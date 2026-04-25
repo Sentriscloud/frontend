@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600&family=Sora:wght@200;300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+@import "tailwindcss";
+
+/* ===== THEME TOKENS ===== */
+:root {
+  --gold: #C8A84A;
+  --gold-l: #F0D080;
+  --gold-d: #8A7840;
+  --gold-dk: #4A3810;
+  --gold-xd: #2A2010;
+  --bk: #0c0c10;
+  --sf: #111116;
+  --sf2: #16161c;
+  --sf3: #1c1c24;
+  --brd: rgba(200,168,74,.10);
+  --brd2: rgba(200,168,74,.25);
+  --brd3: rgba(200,168,74,.06);
+  --tx: #EADBA0;
+  --tx-d: #58566a;
+  --tx-m: #908a7e;
+  --tx-l: #C0B898;
+  --green: #7EC8A4;
+  --red: #C87A6A;
+  --cyan: #7AB8C8;
+  --purple: #A78BFA;
+  --blue: #60A5FA;
+  --pink: #F472B6;
+  --orange: #FB923C;
+  --teal: #2DD4BF;
+  --lime: #A3E635;
+}
+
+[data-theme="light"] {
+  --gold: #8B6914;
+  --gold-l: #6B5010;
+  --gold-d: #A8842A;
+  --gold-dk: #C8A84A;
+  --gold-xd: #E8D8A0;
+  --bk: #ffffff;
+  --sf: #F8F7F4;
+  --sf2: #F1F0EC;
+  --sf3: #EAEAE6;
+  --brd: rgba(0,0,0,.07);
+  --brd2: rgba(139,105,20,.2);
+  --brd3: rgba(0,0,0,.03);
+  --tx: #111111;
+  --tx-d: #999590;
+  --tx-m: #666460;
+  --tx-l: #333330;
+  --green: #1D7A45;
+  --red: #C0504D;
+  --cyan: #1D6A7A;
+  --purple: #7C3AED;
+  --blue: #2563EB;
+  --pink: #DB2777;
+  --orange: #EA580C;
+  --teal: #0D9488;
+  --lime: #65A30D;
+}
+
+@theme inline {
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Sora', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --color-gold: var(--gold);
+  --color-gold-l: var(--gold-l);
+  --color-gold-d: var(--gold-d);
+  --color-gold-dk: var(--gold-dk);
+  --color-bk: var(--bk);
+  --color-sf: var(--sf);
+  --color-sf2: var(--sf2);
+  --color-tx: var(--tx);
+  --color-tx-d: var(--tx-d);
+  --color-tx-m: var(--tx-m);
+  --color-green: var(--green);
+  --color-cyan: var(--cyan);
+}
+
+/* ===== BASE ===== */
+body {
+  background: var(--bk);
+  background: linear-gradient(180deg, #0c0c10 0%, #0f0e15 25%, #0c0c10 50%, #100f18 75%, #0c0c10 100%);
+  background-attachment: fixed;
+  color: var(--tx);
+  font-family: 'Sora', sans-serif;
+  overflow-x: hidden;
+}
+[data-theme="light"] body {
+  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #FCFCFA 30%, #ffffff 50%, #FAFAF6 75%, #ffffff 100%);
+}
+
+/* Noise overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+  opacity: .4;
+}
+[data-theme="light"] body::before { opacity: .08; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bk); }
+::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
+[data-theme="light"] ::-webkit-scrollbar-track { background: #fff; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: #ddd; }
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* ===== TICKER ===== */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ===== REVEAL with stagger ===== */
+.rv {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 1s cubic-bezier(.25,1,.5,1), transform 1s cubic-bezier(.25,1,.5,1);
+}
+.rv.vis {
+  opacity: 1;
+  transform: none;
+}
+
+/* Hero animations */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(28px); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+.anim-hero-1 { animation: fade-up 1s .2s cubic-bezier(.25,1,.5,1) both; }
+.anim-hero-2 { animation: fade-up 1s .4s cubic-bezier(.25,1,.5,1) both; }
+.anim-hero-3 { animation: fade-up 1s .6s cubic-bezier(.25,1,.5,1) both; }
+.anim-hero-4 { animation: fade-up 1s .8s cubic-bezier(.25,1,.5,1) both; }
+
+/* Live dot pulse */
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(126,200,164,.4); }
+  50% { opacity: .7; box-shadow: 0 0 0 6px transparent; }
+}
+
+/* ===== ACCENT SECTION BACKGROUNDS ===== */
+.about-section,
+.tknm-section,
+.srx20-section {
+  background: linear-gradient(160deg, var(--sf) 0%, #0f0e16 50%, var(--sf) 100%);
+}
+
+/* ===== LIGHT THEME OVERRIDES ===== */
+[data-theme="light"] .about-section,
+[data-theme="light"] .tknm-section,
+[data-theme="light"] .srx20-section {
+  background: linear-gradient(160deg, #F8F7F4 0%, #fff 50%, #F8F7F4 100%);
+}
+[data-theme="light"] nav {
+  background: rgba(255,255,255,.92) !important;
+  border-bottom-color: rgba(0,0,0,.05) !important;
+}
+[data-theme="light"] .hero-fade-overlay {
+  background:
+    radial-gradient(ellipse 60% 50% at 70% 40%, rgba(139,105,20,.03) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 30% 70%, rgba(139,105,20,.02) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.7) 0%, rgba(255,255,255,.15) 35%, transparent 50%, rgba(255,255,255,.6) 80%, #fff 100%) !important;
+}
+[data-theme="light"] .hero-grid-overlay {
+  background-image: linear-gradient(rgba(0,0,0,.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.02) 1px, transparent 1px) !important;
+}
+
+/* ===== CARD SHIMMER ===== */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: .4; }
+  50% { opacity: .8; }
+}
+@keyframes border-glow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===== SMOOTH SECTION TRANSITIONS ===== */
+section {
+  will-change: transform;
+}
+
+/* ===== SELECTION ===== */
+::selection {
+  background: rgba(200,168,74,.2);
+  color: var(--gold-l);
+}
+
+/* ===== LINK UNDERLINE GLOW ===== */
+a { transition: color .2s ease; }

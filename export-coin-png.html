@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Export Sentrix Coin PNG</title>
+  <style>
+    body { margin: 0; background: #0c0c10; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; color: #fff; }
+    canvas { border: 1px solid #333; }
+    .controls { margin: 20px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    button { padding: 10px 24px; background: #C8A84A; color: #0c0c10; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+    button:hover { background: #F0D080; }
+    select { padding: 8px 12px; background: #1a1a2e; color: #fff; border: 1px solid #333; border-radius: 6px; }
+    .info { color: #888; font-size: 12px; margin-top: 8px; }
+    h2 { color: #C8A84A; margin-bottom: 4px; }
+    #status { color: #F0D080; margin: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Sentrix Coin - PNG Export</h2>
+  <p class="info">Transparent background. Adjust size below.</p>
+  <div id="status">Loading Three.js...</div>
+
+  <div class="controls">
+    <label>Size: <select id="sizeSelect">
+      <option value="512">512x512</option>
+      <option value="1024" selected>1024x1024</option>
+      <option value="2048">2048x2048</option>
+      <option value="4096">4096x4096</option>
+    </select></label>
+    <label>BG: <select id="bgSelect">
+      <option value="transparent" selected>Transparent</option>
+      <option value="#0c0c10">Dark (#0c0c10)</option>
+      <option value="#000000">Black</option>
+      <option value="#ffffff">White</option>
+    </select></label>
+    <button id="downloadBtn">Download PNG</button>
+  </div>
+
+  <canvas id="coinCanvas"></canvas>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+
+    const canvas = document.getElementById('coinCanvas');
+    const status = document.getElementById('status');
+    let SIZE = 1024;
+    let BG = 'transparent';
+
+    status.textContent = 'Three.js loaded! Rendering...';
+
+    function mkEnvMap() {
+      const s = 256;
+      const c = document.createElement('canvas');
+      c.width = s * 4; c.height = s * 2;
+      const x = c.getContext('2d');
+      const bg = x.createLinearGradient(0, 0, 0, s * 2);
+      bg.addColorStop(0, '#3A2810');
+      bg.addColorStop(0.3, '#28180c');
+      bg.addColorStop(0.5, '#1a1208');
+      bg.addColorStop(0.7, '#28180c');
+      bg.addColorStop(1, '#3A2810');
+      x.fillStyle = bg;
+      x.fillRect(0, 0, s * 4, s * 2);
+      [[s*1.2,s*0.3,s*0.8,'rgba(220,180,80,.35)'],[s*3,s*0.5,s*0.55,'rgba(240,208,128,.25)'],[s*2,s*1.7,s*0.4,'rgba(200,168,74,.18)'],[s*0.3,s*1,s*0.9,'rgba(255,255,240,.1)'],[s*3.5,s*0.2,s*0.3,'rgba(240,208,128,.25)'],[s*2,s*0.3,s*0.6,'rgba(255,240,200,.15)']].forEach(([px,py,rr,cl]) => {
+        const g = x.createRadialGradient(px,py,0,px,py,rr);
+        g.addColorStop(0, cl);
+        g.addColorStop(1, 'transparent');
+        x.fillStyle = g;
+        x.fillRect(0, 0, s*4, s*2);
+      });
+      const t = new THREE.CanvasTexture(c);
+      t.mapping = THREE.EquirectangularReflectionMapping;
+      return t;
+    }
+
+    function mkSTex() {
+      const sc = document.createElement('canvas');
+      sc.width = 128; sc.height = 128;
+      const sx = sc.getContext('2d');
+      sx.clearRect(0, 0, 128, 128);
+      sx.font = 'bold 72px Georgia, serif';
+      sx.textAlign = 'center';
+      sx.textBaseline = 'middle';
+      sx.fillStyle = '#F0D080';
+      sx.shadowColor = 'rgba(240,208,128,0.8)';
+      sx.shadowBlur = 12;
+      sx.fillText('S', 64, 66);
+      return new THREE.CanvasTexture(sc);
+    }
+
+    function mkDiamondGeo(outer, inner) {
+      const shape = new THREE.Shape();
+      shape.moveTo(0, outer);
+      shape.lineTo(outer, 0);
+      shape.lineTo(0, -outer);
+      shape.lineTo(-outer, 0);
+      shape.closePath();
+      if (inner) {
+        const hole = new THREE.Path();
+        hole.moveTo(0, inner);
+        hole.lineTo(inner, 0);
+        hole.lineTo(0, -inner);
+        hole.lineTo(-inner, 0);
+        hole.closePath();
+        shape.holes.push(hole);
+      }
+      return new THREE.ExtrudeGeometry(shape, { depth: inner ? 0.03 : 0.04, bevelEnabled: false });
+    }
+
+    function render() {
+      canvas.width = SIZE;
+      canvas.height = SIZE;
+      canvas.style.width = Math.min(SIZE, 600) + 'px';
+      canvas.style.height = Math.min(SIZE, 600) + 'px';
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true,
+      });
+      renderer.setSize(SIZE, SIZE);
+      renderer.setPixelRatio(1);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 2.0;
+
+      if (BG === 'transparent') {
+        renderer.setClearColor(0x000000, 0);
+      } else {
+        renderer.setClearColor(new THREE.Color(BG), 1);
+      }
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+      camera.position.set(0, 0, 4);
+      camera.lookAt(0, 0, 0);
+
+      // Lights
+      scene.add(new THREE.AmbientLight(0x1a1408, 1.8));
+      const d1 = new THREE.DirectionalLight(0xfff8e0, 2.5);
+      d1.position.set(3, 4, 5); scene.add(d1);
+      const d2 = new THREE.DirectionalLight(0xC8A84A, 1.0);
+      d2.position.set(-3, 1, -2); scene.add(d2);
+      const p1 = new THREE.PointLight(0xF0D080, 1.2, 10);
+      p1.position.set(0, 2, 3); scene.add(p1);
+      const p2 = new THREE.PointLight(0xF0D080, 0.8, 8);
+      p2.position.set(1, 1.5, 3); scene.add(p2);
+
+      const env = mkEnvMap();
+      const sTex = mkSTex();
+
+      const goldMat = new THREE.MeshPhysicalMaterial({
+        color: 0xc8a84a, metalness: 1, roughness: 0.12,
+        clearcoat: 0.6, clearcoatRoughness: 0.05,
+        envMap: env, envMapIntensity: 1.8,
+      });
+      const darkMat = new THREE.MeshPhysicalMaterial({
+        color: 0x0c0c10, metalness: 0.85, roughness: 0.18,
+        clearcoat: 0.5, envMap: env, envMapIntensity: 1.2,
+      });
+      const torusMat = new THREE.MeshPhysicalMaterial({
+        color: 0xc8a84a, metalness: 1, roughness: 0.15,
+        clearcoat: 0.4, clearcoatRoughness: 0.08,
+        envMap: env, envMapIntensity: 1.5,
+      });
+      const accentMat = new THREE.MeshPhysicalMaterial({
+        color: 0xc8a84a, metalness: 1, roughness: 0.2,
+        emissive: 0xc8a84a, emissiveIntensity: 0.08,
+        envMap: env, envMapIntensity: 1.2,
+      });
+      const dotMat = new THREE.MeshPhysicalMaterial({
+        color: 0xf0d080, metalness: 1, roughness: 0.08,
+        emissive: 0xf0d080, emissiveIntensity: 0.2,
+        envMap: env, envMapIntensity: 1.5,
+      });
+
+      const coin = new THREE.Group();
+      coin.scale.set(0.75, 0.75, 0.75);
+
+      // Dark face (no ring)
+      const face = new THREE.Mesh(new THREE.CylinderGeometry(1.18, 1.18, 0.04, 80), darkMat);
+      face.rotation.x = Math.PI / 2;
+      coin.add(face);
+
+      const outerDiamond = mkDiamondGeo(0.5, 0.42);
+      const innerDiamond = mkDiamondGeo(0.22, null);
+      const dotGeo = new THREE.SphereGeometry(0.025, 12, 12);
+      const corners = [{x:0,y:0.5},{x:0.5,y:0},{x:0,y:-0.5},{x:-0.5,y:0}];
+
+      // Front
+      const of = new THREE.Mesh(outerDiamond, goldMat); of.position.z = 0.02; coin.add(of);
+      const inf = new THREE.Mesh(innerDiamond, goldMat); inf.position.z = 0.02; coin.add(inf);
+      const cf = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.08, 24),
+        new THREE.MeshPhysicalMaterial({color:0x0c0c10, metalness:0.5, roughness:0.3}));
+      cf.rotation.x = Math.PI/2; coin.add(cf);
+      const sp = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.28),
+        new THREE.MeshBasicMaterial({map:sTex, transparent:true, depthWrite:false}));
+      sp.position.z = 0.05; coin.add(sp);
+      corners.forEach(p => {
+        const d = new THREE.Mesh(dotGeo, dotMat);
+        d.position.set(p.x, p.y, 0.05); coin.add(d);
+      });
+
+      // Back
+      const ob = new THREE.Mesh(outerDiamond, goldMat);
+      ob.position.z = -0.07; ob.rotation.y = Math.PI; coin.add(ob);
+      const ib = new THREE.Mesh(innerDiamond, goldMat);
+      ib.position.z = -0.07; ib.rotation.y = Math.PI; coin.add(ib);
+      const cb = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.08, 24),
+        new THREE.MeshPhysicalMaterial({color:0x0c0c10, metalness:0.5, roughness:0.3}));
+      cb.rotation.x = Math.PI/2; cb.position.z = -0.02; coin.add(cb);
+      const spb = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.28),
+        new THREE.MeshBasicMaterial({map:sTex, transparent:true, depthWrite:false}));
+      spb.position.z = -0.05; spb.rotation.y = Math.PI; coin.add(spb);
+      corners.forEach(p => {
+        const d = new THREE.Mesh(dotGeo, dotMat);
+        d.position.set(p.x, p.y, -0.05); coin.add(d);
+      });
+
+      scene.add(coin);
+      renderer.render(scene, camera);
+      renderer.dispose();
+
+      status.textContent = 'Ready! Click Download PNG.';
+    }
+
+    document.getElementById('sizeSelect').addEventListener('change', e => {
+      SIZE = parseInt(e.target.value);
+      render();
+    });
+    document.getElementById('bgSelect').addEventListener('change', e => {
+      BG = e.target.value;
+      render();
+    });
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'sentrix-coin-' + SIZE + 'x' + SIZE + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+
+    try {
+      render();
+    } catch(err) {
+      status.textContent = 'Error: ' + err.message;
+      console.error(err);
+    }
+  </script>
+</body>
+</html>
