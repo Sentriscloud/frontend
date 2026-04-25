@@ -1,0 +1,54 @@
+name: Deploy Faucet
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    name: Build & Deploy to VPS2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install & build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to VPS2
+        env:
+          VPS2_HOST: ${{ secrets.VPS2_HOST }}
+          VPS2_USER: ${{ secrets.VPS2_USER }}
+          VPS2_SSH_KEY: ${{ secrets.VPS2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$VPS2_SSH_KEY" > ~/.ssh/id_rsa_vps2
+          chmod 600 ~/.ssh/id_rsa_vps2
+          ssh-keyscan -H "$VPS2_HOST" >> ~/.ssh/known_hosts
+
+          # Sync source + build output — skip .env (live on VPS2 only)
+          rsync -az --delete \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.env' \
+            --exclude='.env.local' \
+            --exclude='.env.production' \
+            -e "ssh -i ~/.ssh/id_rsa_vps2" \
+            ./ "$VPS2_USER@$VPS2_HOST:/opt/sentrix-faucet/"
+
+          # Install prod deps on VPS2 and restart
+          ssh -i ~/.ssh/id_rsa_vps2 "$VPS2_USER@$VPS2_HOST" "
+            set -e
+            cd /opt/sentrix-faucet
+            npm install --omit=dev
+            pm2 restart sentrix-faucet
+            sleep 2
+            pm2 list
+          "
