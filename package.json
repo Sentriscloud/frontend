@@ -1,0 +1,22 @@
+{
+  "name": "sentriscloud-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Monorepo for SentrisCloud user-facing products (explorer, wallet, faucet, exchange, landing).",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  }
+}
