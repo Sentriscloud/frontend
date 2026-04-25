@@ -53,9 +53,9 @@ export async function Stats() {
 
           {/* Sidebar: quiet metadata */}
           <dl className="md:col-span-5 grid grid-cols-2 gap-x-8 gap-y-7 md:gap-x-12">
-            <Datum k="Block time" v="1 sec" hint="Sub-second on Frontier" />
+            <Datum k="Block time" v="1 sec" hint="BLOCK_TIME_SECS = 1" />
             <Datum k="Finality" v="Instant" hint="BFT 2/3+1 vote" />
-            <Datum k="Consensus" v="DPoS · BFT" hint="Voyager mainnet" />
+            <Datum k="Consensus" v="DPoS · BFT" hint="Tendermint-style · 4 vals" />
             <Datum k="Chain ID" v="7119" hint="EVM · revm 37" />
           </dl>
         </div>

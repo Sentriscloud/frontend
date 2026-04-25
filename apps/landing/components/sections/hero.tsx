@@ -21,7 +21,7 @@ export function Hero() {
         <div className="grid grid-cols-1 gap-y-12 md:grid-cols-12 md:gap-x-10">
           {/* Left margin: section number + standfirst */}
           <aside className="md:col-span-3 md:pt-6">
-            <div className="section-number">01 — Sentriscloud</div>
+            <div className="section-number">01 — SentrisCloud</div>
             <p className="mono mt-6 max-w-xs text-xs leading-relaxed text-(--color-ink-3)">
               The user-facing layer of Sentrix Chain. Maintained from{" "}
               <span className="text-(--color-ink-2)">Indonesia</span>, deployed
