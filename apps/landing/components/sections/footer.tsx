@@ -9,22 +9,20 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-(--color-line-2) bg-(--color-canvas)">
-      <div className="container-page py-16 md:py-20">
-        <div className="grid gap-12 md:grid-cols-12">
+    <footer className="border-t border-(--color-line) bg-(--color-canvas)">
+      <div className="container-page py-20 md:py-24">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-12 md:gap-x-10">
           <div className="md:col-span-4">
             <Link href="/" className="inline-flex items-center gap-3" aria-label="SentrisCloud home">
               <Logo size={28} />
               <span className="text-base font-medium tracking-tight text-(--color-ink)">SentrisCloud</span>
             </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-(--color-ink-3)">
+            <p className="mt-6 max-w-xs text-sm leading-relaxed text-(--color-ink-3)">
               {site.tagline}
             </p>
-            <div className="mt-6 flex items-center gap-2 text-xs text-(--color-ink-4)">
-              <a href={`mailto:${site.email.contact}`} className="hover:text-(--color-ink-2)">
-                {site.email.contact}
-              </a>
-            </div>
+            <p className="mono mt-8 text-[10px] uppercase tracking-[0.18em] text-(--color-ink-4)">
+              {site.email.contact}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-8 md:col-span-8 md:grid-cols-3">
@@ -34,11 +32,12 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-16 flex flex-col-reverse items-start gap-4 border-t border-(--color-line-2) pt-8 md:flex-row md:items-center md:justify-between">
-          <p className="text-xs text-(--color-ink-4)">
-            © {year} SentrisCloud. All rights reserved.
+        <hr className="rule mt-16" />
+        <div className="mt-8 flex flex-col-reverse items-start gap-4 md:flex-row md:items-center md:justify-between">
+          <p className="mono text-[10px] uppercase tracking-[0.18em] text-(--color-ink-4)">
+            © {year} SentrisCloud — All rights reserved
           </p>
-          <p className="data text-xs text-(--color-ink-4)">
+          <p className="mono text-[10px] uppercase tracking-[0.18em] text-(--color-ink-4)">
             Built on{" "}
             <a
               href={site.related.chain}
@@ -48,7 +47,6 @@ export function Footer() {
             >
               Sentrix Chain
             </a>
-            .
           </p>
         </div>
       </div>
@@ -65,21 +63,20 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h3 className="text-xs uppercase tracking-[0.18em] text-(--color-ink-4)">{title}</h3>
-      <ul className="mt-5 space-y-3">
+      <h3 className="mono text-[10px] uppercase tracking-[0.18em] text-(--color-ink-4)">
+        {title}
+      </h3>
+      <ul className="mt-6 space-y-3">
         {links.map((link) => (
           <li key={link.href}>
             <a
               href={link.href}
               {...(link.external ? { target: "_blank", rel: "noreferrer" } : {})}
-              className="group inline-flex items-center gap-1 text-sm text-(--color-ink-2) transition-colors hover:text-(--color-ink)"
+              className="link-underline group inline-flex items-baseline gap-1 pb-0.5 text-sm text-(--color-ink-2) transition-colors hover:text-(--color-ink)"
             >
               {link.label}
               {link.external ? (
-                <ArrowUpRight
-                  size={12}
-                  className="text-(--color-ink-4) transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                />
+                <ArrowUpRight size={11} className="text-(--color-ink-4)" />
               ) : null}
             </a>
           </li>

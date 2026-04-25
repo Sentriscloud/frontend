@@ -1,38 +1,75 @@
-import { values } from "@/content/values";
-import { SectionHeading } from "../ui/section-heading";
 import { ScrollReveal } from "../scroll-reveal";
+
+/**
+ * Why — manifesto-style. Drop the icon-card grid; render as three editorial
+ * paragraphs with prominent first letters. More opinion, less template.
+ */
+const tenets = [
+  {
+    title: "Products, not just protocol.",
+    body: `Most Layer 1s ship a node and call the work done. The chain
+    becomes infrastructure looking for someone else to make it useful.
+    We chose the harder path: ship the explorer, the wallet, the
+    faucet, the exchange — so the chain has somewhere to be useful
+    from day one.`,
+  },
+  {
+    title: "Built on what we operate.",
+    body: `We don't ride someone else's settlement layer. Sentrix Chain
+    is a native Layer 1 with sub-second blocks and instant finality,
+    operated by us, used by us. When a product breaks, we can fix the
+    protocol underneath it. No vendor in the middle.`,
+  },
+  {
+    title: "Open to the people who'll grow it.",
+    body: `External validators onboard in 2026. SDKs, brand assets, and
+    tooling are public. Every product lives on GitHub. We grow the
+    network as much as we grow the product — because a chain without
+    other voices is a private database with extra steps.`,
+  },
+];
 
 export function Why() {
   return (
-    <section id="why" className="py-24 md:py-32">
+    <section id="why" className="py-28 md:py-36">
       <div className="container-page">
-        <ScrollReveal>
-          <SectionHeading
-            eyebrow="Why SentrisCloud"
-            title="A Layer 1 isn't enough — products are."
-            description="Most chains ship a node and call it done. We ship the surfaces people actually touch, so the chain has somewhere to be useful from day one."
-          />
-        </ScrollReveal>
+        <header className="grid grid-cols-1 gap-y-8 md:grid-cols-12 md:gap-x-10">
+          <div className="md:col-span-3">
+            <div className="section-number">03 — Position</div>
+          </div>
+          <div className="md:col-span-9">
+            <h2 className="display max-w-3xl text-(--color-ink) text-[clamp(2.5rem,6vw,5rem)]">
+              A chain isn&apos;t enough.
+              <br />
+              <span className="display-italic text-(--color-emerald-500)">
+                Products are.
+              </span>
+            </h2>
+          </div>
+        </header>
 
-        <div className="mt-16 grid gap-8 md:grid-cols-3 lg:mt-20">
-          {values.map((value, i) => {
-            const Icon = value.icon;
-            return (
-              <ScrollReveal key={value.title} delay={i * 0.08}>
-                <article className="hairline group flex h-full flex-col rounded-2xl bg-(--color-canvas-2)/30 p-8">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-(--color-line) bg-(--color-canvas) text-(--color-emerald-400)">
-                    <Icon size={20} />
-                  </div>
-                  <h3 className="mt-8 text-lg font-medium tracking-tight text-(--color-ink)">
-                    {value.title}
+        <div className="mt-16 grid grid-cols-1 gap-y-16 md:mt-24 md:grid-cols-12 md:gap-x-10 md:gap-y-24">
+          {tenets.map((tenet, i) => (
+            <ScrollReveal
+              key={tenet.title}
+              delay={i * 0.06}
+              className="md:col-span-12"
+            >
+              <article className="grid grid-cols-1 gap-y-6 md:grid-cols-12 md:gap-x-10">
+                <div className="md:col-span-3">
+                  <span className="mono text-xs tracking-[0.18em] text-(--color-ink-4)">
+                    {String(i + 1).padStart(2, "0")} / 03
+                  </span>
+                  <h3 className="display mt-4 text-(--color-ink) text-2xl md:text-3xl lg:text-4xl">
+                    {tenet.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-(--color-ink-3)">
-                    {value.description}
-                  </p>
-                </article>
-              </ScrollReveal>
-            );
-          })}
+                </div>
+                <p className="dropcap md:col-span-8 md:col-start-5 max-w-2xl text-base leading-[1.7] text-(--color-ink-2) md:text-lg">
+                  {tenet.body}
+                </p>
+              </article>
+            </ScrollReveal>
+          ))}
         </div>
       </div>
     </section>

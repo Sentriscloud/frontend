@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
-@theme {
+/* CSS custom properties — defined outside @theme so Tailwind 4 doesn't
+   strip them during compile (var() indirection inside @theme is unreliable). */
+:root {
   /* Brand family — emerald shared with Sentrix Labs */
   --color-emerald-50:  #ecfdf5;
   --color-emerald-100: #d1fae5;
   --color-emerald-300: #6ee7b7;
   --color-emerald-400: #34d399;
-  --color-emerald-500: #10b981; /* canonical SentrisCloud */
+  --color-emerald-500: #10b981;
   --color-emerald-600: #059669;
   --color-emerald-700: #047857;
   --color-emerald-900: #064e3b;
 
-  /* Sentrix Chain accent (used sparingly to reference the chain) */
   --color-bronze: #8a5a11;
   --color-gold:   #dbc17f;
 
-  /* Editorial neutrals */
   --color-canvas:    #0a0a0c;
   --color-canvas-2:  #111114;
   --color-ink:       #f5f5f4;
@@ -25,21 +25,13 @@
   --color-line:      #27272a;
   --color-line-2:    #1c1c1f;
 
-  /* Fonts */
-  --font-display: var(--font-playfair), ui-serif, Georgia, serif;
-  --font-body:    var(--font-sora), ui-sans-serif, system-ui, sans-serif;
-  --font-mono:    var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
-
-  /* Motion */
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-expo:     cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+
+  color-scheme: dark;
 }
 
 @layer base {
-  :root {
-    color-scheme: dark;
-  }
-
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -50,7 +42,7 @@
   body {
     background: var(--color-canvas);
     color: var(--color-ink);
-    font-family: var(--font-body);
+    font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: "ss01", "cv11";
     overflow-x: hidden;
   }
@@ -60,7 +52,6 @@
     color: var(--color-canvas);
   }
 
-  /* Scrollbar (subtle) */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: var(--color-canvas); }
   ::-webkit-scrollbar-thumb {
@@ -68,9 +59,7 @@
     border: 2px solid var(--color-canvas);
     border-radius: 5px;
   }
-  ::-webkit-scrollbar-thumb:hover { background: var(--color-line); }
 
-  /* Reduce motion */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -82,17 +71,44 @@
 }
 
 @layer components {
-  /* Editorial display heading */
+  /* Editorial display heading — Playfair, intentionally tight tracking,
+     irregular weight against body sans for visual contrast. */
   .display {
-    font-family: var(--font-display);
+    font-family: var(--font-playfair), ui-serif, Georgia, serif;
     font-weight: 500;
     letter-spacing: -0.025em;
-    line-height: 0.95;
+    line-height: 0.92;
+    font-feature-settings: "lnum", "kern";
   }
 
-  /* Eyebrow tag — small uppercase label */
+  /* Italic emphasis variant (Playfair italic carries strong personality) */
+  .display-italic {
+    font-family: var(--font-playfair), ui-serif, Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 0.92;
+  }
+
+  /* Mono — for code, data, eyebrows */
+  .mono {
+    font-family: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Section number tag — "01 / Hero", editorial cue */
+  .section-number {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ink-4);
+  }
+
   .eyebrow {
-    font-family: var(--font-mono);
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
     font-size: 0.6875rem;
     font-weight: 500;
     text-transform: uppercase;
@@ -112,26 +128,6 @@
     opacity: 0.5;
   }
 
-  /* Data figure (numbers, tabular) */
-  .data {
-    font-family: var(--font-mono);
-    font-feature-settings: "tnum";
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Subtle grain texture overlay */
-  .grain::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1;
-    opacity: 0.03;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    mix-blend-mode: overlay;
-  }
-
-  /* Section container */
   .container-page {
     width: 100%;
     max-width: 1280px;
@@ -143,13 +139,46 @@
     .container-page { padding-inline: 2.5rem; }
   }
 
-  /* Border-on-hover utility for cards */
-  .hairline {
-    border: 1px solid var(--color-line);
-    transition: border-color 200ms var(--ease-out-expo);
+  /* Pull rule — full-width hairline divider */
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--color-line);
+    margin: 0;
   }
 
-  .hairline:hover {
-    border-color: var(--color-emerald-700);
+  /* Subtle grain texture overlay */
+  .grain::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+
+  /* Drop-cap (used in the manifesto-style sections) */
+  .dropcap::first-letter {
+    font-family: var(--font-playfair), ui-serif, serif;
+    font-size: 4.5em;
+    line-height: 0.85;
+    float: left;
+    margin: 0.05em 0.08em -0.1em 0;
+    color: var(--color-emerald-500);
+    font-weight: 500;
+  }
+
+  /* Animated underline link */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 300ms var(--ease-out-expo);
+  }
+
+  .link-underline:hover {
+    background-size: 100% 1px;
   }
 }

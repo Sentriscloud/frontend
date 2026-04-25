@@ -2,88 +2,150 @@ import { ArrowUpRight } from "lucide-react";
 
 import { products, statusLabels, type Product } from "@/content/products";
 import { cn } from "@/lib/utils";
-import { SectionHeading } from "../ui/section-heading";
 import { ScrollReveal } from "../scroll-reveal";
 
 export function Products() {
+  // Hero product: most prominent / most-shipped. Others form the supporting roster.
+  const featured = products.find((p) => p.slug === "scan") ?? products[0]!;
+  const others = products.filter((p) => p.slug !== featured.slug);
+
   return (
-    <section id="products" className="py-24 md:py-32">
+    <section id="products" className="py-28 md:py-36">
       <div className="container-page">
-        <ScrollReveal>
-          <SectionHeading
-            eyebrow="Products"
-            title="Four surfaces, one ecosystem."
-            description="Every SentrisCloud product touches Sentrix Chain. They share primitives, brand, and the goal of making a Layer 1 actually usable."
-          />
+        <header className="grid grid-cols-1 gap-y-8 md:grid-cols-12 md:gap-x-10">
+          <div className="md:col-span-3">
+            <div className="section-number">02 — Products</div>
+          </div>
+          <div className="md:col-span-9">
+            <h2 className="display max-w-3xl text-(--color-ink) text-[clamp(2.5rem,6vw,5rem)]">
+              Four surfaces.
+              <br />
+              <span className="display-italic text-(--color-emerald-500)">
+                One ecosystem.
+              </span>
+            </h2>
+            <p className="mt-8 max-w-xl text-base leading-relaxed text-(--color-ink-3)">
+              Each product runs on Sentrix Chain. They share primitives, brand,
+              and the goal of making a Layer&nbsp;1 actually usable.
+            </p>
+          </div>
+        </header>
+
+        {/* Featured product */}
+        <ScrollReveal className="mt-20 md:mt-28">
+          <FeaturedCard product={featured} />
         </ScrollReveal>
 
-        <div className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-(--color-line) bg-(--color-line) md:grid-cols-2 lg:mt-20">
-          {products.map((product, i) => (
-            <ScrollReveal key={product.slug} delay={i * 0.05} className="bg-(--color-canvas)">
-              <ProductCard product={product} />
+        {/* Roster — compact rows, no card-grid clutter */}
+        <ul className="mt-16 divide-y divide-(--color-line)">
+          {others.map((product, i) => (
+            <ScrollReveal key={product.slug} delay={i * 0.04}>
+              <ProductRow product={product} />
             </ScrollReveal>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );
 }
 
-function ProductCard({ product }: { product: Product }) {
-  const Icon = product.icon;
-  const isLive = product.status === "live";
+function FeaturedCard({ product }: { product: Product }) {
   const isLinkable = product.href !== "#";
+  const Wrapper: React.ElementType = isLinkable ? "a" : "div";
+  const wrapperProps = isLinkable
+    ? { href: product.href, target: "_blank", rel: "noreferrer" }
+    : {};
 
-  const content = (
-    <div className="group flex h-full flex-col gap-6 p-8 transition-colors hover:bg-(--color-canvas-2) md:p-10">
-      <div className="flex items-start justify-between">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-(--color-line) bg-(--color-canvas-2) text-(--color-emerald-500) transition-colors group-hover:border-(--color-emerald-700)">
-          <Icon size={20} />
-        </div>
-        <StatusBadge status={product.status} />
-      </div>
-
-      <div>
-        <div className="flex items-center gap-2">
-          <h3 className="text-xl font-medium tracking-tight text-(--color-ink) md:text-2xl">
+  return (
+    <Wrapper
+      {...wrapperProps}
+      className="group relative block overflow-hidden rounded-3xl border border-(--color-line) bg-(--color-canvas-2)/50 p-10 transition-colors hover:border-(--color-emerald-700) md:p-16"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-(--color-emerald-500) opacity-[0.06] blur-3xl"
+      />
+      <div className="grid grid-cols-1 gap-y-10 md:grid-cols-12 md:gap-x-12">
+        <div className="md:col-span-7">
+          <div className="flex items-center gap-3">
+            <StatusBadge status={product.status} />
+            <span className="mono text-[10px] uppercase tracking-[0.18em] text-(--color-ink-4)">
+              Featured · explorer
+            </span>
+          </div>
+          <h3 className="display mt-6 text-(--color-ink) text-4xl md:text-5xl lg:text-6xl">
             {product.name}
           </h3>
-          {isLinkable && product.external ? (
+          <p className="mt-5 text-base leading-relaxed text-(--color-ink-2) md:text-lg">
+            {product.description}
+          </p>
+          <div className="mt-10 inline-flex items-baseline gap-3 text-sm text-(--color-emerald-400)">
+            <span className="link-underline pb-1">Open SentrixScan</span>
             <ArrowUpRight
-              size={16}
-              className="text-(--color-ink-4) transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-(--color-emerald-500)"
+              size={14}
+              className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+            />
+          </div>
+        </div>
+
+        {/* Right column — quiet feature list, no icons */}
+        <ul className="md:col-span-5 mt-2 space-y-4 self-end border-l border-(--color-line) pl-8">
+          <FeatureBullet>Block, tx, address & validator views</FeatureBullet>
+          <FeatureBullet>Live mainnet + testnet networks</FeatureBullet>
+          <FeatureBullet>Smart search across heights & hashes</FeatureBullet>
+          <FeatureBullet>SRC-20 token registry</FeatureBullet>
+        </ul>
+      </div>
+    </Wrapper>
+  );
+}
+
+function FeatureBullet({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-3 text-sm text-(--color-ink-2)">
+      <span className="mt-1.5 inline-block h-1 w-3 shrink-0 bg-(--color-emerald-500)" />
+      <span>{children}</span>
+    </li>
+  );
+}
+
+function ProductRow({ product }: { product: Product }) {
+  const isLinkable = product.href !== "#";
+  const Wrapper: React.ElementType = isLinkable ? "a" : "div";
+  const wrapperProps = isLinkable
+    ? { href: product.href, target: "_blank", rel: "noreferrer" }
+    : {};
+
+  return (
+    <Wrapper
+      {...wrapperProps}
+      className={cn(
+        "group flex items-baseline gap-6 py-7 md:gap-10",
+        isLinkable && "transition-colors hover:bg-(--color-canvas-2)/30",
+      )}
+    >
+      <span className="mono w-10 shrink-0 text-[10px] tabular-nums text-(--color-ink-4)">
+        0{products.findIndex((p) => p.slug === product.slug) + 1}
+      </span>
+      <div className="flex-1 grid grid-cols-12 items-baseline gap-x-6">
+        <h3 className="display col-span-12 text-(--color-ink) text-2xl md:col-span-4 md:text-3xl">
+          {product.name}
+        </h3>
+        <p className="col-span-12 mt-2 text-sm text-(--color-ink-3) md:col-span-6 md:mt-0">
+          {product.tagline}
+        </p>
+        <div className="col-span-12 mt-3 flex items-center gap-3 md:col-span-2 md:mt-0 md:justify-end">
+          <StatusBadge status={product.status} />
+          {isLinkable ? (
+            <ArrowUpRight
+              size={14}
+              className="text-(--color-ink-4) transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-(--color-emerald-400)"
             />
           ) : null}
         </div>
-        <p className="mt-2 text-sm text-(--color-ink-3)">{product.tagline}</p>
-        <p className="mt-4 text-sm leading-relaxed text-(--color-ink-2)">{product.description}</p>
       </div>
-
-      <div className="mt-auto pt-2">
-        {isLive ? (
-          <span className="inline-flex items-center gap-2 text-xs text-(--color-emerald-400)">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-(--color-emerald-500) opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-(--color-emerald-500)" />
-            </span>
-            Live now
-          </span>
-        ) : (
-          <span className="text-xs text-(--color-ink-4)">{statusLabels[product.status]}</span>
-        )}
-      </div>
-    </div>
+    </Wrapper>
   );
-
-  if (isLinkable && product.external) {
-    return (
-      <a href={product.href} target="_blank" rel="noreferrer" className="block h-full">
-        {content}
-      </a>
-    );
-  }
-
-  return content;
 }
 
 function StatusBadge({ status }: { status: Product["status"] }) {
@@ -97,7 +159,7 @@ function StatusBadge({ status }: { status: Product["status"] }) {
   return (
     <span
       className={cn(
-        "rounded-full border px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em]",
+        "rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em]",
         styles[status],
       )}
     >

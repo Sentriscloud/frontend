@@ -1,44 +1,63 @@
 import { ArrowUpRight } from "lucide-react";
-import { ScrollReveal } from "../scroll-reveal";
 
+/**
+ * CTA — closing editorial line, not a hero-card-with-buttons. Single direct
+ * email link; the work is the closing punctuation.
+ */
 export function Cta() {
   return (
-    <section id="about" className="py-24 md:py-36">
+    <section id="about" className="py-32 md:py-44">
       <div className="container-page">
-        <ScrollReveal>
-          <div className="relative isolate overflow-hidden rounded-3xl border border-(--color-emerald-700)/40 bg-gradient-to-br from-(--color-emerald-900)/40 via-(--color-canvas) to-(--color-canvas) px-8 py-16 md:px-16 md:py-24">
-            <div
-              aria-hidden
-              className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-(--color-emerald-500) opacity-10 blur-3xl"
-            />
-            <span className="eyebrow">Get involved</span>
-            <h2 className="display mt-6 max-w-3xl text-4xl text-(--color-ink) md:text-5xl lg:text-6xl">
-              Build, validate, or partner with SentrisCloud.
-            </h2>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-(--color-ink-2) md:text-lg">
-              External validators onboard in 2026. Builders are welcome any time. Partners and exchanges — let&apos;s talk.
-            </p>
-
-            <div className="mt-10 flex flex-wrap gap-4">
+        <div className="grid grid-cols-1 gap-y-10 md:grid-cols-12 md:gap-x-10">
+          <div className="md:col-span-3">
+            <div className="section-number">05 — Closing</div>
+          </div>
+          <div className="md:col-span-9">
+            <p className="display max-w-4xl text-(--color-ink) text-[clamp(2.25rem,5.5vw,4.5rem)] leading-[1.05]">
+              Build, validate, or partner with us.{" "}
+              <span className="text-(--color-ink-3)">
+                Mostly we just want the chain to be useful.
+              </span>{" "}
               <a
                 href="mailto:hello@sentriscloud.com"
-                className="inline-flex items-center gap-2 rounded-full bg-(--color-emerald-500) px-7 py-3.5 text-sm font-medium text-(--color-canvas) transition-transform duration-200 hover:-translate-y-0.5"
+                className="link-underline group inline-flex items-center gap-3 text-(--color-emerald-400) hover:text-(--color-emerald-300)"
               >
-                hello@sentriscloud.com
-                <ArrowUpRight size={14} />
+                <span className="display-italic">
+                  hello@sentriscloud.com
+                </span>
+                <ArrowUpRight
+                  size={20}
+                  className="transition-transform group-hover:-translate-y-1 group-hover:translate-x-1"
+                />
               </a>
+            </p>
+
+            <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4 text-sm text-(--color-ink-3)">
               <a
                 href="https://github.com/Sentriscloud"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-(--color-line) px-7 py-3.5 text-sm font-medium text-(--color-ink-2) transition-colors hover:border-(--color-emerald-700) hover:text-(--color-ink)"
+                className="link-underline pb-0.5 hover:text-(--color-ink)"
               >
-                See the code
-                <ArrowUpRight size={14} />
+                GitHub
+              </a>
+              <a
+                href="https://sentrixchain.com"
+                target="_blank"
+                rel="noreferrer"
+                className="link-underline pb-0.5 hover:text-(--color-ink)"
+              >
+                Sentrix Chain
+              </a>
+              <a
+                href="mailto:security@sentriscloud.com"
+                className="link-underline pb-0.5 hover:text-(--color-ink)"
+              >
+                security@sentriscloud.com
               </a>
             </div>
           </div>
-        </ScrollReveal>
+        </div>
       </div>
     </section>
   );

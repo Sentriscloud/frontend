@@ -1,61 +1,73 @@
 import { getChainSnapshot } from "@/lib/chain";
 import { formatNumber } from "@/lib/utils";
-import { ScrollReveal } from "../scroll-reveal";
 
 /**
- * Server component fetching real mainnet stats from Sentrix Chain RPC.
- * Cached for 60s via Next route segment config (in page.tsx).
+ * Stats — single editorial ribbon. The latest block leads (it's the live
+ * proof the chain is up); everything else flanks it as quiet metadata.
  */
 export async function Stats() {
   const snapshot = await getChainSnapshot();
 
-  const items = [
-    {
-      label: "Latest block",
-      value: snapshot.status === "live" ? `#${formatNumber(snapshot.blockHeight)}` : "—",
-      hint: snapshot.status === "live" ? "Mainnet" : "Mainnet · sync warming",
-    },
-    {
-      label: "Block time",
-      value: "≤ 500 ms",
-      hint: "Proof of Eternity (PoE)",
-    },
-    {
-      label: "Native token",
-      value: "SRX",
-      hint: "Max supply 210 M · 8 decimals",
-    },
-    {
-      label: "Chain ID",
-      value: "7119",
-      hint: "EVM-compatible · viem ready",
-    },
-  ];
+  const isLive = snapshot.status === "live";
+  const fetchedAt = new Date(snapshot.fetchedAt).toISOString().slice(11, 19);
 
   return (
-    <section className="relative border-y border-(--color-line-2) bg-(--color-canvas-2)/40 py-16 md:py-20">
-      <div className="container-page">
-        <ScrollReveal>
-          <span className="eyebrow">Live · mainnet</span>
-        </ScrollReveal>
-        <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-(--color-line) bg-(--color-line) md:grid-cols-4">
-          {items.map((item, i) => (
-            <ScrollReveal
-              key={item.label}
-              delay={i * 0.05}
-              className="bg-(--color-canvas) px-6 py-8 md:px-8 md:py-10"
-            >
-              <div className="text-xs uppercase tracking-[0.18em] text-(--color-ink-4)">
-                {item.label}
-              </div>
-              <div className="data mt-3 text-2xl text-(--color-ink) md:text-3xl">
-                {item.value}
-              </div>
-              <div className="mt-2 text-xs text-(--color-ink-3)">{item.hint}</div>
-            </ScrollReveal>
-          ))}
+    <section
+      aria-label="Live mainnet status"
+      className="border-y border-(--color-line) bg-(--color-canvas-2)/30"
+    >
+      <div className="container-page py-14 md:py-16">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:items-end md:gap-x-10">
+          {/* Featured: latest block */}
+          <div className="md:col-span-7">
+            <div className="flex items-center gap-3 text-(--color-emerald-400)">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-(--color-emerald-500) opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-(--color-emerald-500)" />
+              </span>
+              <span className="mono text-[11px] uppercase tracking-[0.18em]">
+                {isLive ? "Mainnet · live" : "Mainnet · sync warming"}
+              </span>
+            </div>
+            <div className="mt-5 flex items-baseline gap-4">
+              <span className="mono text-(--color-ink-4) text-2xl">#</span>
+              <span
+                className="display tabular-nums text-(--color-ink) text-[clamp(3rem,8vw,6.5rem)]"
+                style={{ fontFeatureSettings: '"lnum", "tnum"' }}
+              >
+                {isLive ? formatNumber(snapshot.blockHeight) : "—"}
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-(--color-ink-3)">
+              Latest block on Sentrix Chain mainnet
+              <span className="mono mx-2 text-(--color-ink-4)">·</span>
+              <span className="mono text-(--color-ink-4)">
+                fetched {fetchedAt} UTC
+              </span>
+            </p>
+          </div>
+
+          {/* Sidebar: quiet metadata */}
+          <dl className="md:col-span-5 grid grid-cols-2 gap-x-8 gap-y-6 md:gap-x-12">
+            <Datum k="Block time" v="≤ 500 ms" hint="Proof of Eternity" />
+            <Datum k="Native token" v="SRX" hint="Max supply 210 M" />
+            <Datum k="Chain ID" v="7119" hint="EVM-compatible" />
+            <Datum k="Validators" v="3 + 1" hint="Mainnet · testnet" />
+          </dl>
         </div>
       </div>
     </section>
+  );
+}
+
+function Datum({ k, v, hint }: { k: string; v: string; hint: string }) {
+  return (
+    <div>
+      <dt className="mono text-[10px] uppercase tracking-[0.18em] text-(--color-ink-4)">
+        {k}
+      </dt>
+      <dd className="mono mt-2 text-xl text-(--color-ink) tabular-nums">{v}</dd>
+      <dd className="mt-1 text-xs text-(--color-ink-3)">{hint}</dd>
+    </div>
   );
 }
