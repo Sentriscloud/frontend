@@ -37,13 +37,16 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     scroll-behavior: smooth;
+    font-synthesis: none;
   }
 
   body {
     background: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
-    font-feature-settings: "ss01", "cv11";
+    font-feature-settings: "ss01", "cv11", "kern", "liga";
+    font-optical-sizing: auto;
+    font-variant-ligatures: common-ligatures contextual;
     overflow-x: hidden;
   }
 
@@ -72,38 +75,51 @@
 
 @layer components {
   /* Editorial display heading — Playfair at 600 for confident weight
-     against the lighter Sora body. Tight tracking, dense leading. */
+     against the lighter Sora body. Tight tracking, dense leading.
+     Discretionary ligatures + lining figures for editorial feel. */
   .display {
-    font-family: var(--font-playfair), ui-serif, Georgia, serif;
+    font-family: var(--font-playfair), ui-serif, Georgia, "Times New Roman", serif;
     font-weight: 600;
     letter-spacing: -0.028em;
-    line-height: 0.9;
-    font-feature-settings: "lnum", "kern", "liga", "dlig";
+    line-height: 0.92;
+    font-feature-settings: "lnum", "kern", "liga", "dlig", "calt", "ss01";
+    font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
+    font-optical-sizing: auto;
+    text-wrap: balance;
   }
 
   /* Italic emphasis (Playfair italic 500 — carries personality without
-     overwhelming the upright weight) */
+     overwhelming the upright weight). Italic discretionary ligatures
+     are where Playfair earns its premium feel. */
   .display-italic {
-    font-family: var(--font-playfair), ui-serif, Georgia, serif;
+    font-family: var(--font-playfair), ui-serif, Georgia, "Times New Roman", serif;
     font-style: italic;
     font-weight: 500;
-    letter-spacing: -0.022em;
-    line-height: 0.9;
+    letter-spacing: -0.018em;
+    line-height: 0.92;
+    font-feature-settings: "kern", "liga", "dlig", "calt";
+    font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
+    font-optical-sizing: auto;
   }
 
   /* Heavy emphasis — for that one moment per page that needs to land hard */
   .display-heavy {
-    font-family: var(--font-playfair), ui-serif, Georgia, serif;
+    font-family: var(--font-playfair), ui-serif, Georgia, "Times New Roman", serif;
     font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 0.88;
+    letter-spacing: -0.032em;
+    line-height: 0.9;
+    font-feature-settings: "lnum", "kern", "liga", "dlig", "calt";
+    font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
+    font-optical-sizing: auto;
+    text-wrap: balance;
   }
 
-  /* Mono — for code, data, eyebrows */
+  /* Mono — for code, data, eyebrows. Slashed zero + tabular figures so
+     numbers don't shimmy when they update live. */
   .mono {
-    font-family: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
-    font-feature-settings: "tnum";
-    font-variant-numeric: tabular-nums;
+    font-family: var(--font-plex-mono), ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    font-feature-settings: "tnum", "zero", "ss01", "calt";
+    font-variant-numeric: tabular-nums slashed-zero;
   }
 
   /* Section number tag — "01 / Hero", editorial cue */

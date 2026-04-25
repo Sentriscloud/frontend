@@ -23,9 +23,10 @@ export function Hero() {
           <aside className="md:col-span-3 md:pt-6">
             <div className="section-number">01 — SentrisCloud</div>
             <p className="mono mt-6 max-w-xs text-xs leading-relaxed text-(--color-ink-3)">
-              The user-facing layer of Sentrix Chain. Maintained from{" "}
-              <span className="text-(--color-ink-2)">Indonesia</span>, deployed
-              for everyone.
+              The user-facing layer of{" "}
+              <span className="text-(--color-ink-2)">Sentrix Chain</span> —
+              explorers, wallets, faucets, and exchanges. Built to be used, not
+              just shipped.
             </p>
           </aside>
 
