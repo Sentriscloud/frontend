@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  sentrix-wallet:
+    image: ghcr.io/sentrix-labs/sentrix-wallet:latest
+    container_name: sentrix-wallet
+    restart: unless-stopped
+    ports:
+      - "3003:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://sentrix-api.sentriscloud.com
+      - NEXT_PUBLIC_CHAIN_ID=7119
+      - NEXT_PUBLIC_CHAIN_NAME=Sentrix
+      - NEXT_PUBLIC_NATIVE_TOKEN=SRX
+      - NEXT_PUBLIC_SNTX_CONTRACT=SRX20_16d17385cad3ef46d63c93f4daeb8b2f7571afd3

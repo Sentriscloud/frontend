@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #F8FAFC;
+  --text: #0F172A;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+  --card: #FFFFFF;
+  --card-border: #E2E8F0;
+  --input-bg: #F1F5F9;
+  --input-border: #CBD5E1;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Remove number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; }
