@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+/* ── Design tokens ────────────────────────────────────── */
+:root {
+  --gold:   #C8A84A;
+  --gold-l: #F0D080;
+  --gold-d: #8a6f2a;
+  --bk:     #0c0c10;
+  --sf:     #111116;
+  --sf2:    #16161c;
+  --brd:    rgba(200,168,74,.10);
+  --brd2:   rgba(200,168,74,.20);
+  --tx:     #EADBA0;
+  --tx-d:   #58566a;
+  --tx-m:   #908a7e;
+}
+
+/* ── Tailwind custom theme ────────────────────────────── */
+@theme inline {
+  --color-background: var(--bk);
+  --color-foreground: var(--tx);
+  --font-sans: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --color-gold: var(--gold);
+  --color-gold-l: var(--gold-l);
+}
+
+/* ── Base ─────────────────────────────────────────────── */
+html { background-color: var(--bk); }
+
+body {
+  background-color: var(--bk);
+  color: var(--tx);
+  font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Scrollbar ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bk); }
+::-webkit-scrollbar-thumb { background: var(--brd2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-d); }
+
+/* ── Selection ────────────────────────────────────────── */
+::selection { background: rgba(200,168,74,0.25); color: #fff; }
+
+* { box-sizing: border-box; }
+
+/* ── Animations ───────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(200,168,74,.15); }
+  50%       { box-shadow: 0 0 40px rgba(200,168,74,.35); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.animate-fade-up    { animation: fade-up 0.5s ease both; }
+.animate-glow-pulse { animation: glow-pulse 2.5s ease-in-out infinite; }
+.animate-spin-slow  { animation: spin-slow 1s linear infinite; }
