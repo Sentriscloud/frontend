@@ -1,0 +1,9 @@
+services:
+  sentrix-landing:
+    image: ghcr.io/sentrix-labs/sentrix-landing:latest
+    container_name: sentrix-landing
+    restart: unless-stopped
+    ports:
+      - "3004:3000"
+    environment:
+      - NODE_ENV=production
