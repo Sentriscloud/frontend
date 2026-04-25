@@ -1,11 +1,19 @@
-import { Playfair_Display, Sora, IBM_Plex_Mono } from "next/font/google";
+import { Newsreader, Sora, IBM_Plex_Mono } from "next/font/google";
 
-export const playfair = Playfair_Display({
+/**
+ * Editorial display — Newsreader.
+ * News-grade serif with optical sizing (opsz axis). Italic is restrained
+ * (true italic, not script-y swashes), which is what we want for
+ * "editorial tech" rather than "luxury bridal magazine". Variable so we
+ * use one file for the whole weight + opsz + italic range.
+ */
+export const display = Newsreader({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-playfair",
-  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-display",
+  weight: "variable",
   style: ["normal", "italic"],
+  axes: ["opsz"],
 });
 
 export const sora = Sora({

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
 import { site } from "@/content/site";
-import { playfair, sora, plexMono } from "@/lib/fonts";
+import { display, sora, plexMono } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Nav } from "@/components/nav";
@@ -69,7 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          playfair.variable,
+          display.variable,
           sora.variable,
           plexMono.variable,
           "min-h-dvh antialiased",
