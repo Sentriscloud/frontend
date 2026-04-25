@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+/* ── Design tokens ────────────────────────────────────── */
+:root {
+  --gold:   #C8A84A;
+  --gold-l: #F0D080;
+  --gold-d: #8a6f2a;
+  --bk:     #0c0c10;
+  --sf:     #111116;
+  --sf2:    #16161c;
+  --brd:    rgba(200,168,74,.10);
+  --brd2:   rgba(200,168,74,.20);
+  --tx:     #EADBA0;
+  --tx-d:   #58566a;
+  --tx-m:   #908a7e;
+  --header-h: 92px;
+}
+
+/* ── Tailwind custom theme ────────────────────────────── */
+@theme inline {
+  --color-background: var(--bk);
+  --color-foreground: var(--tx);
+  --font-sans: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --color-gold: var(--gold);
+  --color-gold-l: var(--gold-l);
+  --color-bk: var(--bk);
+  --color-sf: var(--sf);
+  --color-sf2: var(--sf2);
+}
+
+/* ── Base ─────────────────────────────────────────────── */
+html { background-color: var(--bk); }
+
+body {
+  background-color: var(--bk);
+  color: var(--tx);
+  font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Scrollbar ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bk); }
+::-webkit-scrollbar-thumb { background: var(--brd2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-d); }
+
+/* ── Selection ────────────────────────────────────────── */
+::selection { background: rgba(200,168,74,0.25); color: #fff; }
+
+* { box-sizing: border-box; }
+
+/* ── Animations ───────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(200,168,74,.15); }
+  50%       { box-shadow: 0 0 40px rgba(200,168,74,.35); }
+}
+
+@keyframes shine-sweep {
+  from { transform: translateX(-100%) skewX(-20deg); }
+  to   { transform: translateX(200%) skewX(-20deg); }
+}
+
+/* ── Ticker tape ──────────────────────────────────────── */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+  will-change: transform;
+}
+.animate-marquee:hover { animation-play-state: paused; }
+
+/* ── Skeleton loading ─────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--sf) 25%, var(--sf2) 50%, var(--sf) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.animate-fade-up    { animation: fade-up 0.6s ease both; }
+.animate-float      { animation: float 4s ease-in-out infinite; }
+.animate-glow-pulse { animation: glow-pulse 2.5s ease-in-out infinite; }
+
+.shimmer-text {
+  background: linear-gradient(90deg, var(--gold-d) 0%, var(--gold-l) 40%, var(--gold-d) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
