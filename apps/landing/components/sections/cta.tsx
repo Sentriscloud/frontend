@@ -19,11 +19,11 @@ export function Cta() {
                 Mostly we just want the chain to be useful.
               </span>{" "}
               <a
-                href="mailto:hello@sentriscloud.com"
+                href="mailto:contact@sentriscloud.com"
                 className="link-underline group inline-flex items-center gap-3 text-(--color-emerald-400) hover:text-(--color-emerald-300)"
               >
                 <span className="display-italic">
-                  hello@sentriscloud.com
+                  contact@sentriscloud.com
                 </span>
                 <ArrowUpRight
                   size={20}

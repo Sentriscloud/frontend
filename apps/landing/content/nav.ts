@@ -26,7 +26,7 @@ export const footerLinks = {
   ],
   company: [
     { label: "About", href: "#about" },
-    { label: "Contact", href: "mailto:hello@sentriscloud.com" },
+    { label: "Contact", href: "mailto:contact@sentriscloud.com" },
     { label: "Security", href: "mailto:security@sentriscloud.com" },
     { label: "GitHub", href: "https://github.com/Sentriscloud", external: true },
   ],

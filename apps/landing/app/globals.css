@@ -71,23 +71,32 @@
 }
 
 @layer components {
-  /* Editorial display heading — Playfair, intentionally tight tracking,
-     irregular weight against body sans for visual contrast. */
+  /* Editorial display heading — Playfair at 600 for confident weight
+     against the lighter Sora body. Tight tracking, dense leading. */
   .display {
     font-family: var(--font-playfair), ui-serif, Georgia, serif;
-    font-weight: 500;
-    letter-spacing: -0.025em;
-    line-height: 0.92;
-    font-feature-settings: "lnum", "kern";
+    font-weight: 600;
+    letter-spacing: -0.028em;
+    line-height: 0.9;
+    font-feature-settings: "lnum", "kern", "liga", "dlig";
   }
 
-  /* Italic emphasis variant (Playfair italic carries strong personality) */
+  /* Italic emphasis (Playfair italic 500 — carries personality without
+     overwhelming the upright weight) */
   .display-italic {
     font-family: var(--font-playfair), ui-serif, Georgia, serif;
     font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    line-height: 0.92;
+    font-weight: 500;
+    letter-spacing: -0.022em;
+    line-height: 0.9;
+  }
+
+  /* Heavy emphasis — for that one moment per page that needs to land hard */
+  .display-heavy {
+    font-family: var(--font-playfair), ui-serif, Georgia, serif;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.88;
   }
 
   /* Mono — for code, data, eyebrows */
@@ -167,6 +176,66 @@
     margin: 0.05em 0.08em -0.1em 0;
     color: var(--color-emerald-500);
     font-weight: 500;
+  }
+
+  /* Corner-lines — signature SentrisCloud card treatment. Four small gold
+     accents flick to visible on hover, framing the content like editorial
+     bracketing. */
+  .corner-lines {
+    position: relative;
+  }
+
+  .corner-lines::before,
+  .corner-lines::after,
+  .corner-lines > .cl-bl,
+  .corner-lines > .cl-br {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--color-gold);
+    opacity: 0;
+    transition: opacity 350ms var(--ease-out-expo);
+    pointer-events: none;
+  }
+
+  .corner-lines::before {
+    top: 0; left: 0;
+    border-right: none; border-bottom: none;
+  }
+
+  .corner-lines::after {
+    top: 0; right: 0;
+    border-left: none; border-bottom: none;
+  }
+
+  .corner-lines > .cl-bl {
+    bottom: 0; left: 0;
+    border-right: none; border-top: none;
+  }
+
+  .corner-lines > .cl-br {
+    bottom: 0; right: 0;
+    border-left: none; border-top: none;
+  }
+
+  .corner-lines:hover::before,
+  .corner-lines:hover::after,
+  .corner-lines:hover > .cl-bl,
+  .corner-lines:hover > .cl-br {
+    opacity: 0.85;
+  }
+
+  /* Oversized backdrop numeral — used behind hero for editorial drama */
+  .backdrop-numeral {
+    font-family: var(--font-playfair), ui-serif, serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--color-canvas-2);
+    line-height: 0.8;
+    letter-spacing: -0.05em;
+    user-select: none;
+    pointer-events: none;
   }
 
   /* Animated underline link */

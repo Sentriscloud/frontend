@@ -9,7 +9,7 @@ export const site = {
     "SentrisCloud builds the user-facing layer of the Sentrix ecosystem — explorers, wallets, faucets, and exchanges that make the chain usable for everyone.",
   url: "https://sentriscloud.com",
   email: {
-    contact: "hello@sentriscloud.com",
+    contact: "contact@sentriscloud.com",
     security: "security@sentriscloud.com",
   },
   social: {

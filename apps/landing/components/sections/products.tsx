@@ -59,8 +59,10 @@ function FeaturedCard({ product }: { product: Product }) {
   return (
     <Wrapper
       {...wrapperProps}
-      className="group relative block overflow-hidden rounded-3xl border border-(--color-line) bg-(--color-canvas-2)/50 p-10 transition-colors hover:border-(--color-emerald-700) md:p-16"
+      className="corner-lines group relative block overflow-hidden border border-(--color-line) bg-(--color-canvas-2)/50 p-10 transition-colors hover:border-(--color-gold)/50 md:p-16"
     >
+      <span className="cl-bl" aria-hidden />
+      <span className="cl-br" aria-hidden />
       <div
         aria-hidden
         className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-(--color-emerald-500) opacity-[0.06] blur-3xl"
