@@ -1,0 +1,357 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600&family=Sora:wght@200;300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ===== SENTRIX BRAND TOKENS (aligned with sentrix-landing) ===== */
+:root {
+  --gold: #8B6914;
+  --gold-l: #6B5010;
+  --gold-d: #A8842A;
+  --gold-dk: #C8A84A;
+  --gold-xd: #E8D8A0;
+  --bk: #ffffff;
+  --sf: #F8F7F4;
+  --sf2: #F1F0EC;
+  --sf3: #EAEAE6;
+  --brd: rgba(0,0,0,.07);
+  --brd2: rgba(139,105,20,.2);
+  --brd3: rgba(0,0,0,.03);
+  --tx: #111111;
+  --tx-d: #999590;
+  --tx-m: #666460;
+  --tx-l: #333330;
+  --green: #1D7A45;
+  --red: #C0504D;
+  --cyan: #1D6A7A;
+  --purple: #7C3AED;
+  --blue: #2563EB;
+  --pink: #DB2777;
+  --orange: #EA580C;
+  --teal: #0D9488;
+  --lime: #65A30D;
+
+  /* shadcn bridge — keeps Card / Button / etc wired to the brand palette. */
+  --background: var(--bk);
+  --foreground: var(--tx);
+  --card: #ffffff;
+  --card-foreground: var(--tx);
+  --popover: #ffffff;
+  --popover-foreground: var(--tx);
+  --primary: var(--gold);
+  --primary-foreground: #ffffff;
+  --secondary: var(--sf);
+  --secondary-foreground: var(--tx);
+  --muted: var(--sf2);
+  --muted-foreground: var(--tx-m);
+  --accent: var(--sf2);
+  --accent-foreground: var(--tx);
+  --destructive: var(--red);
+  --border: var(--brd);
+  --input: var(--brd);
+  --ring: var(--gold);
+  --radius: 0.625rem;
+}
+
+.dark {
+  --gold: #C8A84A;
+  --gold-l: #F0D080;
+  --gold-d: #8A7840;
+  --gold-dk: #4A3810;
+  --gold-xd: #2A2010;
+  --bk: #0c0c10;
+  --sf: #111116;
+  --sf2: #16161c;
+  --sf3: #1c1c24;
+  --brd: rgba(200,168,74,.10);
+  --brd2: rgba(200,168,74,.25);
+  --brd3: rgba(200,168,74,.06);
+  --tx: #EADBA0;
+  --tx-d: #58566a;
+  --tx-m: #908a7e;
+  --tx-l: #C0B898;
+  --green: #7EC8A4;
+  --red: #C87A6A;
+  --cyan: #7AB8C8;
+  --purple: #A78BFA;
+  --blue: #60A5FA;
+  --pink: #F472B6;
+  --orange: #FB923C;
+  --teal: #2DD4BF;
+  --lime: #A3E635;
+
+  --background: var(--bk);
+  --foreground: var(--tx);
+  --card: var(--sf);
+  --card-foreground: var(--tx);
+  --popover: var(--sf);
+  --popover-foreground: var(--tx);
+  --primary: var(--gold);
+  --primary-foreground: var(--bk);
+  --secondary: var(--sf2);
+  --secondary-foreground: var(--tx);
+  --muted: var(--sf2);
+  --muted-foreground: var(--tx-m);
+  --accent: var(--sf2);
+  --accent-foreground: var(--tx);
+  --destructive: var(--red);
+  --border: var(--brd);
+  --input: rgba(255,255,255,.08);
+  --ring: var(--gold);
+}
+
+@theme inline {
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Sora', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-heading: 'Playfair Display', serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-gold: var(--gold);
+  --color-gold-l: var(--gold-l);
+  --color-gold-d: var(--gold-d);
+  --color-sf: var(--sf);
+  --color-sf2: var(--sf2);
+  --color-tx-d: var(--tx-d);
+  --color-tx-m: var(--tx-m);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply text-foreground;
+    background: var(--bk);
+    font-family: 'Sora', sans-serif;
+  }
+  html.dark body {
+    background: linear-gradient(180deg, #0c0c10 0%, #0f0e15 25%, #0c0c10 50%, #100f18 75%, #0c0c10 100%);
+    background-attachment: fixed;
+  }
+  :root:not(.dark) body {
+    background: linear-gradient(180deg, #ffffff 0%, #FCFCFA 30%, #ffffff 50%, #FAFAF6 75%, #ffffff 100%);
+    background-attachment: fixed;
+  }
+}
+
+/* Noise overlay — subtle grain like the landing */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+  opacity: .08;
+}
+html.dark body::before { opacity: .4; }
+
+/* Scrollbar — thin, brand */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--tx-d) 40%, transparent);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}
+
+/* Selection — gold highlight */
+::selection {
+  background: color-mix(in oklab, var(--gold) 25%, transparent);
+  color: var(--gold);
+}
+html.dark ::selection {
+  background: rgba(200,168,74,.2);
+  color: var(--gold-l);
+}
+
+/* Numeric tabular figures for monospace */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Address hover highlight — all matching data-address nodes on the page light up together */
+.address-highlight {
+  background: color-mix(in oklab, var(--gold) 12%, transparent);
+  outline: 1px solid color-mix(in oklab, var(--gold) 25%, transparent);
+  border-radius: 4px;
+}
+
+/* ===== REVEAL ===== */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(28px); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+.animate-fade-in { animation: fade-up 600ms cubic-bezier(.25,1,.5,1) both; }
+.anim-hero-1 { animation: fade-up 1s .1s cubic-bezier(.25,1,.5,1) both; }
+.anim-hero-2 { animation: fade-up 1s .3s cubic-bezier(.25,1,.5,1) both; }
+.anim-hero-3 { animation: fade-up 1s .5s cubic-bezier(.25,1,.5,1) both; }
+.anim-hero-4 { animation: fade-up 1s .7s cubic-bezier(.25,1,.5,1) both; }
+
+/* Live dot pulse */
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(126,200,164,.4); }
+  50% { opacity: .7; box-shadow: 0 0 0 6px transparent; }
+}
+.animate-pulse-live { animation: pulse-live 2s infinite; }
+
+/* Ticker marquee — seamless left-drift (two copies, 0 → -50% so copy #2 lands where #1 started) */
+@keyframes marquee-drift {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee-drift 45s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee { animation: none; }
+}
+
+/* Smooth transitions between themes — widened so every surface (cards, borders, text, svgs)
+   cross-fades together instead of a staggered flash. */
+html, body, header, main, footer, nav, aside, section, article,
+.bg-card, .bg-background, .bg-muted, .bg-primary,
+.text-foreground, .text-muted-foreground, .text-primary,
+.border-border, .border-border\/60, .border-primary,
+svg, input, button, select, textarea {
+  transition: background-color 280ms cubic-bezier(.4,0,.2,1),
+              border-color 280ms cubic-bezier(.4,0,.2,1),
+              color 280ms cubic-bezier(.4,0,.2,1),
+              fill 280ms cubic-bezier(.4,0,.2,1),
+              stroke 280ms cubic-bezier(.4,0,.2,1);
+}
+/* Respect reduced-motion users */
+@media (prefers-reduced-motion: reduce) {
+  html, body, header, main, footer, nav, aside, section, article,
+  .bg-card, .bg-background, .bg-muted, .bg-primary,
+  .text-foreground, .text-muted-foreground, .text-primary,
+  .border-border, .border-border\/60, .border-primary,
+  svg, input, button, select, textarea { transition: none; }
+}
+
+/* ===== Zebra + row-hover table utilities ===== */
+tbody[data-zebra] > tr:nth-child(odd) {
+  background: color-mix(in oklab, var(--foreground) 2%, transparent);
+}
+tbody.row-hover > tr {
+  transition: background 160ms ease;
+}
+tbody.row-hover > tr:hover {
+  background: color-mix(in oklab, var(--gold) 6%, transparent);
+}
+
+/* ===== Editorial utilities ===== */
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6875rem; /* 11px */
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--tx-d);
+  font-weight: 400;
+}
+.font-serif { font-family: 'Playfair Display', serif; }
+
+/* ===== Branded skeleton shimmer — replaces shadcn's grey pulse ===== */
+@keyframes shimmer {
+  0% { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+.shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--gold) 8%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 150% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* ===== Brand focus ring — gold halo on keyboard focus across the app ===== */
+*:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--gold) 60%, transparent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+[role="button"]:focus-visible,
+[role="radio"]:focus-visible {
+  outline-color: var(--gold);
+}
+
+/* Card hover lift — subtle y-axis translate for interactive cards */
+.card-lift {
+  transition: transform 200ms cubic-bezier(.25,1,.5,1), border-color 200ms ease, box-shadow 200ms ease;
+}
+.card-lift:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in oklab, var(--gold) 22%, var(--brd));
+  box-shadow: 0 8px 24px -16px color-mix(in oklab, var(--gold) 40%, transparent);
+}
+
+/* ===== Card corner-line hover (landing-style) ===== */
+.corner-lines {
+  position: relative;
+}
+.corner-lines::before,
+.corner-lines::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: linear-gradient(to right, var(--gold), transparent);
+  opacity: 0;
+  transition: opacity 500ms, width 500ms, height 500ms;
+}
+.corner-lines::before {
+  width: 0;
+  height: 1px;
+}
+.corner-lines::after {
+  width: 1px;
+  height: 0;
+  background: linear-gradient(to bottom, var(--gold), transparent);
+}
+.corner-lines:hover::before {
+  opacity: .6;
+  width: 60px;
+}
+.corner-lines:hover::after {
+  opacity: .6;
+  height: 100%;
+}
