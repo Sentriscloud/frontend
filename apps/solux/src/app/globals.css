@@ -1,86 +1,266 @@
 @import "tailwindcss";
 
-/* Solux dark navy palette — shared with the Solux mobile wallet
-   (see sentrix-wallet-mobile lib/theme/app_colors.dart). */
+/* Solux — Sentrix Chain wallet
+   Editorial luxury × technical precision.
+   Charcoal black background, bronze-gold accent, Playfair Display for hero
+   moments, Geist Mono for hashes / addresses / amounts. */
+/* ── Theme: Onyx — polished onyx stone + antique brass ───────── */
 :root {
-  /* Backgrounds */
-  --bg:            #030712;
-  --bg-elevated:   #0A0F1A;
-  --surface:       #0D1426;
-  --surface-high:  #0F1A2E;
+  /* Backgrounds — onyx stone, not pure black */
+  --bk:            #0a0a0d;
+  --bk-2:          #131317;
+  --sf:            #1c1c22;
+  --sf-2:          #25252d;
+  --sf-3:          #30303a;
 
-  /* Glass overlays */
-  --glass:         rgba(255, 255, 255, 0.04);
-  --glass-border:  rgba(255, 255, 255, 0.08);
-  --glass-hover:   rgba(255, 255, 255, 0.06);
+  /* Borders — visible but restrained */
+  --brd:           rgba(244, 240, 224, 0.10);
+  --brd-s:         rgba(196, 154, 78, 0.32);
 
-  /* Text */
-  --text:          #F1F5F9;
-  --text-2:        #8494A7;
-  --text-muted:    #7A8A9A;
-  --text-dim:      #5A6A7A;
+  /* Text — warm cream, not stark white */
+  --tx:            #f4f0e0;
+  --tx-2:          #b5b0a0;
+  --tx-m:          #888578;
+  --tx-d:          #5a584f;
 
-  /* Candy accents */
-  --pink:          #EC4899;
-  --pink-light:    #F472B6;
-  --violet:        #A855F7;
-  --violet-light:  #C084FC;
-  --indigo:        #6366F1;
-  --indigo-light:  #818CF8;
-  --blue:          #3B82F6;
-  --cyan:          #22D3EE;
+  /* Brand accent — antique brass (not yellow gold) */
+  --gold:          #c49a4e;
+  --gold-l:        #dbb46c;
+  --gold-d:        #9a7a3a;
+  --gold-bg:       rgba(196, 154, 78, 0.14);
+  --gold-bg-s:     rgba(196, 154, 78, 0.28);
+  --gold-glow:     rgba(196, 154, 78, 0.30);
 
-  /* Semantic */
-  --emerald:       #10B981;
-  --emerald-bg:    rgba(16, 185, 129, 0.12);
-  --danger:        #F43F5E;
-  --danger-bg:     rgba(244, 63, 94, 0.12);
-  --warning:       #F59E0B;
-
-  /* Legacy aliases for any remaining inline-styled refs */
-  --card:          var(--surface);
-  --card-border:   var(--glass-border);
-  --input-bg:      var(--surface-high);
-  --input-border:  var(--glass-border);
-  --text-secondary:var(--text-2);
+  /* Status — muted, editorial */
+  --green:         #6ba56f;
+  --green-bg:      rgba(107, 165, 111, 0.14);
+  --red:           #d46659;
+  --red-bg:        rgba(212, 102, 89, 0.14);
 
   color-scheme: dark;
 }
 
+/* ── Theme: Bordeaux — oxblood wine + cordovan leather ───────── */
+/* References: Patek Philippe maroon dial; cordovan boot leather;
+   aged Bordeaux wine. Masculine, warm, library-of-wealth. */
+:root[data-theme="colorful"] {
+  --bk:            #150709;
+  --bk-2:          #1d0a10;
+  --sf:            #2a1218;
+  --sf-2:          #381820;
+  --sf-3:          #4a1f2c;
+  --brd:           rgba(244, 232, 214, 0.10);
+  --brd-s:         rgba(196, 86, 74, 0.34);
+  --tx:            #f4e8d4;
+  --tx-2:          #c8b59a;
+  --tx-m:          #98856e;
+  --tx-d:          #645548;
+  --gold:          #c4564a;
+  --gold-l:        #dc6f5e;
+  --gold-d:        #983c33;
+  --gold-bg:       rgba(196, 86, 74, 0.14);
+  --gold-bg-s:     rgba(196, 86, 74, 0.28);
+  --gold-glow:     rgba(196, 86, 74, 0.32);
+  --green:         #8ba872;
+  --green-bg:      rgba(139, 168, 114, 0.14);
+  --red:           #d63a30;
+  --red-bg:        rgba(214, 58, 48, 0.14);
+}
+
+/* ── Theme: Newsprint — Financial Times salmon paper ─────────── */
+/* References: Financial Times salmon-pink paper #FFF1E5 (exact),
+   warm ink, terracotta editorial accent. The unmistakable look of
+   a serious financial newspaper. */
+:root[data-theme="light"] {
+  --bk:            #fff1e5;
+  --bk-2:          #f5e2cc;
+  --sf:            #fff8ee;
+  --sf-2:          #f9e8d2;
+  --sf-3:          #ebd3b4;
+  --brd:           rgba(40, 30, 20, 0.16);
+  --brd-s:         rgba(143, 65, 50, 0.40);
+  --tx:            #2a2520;
+  --tx-2:          #555049;
+  --tx-m:          #847b6d;
+  --tx-d:          #a89888;
+  --gold:          #8f4132;
+  --gold-l:        #ad5238;
+  --gold-d:        #6a2e21;
+  --gold-bg:       rgba(143, 65, 50, 0.10);
+  --gold-bg-s:     rgba(143, 65, 50, 0.22);
+  --gold-glow:     rgba(143, 65, 50, 0.18);
+  --green:         #466b46;
+  --green-bg:      rgba(70, 107, 70, 0.12);
+  --red:           #a82e1c;
+  --red-bg:        rgba(168, 46, 28, 0.10);
+  color-scheme: light;
+}
+
+/* ── Theme: Sentris — SentrisCloud brand emerald ──────────────── */
+/* Mirrors sentriscloud.com landing palette exactly: canvas
+   #0a0a0c, ink #f5f5f4, emerald-500 accent. Cohesive across the
+   SentrisCloud product line — same visual language as the marketing
+   site, scan, faucet, etc. */
+:root[data-theme="sentris"] {
+  --bk:            #0a0a0c;
+  --bk-2:          #111114;
+  --sf:            #16161a;
+  --sf-2:          #1c1c1f;
+  --sf-3:          #27272a;
+  --brd:           rgba(245, 245, 244, 0.08);
+  --brd-s:         rgba(16, 185, 129, 0.32);
+  --tx:            #f5f5f4;
+  --tx-2:          #d6d3d1;
+  --tx-m:          #a8a29e;
+  --tx-d:          #78716c;
+  --gold:          #10b981;
+  --gold-l:        #34d399;
+  --gold-d:        #047857;
+  --gold-bg:       rgba(16, 185, 129, 0.12);
+  --gold-bg-s:     rgba(16, 185, 129, 0.26);
+  --gold-glow:     rgba(16, 185, 129, 0.30);
+  --green:         #6ee7b7;
+  --green-bg:      rgba(110, 231, 183, 0.14);
+  --red:           #ef4444;
+  --red-bg:        rgba(239, 68, 68, 0.14);
+}
+
+/* ── Theme: Midnight — Patek dial + chronograph amber ────────── */
+/* References: Patek Philippe Nautilus 5712 deep blue dial; warm
+   amber chronograph hands and lume; Vacheron Overseas blue.
+   Watchmaker sophistication, not crypto neon. */
+:root[data-theme="ocean"] {
+  --bk:            #0a1228;
+  --bk-2:          #101a3a;
+  --sf:            #182547;
+  --sf-2:          #1f3060;
+  --sf-3:          #2a4080;
+  --brd:           rgba(232, 220, 200, 0.10);
+  --brd-s:         rgba(224, 160, 80, 0.32);
+  --tx:            #f0ecde;
+  --tx-2:          #b5b0a0;
+  --tx-m:          #807c70;
+  --tx-d:          #555048;
+  --gold:          #e0a050;
+  --gold-l:        #f0bc6a;
+  --gold-d:        #b07c34;
+  --gold-bg:       rgba(224, 160, 80, 0.14);
+  --gold-bg-s:     rgba(224, 160, 80, 0.28);
+  --gold-glow:     rgba(224, 160, 80, 0.30);
+  --green:         #6cc09a;
+  --green-bg:      rgba(108, 192, 154, 0.14);
+  --red:           #ec6a5c;
+  --red-bg:        rgba(236, 106, 92, 0.14);
+}
+
+html, body { background: var(--bk); color: var(--tx); }
+
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Subtle ambient glow (per-theme accent) + fine noise grid */
+  background-image:
+    radial-gradient(ellipse 70% 50% at 50% -8%, var(--gold-bg) 0%, transparent 60%),
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.018) 1px, transparent 0);
+  background-size: auto, 22px 22px;
+  background-attachment: fixed;
 }
 
-/* Remove number input spinners */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+/* Light theme: invert noise dots from white→ink so they remain visible */
+:root[data-theme="light"] body {
+  background-image:
+    radial-gradient(ellipse 70% 50% at 50% -8%, var(--gold-bg) 0%, transparent 60%),
+    radial-gradient(circle at 1px 1px, rgba(20,15,8,0.025) 1px, transparent 0);
 }
+
+/* ── Typography ────────────────────────────────────────── */
+.font-serif { font-family: var(--font-playfair), Georgia, 'Times New Roman', serif; }
+.font-mono  { font-family: var(--font-geist-mono), ui-monospace, 'IBM Plex Mono', monospace; }
+
+.tab-num { font-variant-numeric: tabular-nums; }
+
+/* Editorial eyebrow label — mono caps, tracked, dim */
+.eyebrow {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--tx-d);
+  font-weight: 500;
+}
+
+/* ── Signature components ──────────────────────────────── */
+
+/* Hover gold corner-accents on premium cards */
+.corner-lines { position: relative; }
+.corner-lines::before,
+.corner-lines::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.corner-lines::before {
+  top: -1px; left: -1px;
+  border-width: 1px 0 0 1px;
+}
+.corner-lines::after {
+  bottom: -1px; right: -1px;
+  border-width: 0 1px 1px 0;
+}
+.corner-lines:hover::before,
+.corner-lines:hover::after { opacity: 1; }
+.corner-lines.always::before,
+.corner-lines.always::after { opacity: 1; }
+
+/* Live pulse */
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.animate-pulse-live { animation: pulse-live 2s ease-in-out infinite; }
+
+/* Fade-up reveal */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.45s ease-out both; }
+.delay-1 { animation-delay: 0.06s; }
+.delay-2 { animation-delay: 0.12s; }
+.delay-3 { animation-delay: 0.18s; }
+.delay-4 { animation-delay: 0.24s; }
+
+/* Skeleton shimmer for loading numbers */
+@keyframes shimmer {
+  0%   { background-position: -120% 0; }
+  100% { background-position: 220% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--sf) 0%, var(--sf-2) 40%, var(--sf) 80%);
+  background-size: 220% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* Number input spinner removal */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
 
-/* Solux brand gradients */
-.gradient-candy {
-  background-image: linear-gradient(90deg, var(--pink), var(--violet), var(--indigo));
-}
-.gradient-balance {
-  background-image: linear-gradient(135deg, #1E0A35 0%, #101018 50%, #0C1226 100%);
-}
-.gradient-emerald-cyan {
-  background-image: linear-gradient(135deg, var(--emerald), var(--cyan));
-}
-.gradient-violet-pink {
-  background-image: linear-gradient(135deg, var(--violet), var(--pink));
-}
+/* Selection */
+::selection { background: var(--gold-bg-s); color: var(--gold-l); }
 
-/* Subtle hex-grid texture (placeholder — could swap to canvas later) */
-.hex-texture {
-  background-color: var(--surface);
-  background-image:
-    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
-  background-size: 18px 18px;
-}
+/* Scrollbar — minimal */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--brd-s); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--tx-d); }

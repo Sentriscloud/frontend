@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useWalletStore } from '@/lib/store';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, Copy, Check, Download } from 'lucide-react';
+import { ArrowLeft, Copy, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Receive({ onBack }: { onBack: () => void }) {
@@ -19,46 +19,49 @@ export default function Receive({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#030712' }}>
+    <div className="min-h-screen flex justify-center px-5 py-8">
       <div className="w-full max-w-sm">
-        <button onClick={onBack} className="flex items-center gap-2 mb-5 text-sm font-medium transition-colors active:scale-95" style={{ color: '#8494A7' }}>
-          <ArrowLeft className="w-4 h-4" /> Back
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 mb-6 text-xs font-mono uppercase tracking-wider text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back
         </button>
 
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#0D1426', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, #10b981, #0d9488)' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                <Download className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-white">Receive</h2>
-                <p className="text-white/70 text-xs">Your address accepts SRX and SRC-20 tokens</p>
-              </div>
+        <div className="mb-6 animate-fade-up delay-1">
+          <div className="eyebrow">Inbound</div>
+          <h1 className="font-serif text-3xl text-[var(--tx)] mt-1">Receive SRX</h1>
+          <p className="text-sm text-[var(--tx-m)] mt-2">
+            Share this address with the sender. Works for native SRX and any SRC-20 tokens on Sentrix Chain.
+          </p>
+        </div>
+
+        <div className="corner-lines rounded-2xl bg-[var(--sf)] border border-[var(--brd)] p-6 animate-fade-up delay-2">
+          <div className="flex justify-center mb-5">
+            <div className="rounded-xl bg-[var(--bk)] border border-[var(--brd)] p-4">
+              {address && (
+                <QRCodeSVG
+                  value={address}
+                  size={192}
+                  bgColor="transparent"
+                  fgColor="#f1f1f3"
+                  level="M"
+                />
+              )}
             </div>
           </div>
 
-          <div className="px-6 py-6 space-y-5">
-            <div className="flex justify-center">
-              <div className="p-4 rounded-2xl" style={{ background: '#0D1426', border: '1px solid rgba(255,255,255,0.08)' }}>
-                {address && <QRCodeSVG value={address} size={200} bgColor="#0D1426" fgColor="#F1F5F9" level="M" />}
-              </div>
-            </div>
-
-            <div className="rounded-xl p-4" style={{ background: '#0F1A2E' }}>
-              <p className="text-xs font-medium mb-2" style={{ color: '#8494A7' }}>Your Address</p>
-              <p className="text-sm font-mono break-all" style={{ color: '#F1F5F9' }}>{address}</p>
-            </div>
-
-            <button
-              onClick={copy}
-              className="w-full py-3.5 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 4px 16px rgba(16,185,129,0.3)' }}
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'Copied' : 'Copy Address'}
-            </button>
+          <div className="rounded-lg bg-[var(--bk-2)] border border-[var(--brd)] p-3 mb-4">
+            <div className="eyebrow mb-1.5">Your address</div>
+            <p className="text-xs font-mono break-all text-[var(--tx)] leading-relaxed">{address}</p>
           </div>
+
+          <button
+            onClick={copy}
+            className="w-full py-3 rounded-lg text-sm font-semibold bg-[var(--gold)] text-[var(--bk)] hover:bg-[var(--gold-l)] transition-colors active:scale-[0.99] flex items-center justify-center gap-2"
+          >
+            {copied ? <><Check className="w-4 h-4" /> Copied</> : <><Copy className="w-4 h-4" /> Copy address</>}
+          </button>
         </div>
       </div>
     </div>

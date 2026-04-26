@@ -1,50 +1,149 @@
 'use client';
 
-import { useState } from 'react';
-import { useWalletStore } from '@/lib/store';
-import { getAddressInfo, getNonce, sendTransaction } from '@/lib/api';
+import { useState, useEffect, useRef } from 'react';
+import { useWalletStore, useAddressBookStore, useSettingsStore, useNonceStore, useNotificationStore, NETWORKS } from '@/lib/store';
+import {
+  getAddressInfo, getNonce, sendTransaction, getTransactionDetail, getFinalizedHeight,
+} from '@/lib/api';
 import { signTransaction, isValidAddress } from '@/lib/crypto';
-import { ArrowLeft, Loader2, Check, Copy, Send, Clipboard } from 'lucide-react';
+import { parseSRXToSentri, sentriToSRX, SENTRI, MIN_FEE, AmountOverflowError } from '@/lib/amount';
+import { useEscape } from '@/lib/useEscape';
+import { ArrowLeft, Loader2, Check, Copy, Clipboard, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 7119);
-const MIN_FEE = 10000;
-const SENTRI = 100_000_000;
+type TxStatus = 'pending' | 'in-block' | 'finalized' | 'expired' | 'orphaned';
 
-function parseSRXToSentri(input: string): number {
-  const [whole = '0', decimal = ''] = input.split('.');
-  const paddedDecimal = decimal.padEnd(8, '0').slice(0, 8);
-  return parseInt(whole + paddedDecimal, 10);
-}
-
-function sentriToSRX(sentri: number): string {
-  const whole = Math.floor(sentri / SENTRI);
-  const frac = String(sentri % SENTRI).padStart(8, '0').replace(/0+$/, '');
-  return frac ? `${whole}.${frac}` : `${whole}`;
-}
+// Match chain MEMPOOL_MAX_AGE_SECS (1h). After this, the chain has dropped
+// the tx from mempool and it will not be included. Stop polling.
+const PENDING_TIMEOUT_MS = 60 * 60 * 1000;
 
 export default function SendSRX({ onBack }: { onBack: () => void }) {
-  const { address, privateKey } = useWalletStore();
+  const { address, privateKey, watchOnly } = useWalletStore();
+  const { entries: addressBook } = useAddressBookStore();
+  const { hideBalances, network } = useSettingsStore();
+  const { bumpNonce, getLocalNext } = useNonceStore();
+  const { push: pushNotif, update: updateNotif } = useNotificationStore();
+  const notifIdRef = useRef<string | null>(null);
+  const net = NETWORKS[network];
+  const CHAIN_ID = net.chainId;
   const [toAddress, setToAddress] = useState('');
+  const [showBookPicker, setShowBookPicker] = useState(false);
   const [amount, setAmount] = useState('');
   const [sending, setSending] = useState(false);
   const [txid, setTxid] = useState('');
+  const [txStatus, setTxStatus] = useState<TxStatus>('pending');
+  const [txBlockHeight, setTxBlockHeight] = useState<number | null>(null);
   const [txCopied, setTxCopied] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [balanceSentri, setBalanceSentri] = useState<number | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Pin the network the tx was broadcast on. If user switches mid-tracking,
+  // we mark as orphaned (can't poll the new network for an old txid).
+  const txNetworkRef = useRef<string | null>(null);
+  // Snapshot of amountSentri at broadcast — used by the finalize notification
+  // so it shows the correct amount even after resetForm clears `amount` state.
+  const broadcastAmountRef = useRef<number>(0);
 
-  const loadMax = async () => {
+  useEscape(showConfirm, () => setShowConfirm(false));
+  useEscape(showBookPicker, () => setShowBookPicker(false));
+
+  useEffect(() => {
     if (!address) return;
-    try {
-      const info = await getAddressInfo(address);
-      const balSentri = info?.balance_sentri ?? Math.round((info?.balance_srx ?? 0) * SENTRI);
-      const maxSentri = Math.max(0, balSentri - MIN_FEE);
-      if (maxSentri > 0) setAmount(sentriToSRX(maxSentri));
-    } catch { /* ignore */ }
+    let cancelled = false;
+    setBalanceSentri(null); // reset so stale balance from prev network doesn't flash
+    getAddressInfo(address)
+      .then((info) => {
+        if (cancelled) return;
+        const bal = info?.balance_sentri ?? Math.round((info?.balance_srx ?? 0) * SENTRI);
+        setBalanceSentri(bal);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [address, network]);
+
+  // ── Pending tx tracker — poll until in block + finalized ─────────────
+  useEffect(() => {
+    if (!txid) return;
+    setTxStatus('pending');
+    setTxBlockHeight(null);
+
+    const startedAt = Date.now();
+    const stopPolling = () => {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    };
+
+    // If user switched network while a tx was tracking, the new API won't
+    // know about the old txid. Mark orphaned so we stop confusing them.
+    if (txNetworkRef.current && txNetworkRef.current !== network) {
+      setTxStatus('orphaned');
+      stopPolling();
+      return;
+    }
+    txNetworkRef.current = network;
+
+    const poll = async () => {
+      if (Date.now() - startedAt > PENDING_TIMEOUT_MS) {
+        setTxStatus((s) => s === 'pending' ? 'expired' : s);
+        if (address && notifIdRef.current) {
+          updateNotif(address, notifIdRef.current, {
+            kind: 'tx-expired',
+            title: 'Transaction expired',
+            body: 'Never landed in a block — your nonce did not advance',
+            read: false,
+          });
+        }
+        stopPolling();
+        return;
+      }
+      try {
+        const detail = await getTransactionDetail(txid);
+        if (!detail) return;
+        const blockIdx = detail.block_index ?? detail.block?.index;
+        if (typeof blockIdx === 'number') {
+          setTxBlockHeight(blockIdx);
+          setTxStatus('in-block');
+          if (address && notifIdRef.current) {
+            updateNotif(address, notifIdRef.current, {
+              kind: 'tx-confirmed',
+              title: `In block #${blockIdx.toLocaleString()}`,
+              blockHeight: blockIdx,
+            });
+          }
+          try {
+            const fh = await getFinalizedHeight();
+            if ((fh.finalized_height ?? 0) >= blockIdx) {
+              setTxStatus('finalized');
+              if (address && notifIdRef.current) {
+                updateNotif(address, notifIdRef.current, {
+                  kind: 'tx-finalized',
+                  title: `Sent ${sentriToSRX(broadcastAmountRef.current)} SRX`,
+                  body: `Finalized at block #${blockIdx.toLocaleString()}`,
+                  read: false,
+                });
+              }
+              stopPolling();
+            }
+          } catch { /* keep polling */ }
+        }
+      } catch { /* keep polling */ }
+    };
+
+    poll();
+    pollRef.current = setInterval(poll, 1500);
+    return stopPolling;
+  }, [txid, network]);
+
+  const loadMax = () => {
+    if (balanceSentri === null) return;
+    const maxSentri = Math.max(0, balanceSentri - MIN_FEE);
+    if (maxSentri > 0) setAmount(sentriToSRX(maxSentri));
   };
 
   const handlePaste = async () => {
-    const text = await navigator.clipboard.readText();
-    setToAddress(text.trim());
+    try {
+      const text = await navigator.clipboard.readText();
+      setToAddress(text.trim());
+    } catch { /* no clipboard access */ }
   };
 
   const copyTxid = () => {
@@ -53,28 +152,53 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
     setTimeout(() => setTxCopied(false), 2000);
   };
 
-  const feeDisplay = sentriToSRX(MIN_FEE);
-  const amountSentri = amount ? parseSRXToSentri(amount) : 0;
-  const totalDisplay = amountSentri > 0 ? sentriToSRX(amountSentri + MIN_FEE) : '0';
+  const feeDisplay     = sentriToSRX(MIN_FEE);
+  let amountSentri = 0;
+  let amountError: string | null = null;
+  if (amount) {
+    try { amountSentri = parseSRXToSentri(amount); }
+    catch (e) { amountError = e instanceof AmountOverflowError ? e.message : 'Invalid amount'; }
+  }
+  const totalDisplay   = amountSentri > 0 ? sentriToSRX(amountSentri + MIN_FEE) : '0';
+  const balanceDisplay = balanceSentri !== null
+    ? (hideBalances ? '••••' : sentriToSRX(balanceSentri))
+    : '—';
 
   const resetForm = () => {
     setTxid('');
     setToAddress('');
     setAmount('');
+    setTxStatus('pending');
+    setTxBlockHeight(null);
   };
 
   const handleSend = () => {
+    if (watchOnly) {
+      toast.error('Watch-only wallet cannot send');
+      return;
+    }
     if (!address || !privateKey) return;
     if (!isValidAddress(toAddress)) {
-      toast.error('Invalid address');
+      toast.error('Invalid recipient address');
       return;
     }
     if (toAddress.toLowerCase() === address.toLowerCase()) {
       toast.error('Cannot send to your own address');
       return;
     }
+    if (amountError) {
+      toast.error(amountError, { duration: 6000 });
+      return;
+    }
     if (isNaN(amountSentri) || amountSentri <= 0) {
       toast.error('Enter a valid amount');
+      return;
+    }
+    if (balanceSentri !== null && amountSentri + MIN_FEE > balanceSentri) {
+      toast.error(
+        `Insufficient balance. Have ${sentriToSRX(balanceSentri)} SRX, need ${sentriToSRX(amountSentri + MIN_FEE)} SRX (incl. fee)`,
+        { duration: 6000 },
+      );
       return;
     }
     setShowConfirm(true);
@@ -85,189 +209,362 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
     setShowConfirm(false);
     setSending(true);
     try {
-      const nonce = await getNonce(address);
+      const serverNonce = await getNonce(address);
+      const localNext = getLocalNext(network, address);
+      // Use whichever is higher: trust on-chain nonce by default, but if we
+      // have a more recent local pending, jump ahead to avoid InvalidNonce.
+      const nonce = localNext !== null && localNext > serverNonce ? localNext : serverNonce;
       const timestamp = Math.floor(Date.now() / 1000);
 
+      const toLower = toAddress.toLowerCase();
+      const fromLower = address.toLowerCase();
+
       const payload = {
-        from: address, to: toAddress, amount: amountSentri, fee: MIN_FEE,
+        from: fromLower, to: toLower, amount: amountSentri, fee: MIN_FEE,
         nonce, data: '', timestamp, chain_id: CHAIN_ID,
       };
 
-      const { signature, txid: computedTxid, public_key: publicKey } = await signTransaction(payload, privateKey);
+      const { signature, txid: computedTxid, public_key: publicKey } =
+        await signTransaction(payload, privateKey);
 
       const result = await sendTransaction({
-        txid: computedTxid, from_address: address, to_address: toAddress,
+        txid: computedTxid, from_address: fromLower, to_address: toLower,
         amount: amountSentri, fee: MIN_FEE, nonce, data: '', timestamp,
         chain_id: CHAIN_ID, signature, public_key: publicKey,
       });
 
       if (result.success) {
+        bumpNonce(network, address, nonce);
+        broadcastAmountRef.current = amountSentri;
         setTxid(computedTxid);
-        toast.success('Transaction sent!');
+        toast.success('Transaction broadcast');
+        notifIdRef.current = pushNotif(address, {
+          kind: 'tx-broadcast',
+          title: `Sending ${sentriToSRX(amountSentri)} SRX`,
+          body: `To ${toLower.slice(0, 6)}…${toLower.slice(-4)}`,
+          amount: amountSentri,
+          txid: computedTxid,
+        });
+        getAddressInfo(address)
+          .then((info) => {
+            const bal = info?.balance_sentri ?? Math.round((info?.balance_srx ?? 0) * SENTRI);
+            setBalanceSentri(bal);
+          })
+          .catch(() => {});
       } else {
-        toast.error(result.error || 'Failed');
+        toast.error(result.error || 'Transaction rejected', { duration: 8000 });
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to send');
+      toast.error(err instanceof Error ? err.message : 'Failed to send', { duration: 8000 });
     } finally {
       setSending(false);
     }
   };
 
+  const recipientLabel = (() => {
+    if (!toAddress) return null;
+    const e = addressBook.find((x) => x.address === toAddress.toLowerCase());
+    return e?.label;
+  })();
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#030712' }}>
+    <div className="min-h-screen flex justify-center px-5 py-8">
       <div className="w-full max-w-sm">
-        <button onClick={onBack} className="flex items-center gap-2 mb-5 text-sm font-medium transition-colors active:scale-95" style={{ color: '#8494A7' }}>
-          <ArrowLeft className="w-4 h-4" /> Back
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 mb-6 text-xs font-mono uppercase tracking-wider text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back
         </button>
 
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#0D1426', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          {/* Gradient Header */}
-          <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, #10b981, #0d9488)' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                <Send className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-white">Send SRX</h2>
-                <p className="text-white/70 text-xs">Native token transfer</p>
-              </div>
-            </div>
-          </div>
+        <div className="mb-6 animate-fade-up delay-1">
+          <div className="eyebrow">Native transfer</div>
+          <h1 className="font-serif text-3xl text-[var(--tx)] mt-1">Send SRX</h1>
+        </div>
 
-          <div className="px-6 py-5 space-y-4">
-            {/* To */}
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#8494A7' }}>Recipient</label>
-              <div className="relative">
-                <input
-                  value={toAddress}
-                  onChange={(e) => setToAddress(e.target.value)}
-                  placeholder="0x..."
-                  className="w-full rounded-xl p-3.5 pr-12 text-sm font-mono focus:outline-none transition-all"
-                  style={{ background: '#0F1A2E', border: '2px solid transparent', color: '#F1F5F9' }}
-                  onFocus={(e) => e.currentTarget.style.borderColor = '#10b981'}
-                  onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
-                />
-                <button onClick={handlePaste} className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center transition-all active:scale-90" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                  <Clipboard className="w-3.5 h-3.5" style={{ color: '#8494A7' }} />
-                </button>
-              </div>
-            </div>
-
-            {/* Amount */}
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#8494A7' }}>Amount</label>
-              <div className="relative">
-                <input
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  type="text"
-                  inputMode="decimal"
-                  className="w-full rounded-xl p-3.5 pr-16 text-sm focus:outline-none transition-all"
-                  style={{ background: '#0F1A2E', border: '2px solid transparent', color: '#F1F5F9' }}
-                  onFocus={(e) => e.currentTarget.style.borderColor = '#10b981'}
-                  onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
-                />
-                <button onClick={loadMax} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold px-2.5 py-1 rounded-lg transition-all active:scale-90" style={{ background: 'rgba(16,185,129,0.12)', color: '#059669' }}>
-                  MAX
-                </button>
-              </div>
-            </div>
-
-            {/* Fee/Total */}
-            <div className="rounded-xl p-4 space-y-2" style={{ background: '#030712' }}>
-              <div className="flex justify-between text-xs">
-                <span style={{ color: '#7A8A9A' }}>Network fee</span>
-                <span style={{ color: '#8494A7' }}>{feeDisplay} SRX</span>
-              </div>
-              <div className="flex justify-between text-sm pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <span className="font-medium" style={{ color: '#8494A7' }}>Total</span>
-                <span className="font-bold" style={{ color: '#F1F5F9' }}>{totalDisplay} SRX</span>
-              </div>
-            </div>
-
-            {/* Result */}
-            {txid ? (
-              <div className="space-y-3">
-                <div className="rounded-xl p-4" style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)' }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#10b981' }}>
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="text-sm font-bold" style={{ color: '#059669' }}>Sent!</span>
-                  </div>
-                  <button onClick={copyTxid} className="flex items-center gap-1 text-xs font-mono break-all transition-colors" style={{ color: '#34D399' }}>
-                    {txid.slice(0, 20)}...{txid.slice(-8)}
-                    {txCopied ? <Check className="w-3 h-3 shrink-0" /> : <Copy className="w-3 h-3 shrink-0" />}
-                  </button>
-                </div>
+        <div className="space-y-4 animate-fade-up delay-2">
+          {/* Recipient */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="eyebrow">Recipient</label>
+              {addressBook.length > 0 && (
                 <button
-                  onClick={resetForm}
-                  className="w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-95"
-                  style={{ background: '#0F1A2E', color: '#8494A7' }}
+                  onClick={() => setShowBookPicker(true)}
+                  className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors flex items-center gap-1"
                 >
-                  Send another
+                  <BookOpen className="w-3 h-3" /> Address book
                 </button>
-              </div>
-            ) : (
+              )}
+            </div>
+            <div className="relative">
+              <input
+                value={toAddress}
+                onChange={(e) => setToAddress(e.target.value)}
+                placeholder="0x…"
+                className="w-full rounded-lg p-3.5 pr-12 text-sm font-mono bg-[var(--sf)] border border-[var(--brd)] text-[var(--tx)] placeholder:text-[var(--tx-d)] focus:outline-none focus:border-[var(--gold-d)] transition-colors"
+              />
               <button
-                onClick={handleSend}
-                disabled={sending}
-                className="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 4px 16px rgba(16,185,129,0.3)' }}
+                onClick={handlePaste}
+                aria-label="Paste from clipboard"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-md flex items-center justify-center bg-[var(--sf-2)] hover:bg-[var(--sf-3)] transition-colors"
               >
-                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                {sending ? 'Sending...' : 'Send SRX'}
+                <Clipboard className="w-3.5 h-3.5 text-[var(--tx-m)]" />
               </button>
+            </div>
+            {recipientLabel && (
+              <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] mt-1.5">
+                ↳ {recipientLabel}
+              </p>
             )}
           </div>
+
+          {/* Amount */}
+          <div>
+            <div className="flex items-baseline justify-between mb-2">
+              <label className="eyebrow">Amount</label>
+              <span className="text-[10px] font-mono text-[var(--tx-d)]">
+                Balance <span className="text-[var(--gold)]">{balanceDisplay}</span> SRX
+              </span>
+            </div>
+            <div className="relative">
+              <input
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                type="text"
+                inputMode="decimal"
+                className="w-full rounded-lg p-3.5 pr-16 text-base font-mono bg-[var(--sf)] border border-[var(--brd)] text-[var(--tx)] placeholder:text-[var(--tx-d)] focus:outline-none focus:border-[var(--gold-d)] transition-colors"
+              />
+              <button
+                onClick={loadMax}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono uppercase tracking-wider px-2.5 py-1.5 rounded-md bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)] hover:bg-[var(--gold-bg-s)] transition-colors"
+              >
+                Max
+              </button>
+            </div>
+          </div>
+
+          {/* Fee / total */}
+          <div className="rounded-lg bg-[var(--bk-2)] border border-[var(--brd)] divide-y divide-[var(--brd)]">
+            <div className="flex justify-between items-baseline px-4 py-2.5">
+              <span className="text-[11px] text-[var(--tx-m)]">Network fee</span>
+              <span className="text-xs font-mono text-[var(--tx-2)] tab-num">{feeDisplay} SRX</span>
+            </div>
+            <div className="flex justify-between items-baseline px-4 py-2.5">
+              <span className="text-[11px] uppercase tracking-wider text-[var(--tx-m)] font-mono">Total</span>
+              <span className="text-sm font-mono text-[var(--tx)] tab-num">{totalDisplay} SRX</span>
+            </div>
+          </div>
+
+          {/* CTA / pending tracker */}
+          {txid ? (
+            <div className="space-y-3">
+              <PendingTracker
+                txid={txid}
+                status={txStatus}
+                blockHeight={txBlockHeight}
+                onCopy={copyTxid}
+                copied={txCopied}
+              />
+              <button
+                onClick={resetForm}
+                className="w-full py-3 rounded-lg text-sm font-medium bg-[var(--sf)] border border-[var(--brd)] text-[var(--tx-2)] hover:bg-[var(--sf-2)] transition-colors active:scale-[0.99]"
+              >
+                Send another
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleSend}
+              disabled={sending}
+              className="w-full py-3.5 rounded-lg text-sm font-semibold bg-[var(--gold)] text-[var(--bk)] hover:bg-[var(--gold-l)] transition-colors active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {sending ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing & broadcasting…</> : 'Review transaction'}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Confirm sheet */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
-          <div className="rounded-2xl p-6 max-w-sm w-full" style={{ background: '#0D1426', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: '#F1F5F9' }}>Confirm Transaction</h3>
-            <div className="space-y-3 mb-6">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70">
+          <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up">
+            <div className="px-5 pt-5 pb-2">
+              <div className="eyebrow mb-1">Confirm</div>
+              <h3 className="font-serif text-xl text-[var(--tx)]">Review &amp; sign</h3>
+            </div>
+            <div className="px-5 pb-5 space-y-3">
+              <NetworkBadge network={network} chainId={CHAIN_ID} label={net.label} accent={net.accent} />
               <div>
-                <span className="text-xs font-medium block mb-1" style={{ color: '#7A8A9A' }}>To</span>
-                <span className="text-sm font-mono break-all" style={{ color: '#F1F5F9' }}>{toAddress}</span>
+                <div className="eyebrow mb-1">To</div>
+                <p className="text-xs font-mono break-all text-[var(--tx)]">{toAddress}</p>
+                {recipientLabel && (
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] mt-1">{recipientLabel}</p>
+                )}
               </div>
-              <div className="flex justify-between">
-                <span style={{ color: '#7A8A9A' }}>Amount</span>
-                <span className="font-semibold" style={{ color: '#F1F5F9' }}>{amount} SRX</span>
-              </div>
-              <div className="flex justify-between">
-                <span style={{ color: '#7A8A9A' }}>Fee</span>
-                <span style={{ color: '#F1F5F9' }}>{feeDisplay} SRX</span>
-              </div>
-              <div className="flex justify-between pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <span className="font-semibold" style={{ color: '#8494A7' }}>Total</span>
-                <span className="font-bold" style={{ color: '#F1F5F9' }}>{totalDisplay} SRX</span>
+              <div className="rounded-lg bg-[var(--bk-2)] border border-[var(--brd)] divide-y divide-[var(--brd)]">
+                <Row label="Amount" value={`${amount} SRX`} />
+                <Row label="Network fee" value={`${feeDisplay} SRX`} />
+                <Row label="Total" value={`${totalDisplay} SRX`} bold />
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 px-5 pb-5">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all active:scale-95"
-                style={{ background: '#0F1A2E', color: '#8494A7' }}
+                className="flex-1 py-3 rounded-lg text-sm font-medium bg-[var(--bk-2)] border border-[var(--brd)] text-[var(--tx-2)] hover:bg-[var(--sf-2)] transition-colors active:scale-[0.99]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmedSend}
-                className="flex-1 py-3 rounded-xl text-sm font-bold text-white transition-all active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 4px 14px rgba(16,185,129,0.35)' }}
+                className="flex-1 py-3 rounded-lg text-sm font-semibold bg-[var(--gold)] text-[var(--bk)] hover:bg-[var(--gold-l)] transition-colors active:scale-[0.99]"
               >
-                Confirm &amp; Send
+                Confirm &amp; sign
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Address book picker */}
+      {showBookPicker && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70">
+          <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[70vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <div>
+                <div className="eyebrow">Address book</div>
+                <h2 className="font-serif text-lg text-[var(--tx)]">Pick recipient</h2>
+              </div>
+              <button onClick={() => setShowBookPicker(false)} className="text-[10px] font-mono uppercase tracking-wider text-[var(--tx-m)] hover:text-[var(--tx)]">
+                Close
+              </button>
+            </div>
+            <div className="divide-y divide-[var(--brd)]">
+              {addressBook.map((e) => (
+                <button
+                  key={e.address}
+                  onClick={() => { setToAddress(e.address); setShowBookPicker(false); }}
+                  className="w-full text-left px-5 py-3 hover:bg-[var(--sf-2)] transition-colors"
+                >
+                  <p className="text-sm text-[var(--tx)]">{e.label}</p>
+                  <p className="text-[11px] font-mono text-[var(--tx-d)] mt-0.5 truncate">{e.address}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PendingTracker({
+  txid, status, blockHeight, onCopy, copied,
+}: {
+  txid: string; status: TxStatus; blockHeight: number | null; onCopy: () => void; copied: boolean;
+}) {
+  const phases: Array<{ key: 'pending' | 'in-block' | 'finalized'; label: string }> = [
+    { key: 'pending',    label: 'Broadcast' },
+    { key: 'in-block',   label: 'In block' },
+    { key: 'finalized',  label: 'Finalized' },
+  ];
+  const currentIdx = phases.findIndex((p) => p.key === status);
+  const expired = status === 'expired';
+  const orphaned = status === 'orphaned';
+  const error = expired || orphaned;
+
+  const containerClass = error
+    ? 'rounded-lg p-4 bg-[var(--red-bg)] border border-[var(--red)]/30'
+    : 'rounded-lg p-4 bg-[var(--gold-bg)] border border-[var(--gold-bg-s)]';
+  const accent = error ? 'text-[var(--red)]' : 'text-[var(--gold)]';
+  const accentLight = error ? 'text-[var(--red)]' : 'text-[var(--gold-l)]';
+
+  return (
+    <div className={containerClass}>
+      <div className="flex items-center gap-2 mb-3">
+        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+          status === 'finalized' ? 'bg-[var(--gold)]' :
+          error                  ? 'bg-[var(--red)]' :
+                                    'bg-[var(--gold-bg-s)]'
+        }`}>
+          {status === 'finalized'
+            ? <Check className="w-3 h-3 text-[var(--bk)]" />
+            : error
+              ? <span className="text-[10px] font-bold text-white">!</span>
+              : <span className="w-2 h-2 rounded-full bg-[var(--gold)] animate-pulse-live" />}
+        </div>
+        <span className={`text-xs font-mono uppercase tracking-wider ${accent}`}>
+          {orphaned               ? 'Network changed — tx pinned to previous chain' :
+           expired                ? 'Expired — never landed in a block' :
+           status === 'pending'   ? 'Broadcast — awaiting block' :
+           status === 'in-block'  ? `In block #${blockHeight} — confirming` :
+                                    `Finalized at block #${blockHeight}`}
+        </span>
+      </div>
+
+      {!error && (
+        <div className="flex items-center gap-2 mb-3">
+          {phases.map((p, i) => (
+            <div key={p.key} className="flex-1 flex flex-col gap-1">
+              <div className={`h-1 rounded-full ${
+                i <= currentIdx ? 'bg-[var(--gold)]' : 'bg-[var(--sf-3)]'
+              }`} />
+              <span className={`text-[9px] font-mono uppercase tracking-wider text-center ${
+                i <= currentIdx ? 'text-[var(--gold-l)]' : 'text-[var(--tx-d)]'
+              }`}>
+                {p.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {expired && (
+        <p className="text-[11px] text-[var(--tx-2)] mb-3 leading-relaxed">
+          The chain dropped this transaction from the mempool after one hour. Submit a new transaction with the same details to retry — your nonce hasn&apos;t advanced.
+        </p>
+      )}
+
+      {orphaned && (
+        <p className="text-[11px] text-[var(--tx-2)] mb-3 leading-relaxed">
+          You switched network while this transaction was tracking. Switch back to the previous chain to verify its status.
+        </p>
+      )}
+
+      <button onClick={onCopy} className={`flex items-center gap-1.5 text-[11px] font-mono break-all hover:opacity-80 transition-opacity ${accentLight}`}>
+        <span className="break-all">{txid.slice(0, 22)}…{txid.slice(-10)}</span>
+        {copied ? <Check className="w-3 h-3 shrink-0" /> : <Copy className="w-3 h-3 shrink-0" />}
+      </button>
+    </div>
+  );
+}
+
+export function NetworkBadge({ network, chainId, label, accent }: {
+  network: string; chainId: number; label: string; accent: 'gold' | 'teal';
+}) {
+  const tealClass = 'bg-[rgba(45,212,191,0.10)] border-[rgba(45,212,191,0.3)] text-[#5eead4]';
+  const goldClass = 'bg-[var(--gold-bg)] border-[var(--gold-bg-s)] text-[var(--gold)]';
+  return (
+    <div className={`rounded-lg p-3 flex items-center gap-2 border ${accent === 'teal' ? tealClass : goldClass}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${accent === 'teal' ? 'bg-[#2dd4bf]' : 'bg-[var(--gold)]'} animate-pulse-live`} />
+      <span className="text-[11px] font-mono uppercase tracking-wider">
+        Signing on <span className="font-bold">{label}</span>
+      </span>
+      <span className="ml-auto text-[10px] font-mono opacity-70 tab-num">
+        Chain {chainId}
+      </span>
+      <span className="sr-only">{network}</span>
+    </div>
+  );
+}
+
+function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  return (
+    <div className="flex justify-between items-baseline px-4 py-2.5">
+      <span className="text-[11px] uppercase tracking-wider font-mono text-[var(--tx-m)]">{label}</span>
+      <span className={`font-mono tab-num ${bold ? 'text-sm text-[var(--tx)]' : 'text-xs text-[var(--tx-2)]'}`}>
+        {value}
+      </span>
     </div>
   );
 }

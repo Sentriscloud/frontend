@@ -3,13 +3,16 @@
 import { useWalletStore } from '@/lib/store';
 import WalletSetup from '@/components/WalletSetup';
 import Dashboard from '@/components/Dashboard';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default function WalletPage() {
-  const { privateKey } = useWalletStore();
+  const { privateKey, address, watchOnly } = useWalletStore();
+  // Watch-only mode loads address without privkey, so check both.
+  const hasWallet = privateKey || (watchOnly && address);
 
-  if (!privateKey) {
-    return <WalletSetup />;
-  }
-
-  return <Dashboard />;
+  return (
+    <ErrorBoundary>
+      {!hasWallet ? <WalletSetup /> : <Dashboard />}
+    </ErrorBoundary>
+  );
 }

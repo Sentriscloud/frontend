@@ -1,0 +1,44 @@
+{
+  "name": "Solux — Sentrix Chain Wallet",
+  "short_name": "Solux",
+  "description": "Self-custody wallet for Sentrix Chain. Hold, send, and receive SRX. Chain ID 7119.",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#0c0c10",
+  "background_color": "#0c0c10",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/wallet",
+  "scope": "/",
+  "categories": ["finance", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Send SRX",
+      "url": "/wallet?action=send",
+      "description": "Open the wallet and start a transfer"
+    },
+    {
+      "name": "Receive",
+      "url": "/wallet?action=receive",
+      "description": "Show your address and QR"
+    }
+  ]
+}
