@@ -104,13 +104,13 @@ export default function SendSNTX({ onBack, decimals, symbol }: { onBack: () => v
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#F8FAFC' }}>
+    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#030712' }}>
       <div className="w-full max-w-sm">
-        <button onClick={onBack} className="flex items-center gap-2 mb-5 text-sm font-medium transition-colors active:scale-95" style={{ color: '#64748B' }}>
+        <button onClick={onBack} className="flex items-center gap-2 mb-5 text-sm font-medium transition-colors active:scale-95" style={{ color: '#8494A7' }}>
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#0D1426', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {/* Gradient Header */}
           <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899)' }}>
             <div className="flex items-center gap-3">
@@ -127,26 +127,26 @@ export default function SendSNTX({ onBack, decimals, symbol }: { onBack: () => v
           <div className="px-6 py-5 space-y-4">
             {/* To */}
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#64748B' }}>Recipient</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: '#8494A7' }}>Recipient</label>
               <div className="relative">
                 <input
                   value={toAddress}
                   onChange={(e) => setToAddress(e.target.value)}
                   placeholder="0x..."
                   className="w-full rounded-xl p-3.5 pr-12 text-sm font-mono focus:outline-none transition-all"
-                  style={{ background: '#F1F5F9', border: '2px solid transparent', color: '#0F172A' }}
+                  style={{ background: '#0F1A2E', border: '2px solid transparent', color: '#F1F5F9' }}
                   onFocus={(e) => e.currentTarget.style.borderColor = '#7c3aed'}
                   onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
                 />
-                <button onClick={handlePaste} className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center transition-all active:scale-90" style={{ background: '#E2E8F0' }}>
-                  <Clipboard className="w-3.5 h-3.5" style={{ color: '#64748B' }} />
+                <button onClick={handlePaste} className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center transition-all active:scale-90" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                  <Clipboard className="w-3.5 h-3.5" style={{ color: '#8494A7' }} />
                 </button>
               </div>
             </div>
 
             {/* Amount */}
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#64748B' }}>Amount ({symbol})</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: '#8494A7' }}>Amount ({symbol})</label>
               <input
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -154,25 +154,25 @@ export default function SendSNTX({ onBack, decimals, symbol }: { onBack: () => v
                 type="text"
                 inputMode="decimal"
                 className="w-full rounded-xl p-3.5 text-sm focus:outline-none transition-all"
-                style={{ background: '#F1F5F9', border: '2px solid transparent', color: '#0F172A' }}
+                style={{ background: '#0F1A2E', border: '2px solid transparent', color: '#F1F5F9' }}
                 onFocus={(e) => e.currentTarget.style.borderColor = '#7c3aed'}
                 onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
               />
             </div>
 
             {/* Fee */}
-            <div className="rounded-xl p-4" style={{ background: '#F8FAFC' }}>
+            <div className="rounded-xl p-4" style={{ background: '#030712' }}>
               <div className="flex justify-between text-xs">
-                <span style={{ color: '#94A3B8' }}>Gas fee (SRX)</span>
-                <span style={{ color: '#64748B' }}>{feeDisplay} SRX</span>
+                <span style={{ color: '#7A8A9A' }}>Gas fee (SRX)</span>
+                <span style={{ color: '#8494A7' }}>{feeDisplay} SRX</span>
               </div>
-              <p className="text-xs mt-1.5" style={{ color: '#CBD5E1' }}>Processed on next block</p>
+              <p className="text-xs mt-1.5" style={{ color: '#5A6A7A' }}>Processed on next block</p>
             </div>
 
             {/* Result */}
             {txid ? (
               <div className="space-y-3">
-                <div className="rounded-xl p-4" style={{ background: '#F5F3FF', border: '1px solid #DDD6FE' }}>
+                <div className="rounded-xl p-4" style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.3)' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#7c3aed' }}>
                       <Check className="w-4 h-4 text-white" />
@@ -187,7 +187,7 @@ export default function SendSNTX({ onBack, decimals, symbol }: { onBack: () => v
                 <button
                   onClick={resetForm}
                   className="w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-95"
-                  style={{ background: '#F1F5F9', color: '#64748B' }}
+                  style={{ background: '#0F1A2E', color: '#8494A7' }}
                 >
                   Send another
                 </button>
@@ -210,27 +210,27 @@ export default function SendSNTX({ onBack, decimals, symbol }: { onBack: () => v
       {/* Confirmation Modal */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
-          <div className="rounded-2xl p-6 max-w-sm w-full" style={{ background: '#FFFFFF', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: '#0F172A' }}>Confirm Transaction</h3>
+          <div className="rounded-2xl p-6 max-w-sm w-full" style={{ background: '#0D1426', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: '#F1F5F9' }}>Confirm Transaction</h3>
             <div className="space-y-3 mb-6">
               <div>
-                <span className="text-xs font-medium block mb-1" style={{ color: '#94A3B8' }}>To</span>
-                <span className="text-sm font-mono break-all" style={{ color: '#0F172A' }}>{toAddress}</span>
+                <span className="text-xs font-medium block mb-1" style={{ color: '#7A8A9A' }}>To</span>
+                <span className="text-sm font-mono break-all" style={{ color: '#F1F5F9' }}>{toAddress}</span>
               </div>
               <div className="flex justify-between">
-                <span style={{ color: '#94A3B8' }}>Amount</span>
-                <span className="font-semibold" style={{ color: '#0F172A' }}>{formatAmount(tokenAmount, decimals)} {symbol}</span>
+                <span style={{ color: '#7A8A9A' }}>Amount</span>
+                <span className="font-semibold" style={{ color: '#F1F5F9' }}>{formatAmount(tokenAmount, decimals)} {symbol}</span>
               </div>
               <div className="flex justify-between">
-                <span style={{ color: '#94A3B8' }}>Fee</span>
-                <span style={{ color: '#0F172A' }}>{feeDisplay} SRX</span>
+                <span style={{ color: '#7A8A9A' }}>Fee</span>
+                <span style={{ color: '#F1F5F9' }}>{feeDisplay} SRX</span>
               </div>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirm(false)}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all active:scale-95"
-                style={{ background: '#F1F5F9', color: '#64748B' }}
+                style={{ background: '#0F1A2E', color: '#8494A7' }}
               >
                 Cancel
               </button>

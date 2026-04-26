@@ -115,13 +115,13 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#F8FAFC' }}>
+    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#030712' }}>
       <div className="w-full max-w-sm">
-        <button onClick={onBack} className="flex items-center gap-2 mb-5 text-sm font-medium transition-colors active:scale-95" style={{ color: '#64748B' }}>
+        <button onClick={onBack} className="flex items-center gap-2 mb-5 text-sm font-medium transition-colors active:scale-95" style={{ color: '#8494A7' }}>
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#0D1426', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {/* Gradient Header */}
           <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, #10b981, #0d9488)' }}>
             <div className="flex items-center gap-3">
@@ -138,26 +138,26 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
           <div className="px-6 py-5 space-y-4">
             {/* To */}
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#64748B' }}>Recipient</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: '#8494A7' }}>Recipient</label>
               <div className="relative">
                 <input
                   value={toAddress}
                   onChange={(e) => setToAddress(e.target.value)}
                   placeholder="0x..."
                   className="w-full rounded-xl p-3.5 pr-12 text-sm font-mono focus:outline-none transition-all"
-                  style={{ background: '#F1F5F9', border: '2px solid transparent', color: '#0F172A' }}
+                  style={{ background: '#0F1A2E', border: '2px solid transparent', color: '#F1F5F9' }}
                   onFocus={(e) => e.currentTarget.style.borderColor = '#10b981'}
                   onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
                 />
-                <button onClick={handlePaste} className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center transition-all active:scale-90" style={{ background: '#E2E8F0' }}>
-                  <Clipboard className="w-3.5 h-3.5" style={{ color: '#64748B' }} />
+                <button onClick={handlePaste} className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center transition-all active:scale-90" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                  <Clipboard className="w-3.5 h-3.5" style={{ color: '#8494A7' }} />
                 </button>
               </div>
             </div>
 
             {/* Amount */}
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: '#64748B' }}>Amount</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: '#8494A7' }}>Amount</label>
               <div className="relative">
                 <input
                   value={amount}
@@ -166,39 +166,39 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
                   type="text"
                   inputMode="decimal"
                   className="w-full rounded-xl p-3.5 pr-16 text-sm focus:outline-none transition-all"
-                  style={{ background: '#F1F5F9', border: '2px solid transparent', color: '#0F172A' }}
+                  style={{ background: '#0F1A2E', border: '2px solid transparent', color: '#F1F5F9' }}
                   onFocus={(e) => e.currentTarget.style.borderColor = '#10b981'}
                   onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
                 />
-                <button onClick={loadMax} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold px-2.5 py-1 rounded-lg transition-all active:scale-90" style={{ background: '#ECFDF5', color: '#059669' }}>
+                <button onClick={loadMax} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold px-2.5 py-1 rounded-lg transition-all active:scale-90" style={{ background: 'rgba(16,185,129,0.12)', color: '#059669' }}>
                   MAX
                 </button>
               </div>
             </div>
 
             {/* Fee/Total */}
-            <div className="rounded-xl p-4 space-y-2" style={{ background: '#F8FAFC' }}>
+            <div className="rounded-xl p-4 space-y-2" style={{ background: '#030712' }}>
               <div className="flex justify-between text-xs">
-                <span style={{ color: '#94A3B8' }}>Network fee</span>
-                <span style={{ color: '#64748B' }}>{feeDisplay} SRX</span>
+                <span style={{ color: '#7A8A9A' }}>Network fee</span>
+                <span style={{ color: '#8494A7' }}>{feeDisplay} SRX</span>
               </div>
-              <div className="flex justify-between text-sm pt-1" style={{ borderTop: '1px solid #E2E8F0' }}>
-                <span className="font-medium" style={{ color: '#64748B' }}>Total</span>
-                <span className="font-bold" style={{ color: '#0F172A' }}>{totalDisplay} SRX</span>
+              <div className="flex justify-between text-sm pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <span className="font-medium" style={{ color: '#8494A7' }}>Total</span>
+                <span className="font-bold" style={{ color: '#F1F5F9' }}>{totalDisplay} SRX</span>
               </div>
             </div>
 
             {/* Result */}
             {txid ? (
               <div className="space-y-3">
-                <div className="rounded-xl p-4" style={{ background: '#ECFDF5', border: '1px solid #A7F3D0' }}>
+                <div className="rounded-xl p-4" style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#10b981' }}>
                       <Check className="w-4 h-4 text-white" />
                     </div>
                     <span className="text-sm font-bold" style={{ color: '#059669' }}>Sent!</span>
                   </div>
-                  <button onClick={copyTxid} className="flex items-center gap-1 text-xs font-mono break-all transition-colors" style={{ color: '#047857' }}>
+                  <button onClick={copyTxid} className="flex items-center gap-1 text-xs font-mono break-all transition-colors" style={{ color: '#34D399' }}>
                     {txid.slice(0, 20)}...{txid.slice(-8)}
                     {txCopied ? <Check className="w-3 h-3 shrink-0" /> : <Copy className="w-3 h-3 shrink-0" />}
                   </button>
@@ -206,7 +206,7 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
                 <button
                   onClick={resetForm}
                   className="w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-95"
-                  style={{ background: '#F1F5F9', color: '#64748B' }}
+                  style={{ background: '#0F1A2E', color: '#8494A7' }}
                 >
                   Send another
                 </button>
@@ -229,31 +229,31 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
       {/* Confirmation Modal */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
-          <div className="rounded-2xl p-6 max-w-sm w-full" style={{ background: '#FFFFFF', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: '#0F172A' }}>Confirm Transaction</h3>
+          <div className="rounded-2xl p-6 max-w-sm w-full" style={{ background: '#0D1426', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: '#F1F5F9' }}>Confirm Transaction</h3>
             <div className="space-y-3 mb-6">
               <div>
-                <span className="text-xs font-medium block mb-1" style={{ color: '#94A3B8' }}>To</span>
-                <span className="text-sm font-mono break-all" style={{ color: '#0F172A' }}>{toAddress}</span>
+                <span className="text-xs font-medium block mb-1" style={{ color: '#7A8A9A' }}>To</span>
+                <span className="text-sm font-mono break-all" style={{ color: '#F1F5F9' }}>{toAddress}</span>
               </div>
               <div className="flex justify-between">
-                <span style={{ color: '#94A3B8' }}>Amount</span>
-                <span className="font-semibold" style={{ color: '#0F172A' }}>{amount} SRX</span>
+                <span style={{ color: '#7A8A9A' }}>Amount</span>
+                <span className="font-semibold" style={{ color: '#F1F5F9' }}>{amount} SRX</span>
               </div>
               <div className="flex justify-between">
-                <span style={{ color: '#94A3B8' }}>Fee</span>
-                <span style={{ color: '#0F172A' }}>{feeDisplay} SRX</span>
+                <span style={{ color: '#7A8A9A' }}>Fee</span>
+                <span style={{ color: '#F1F5F9' }}>{feeDisplay} SRX</span>
               </div>
-              <div className="flex justify-between pt-3" style={{ borderTop: '1px solid #E2E8F0' }}>
-                <span className="font-semibold" style={{ color: '#64748B' }}>Total</span>
-                <span className="font-bold" style={{ color: '#0F172A' }}>{totalDisplay} SRX</span>
+              <div className="flex justify-between pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <span className="font-semibold" style={{ color: '#8494A7' }}>Total</span>
+                <span className="font-bold" style={{ color: '#F1F5F9' }}>{totalDisplay} SRX</span>
               </div>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirm(false)}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all active:scale-95"
-                style={{ background: '#F1F5F9', color: '#64748B' }}
+                style={{ background: '#0F1A2E', color: '#8494A7' }}
               >
                 Cancel
               </button>

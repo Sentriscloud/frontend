@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/* Solux dark navy palette — shared with the Solux mobile wallet
+   (see sentrix-wallet-mobile lib/theme/app_colors.dart). */
+:root {
+  /* Backgrounds */
+  --bg:            #030712;
+  --bg-elevated:   #0A0F1A;
+  --surface:       #0D1426;
+  --surface-high:  #0F1A2E;
+
+  /* Glass overlays */
+  --glass:         rgba(255, 255, 255, 0.04);
+  --glass-border:  rgba(255, 255, 255, 0.08);
+  --glass-hover:   rgba(255, 255, 255, 0.06);
+
+  /* Text */
+  --text:          #F1F5F9;
+  --text-2:        #8494A7;
+  --text-muted:    #7A8A9A;
+  --text-dim:      #5A6A7A;
+
+  /* Candy accents */
+  --pink:          #EC4899;
+  --pink-light:    #F472B6;
+  --violet:        #A855F7;
+  --violet-light:  #C084FC;
+  --indigo:        #6366F1;
+  --indigo-light:  #818CF8;
+  --blue:          #3B82F6;
+  --cyan:          #22D3EE;
+
+  /* Semantic */
+  --emerald:       #10B981;
+  --emerald-bg:    rgba(16, 185, 129, 0.12);
+  --danger:        #F43F5E;
+  --danger-bg:     rgba(244, 63, 94, 0.12);
+  --warning:       #F59E0B;
+
+  /* Legacy aliases for any remaining inline-styled refs */
+  --card:          var(--surface);
+  --card-border:   var(--glass-border);
+  --input-bg:      var(--surface-high);
+  --input-border:  var(--glass-border);
+  --text-secondary:var(--text-2);
+
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; }
+
+/* Solux brand gradients */
+.gradient-candy {
+  background-image: linear-gradient(90deg, var(--pink), var(--violet), var(--indigo));
+}
+.gradient-balance {
+  background-image: linear-gradient(135deg, #1E0A35 0%, #101018 50%, #0C1226 100%);
+}
+.gradient-emerald-cyan {
+  background-image: linear-gradient(135deg, var(--emerald), var(--cyan));
+}
+.gradient-violet-pink {
+  background-image: linear-gradient(135deg, var(--violet), var(--pink));
+}
+
+/* Subtle hex-grid texture (placeholder — could swap to canvas later) */
+.hex-texture {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
+  background-size: 18px 18px;
+}

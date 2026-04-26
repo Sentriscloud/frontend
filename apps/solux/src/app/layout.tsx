@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sentrix Wallet",
-  description: "Sentrix Blockchain Wallet — Chain ID 7119",
+  title: "Solux — Sentrix Chain Wallet",
+  description: "Solux: self-custody wallet for Sentrix Chain (SRX). Chain ID 7119.",
 };
 
 export default function RootLayout({
@@ -28,18 +28,18 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col" style={{ background: '#F8FAFC' }}>
+      <body className="min-h-full flex flex-col" style={{ background: '#030712' }}>
         {children}
         <Toaster
           position="top-center"
           toastOptions={{
             style: {
-              background: '#FFFFFF',
-              color: '#0F172A',
-              border: '1px solid #E2E8F0',
+              background: '#0D1426',
+              color: '#F1F5F9',
+              border: '1px solid rgba(255,255,255,0.08)',
               fontSize: '14px',
               borderRadius: '12px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
             },
           }}
         />

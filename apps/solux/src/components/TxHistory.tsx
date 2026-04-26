@@ -35,29 +35,29 @@ export default function TxHistory({ onBack }: { onBack: () => void }) {
   const SENTRI = 100_000_000;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#F8FAFC' }}>
+    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#030712' }}>
       <div className="w-full max-w-sm">
-        <button onClick={onBack} className="flex items-center gap-2 mb-5 text-sm font-medium transition-colors active:scale-95" style={{ color: '#64748B' }}>
+        <button onClick={onBack} className="flex items-center gap-2 mb-5 text-sm font-medium transition-colors active:scale-95" style={{ color: '#8494A7' }}>
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}>
-          <div className="px-5 py-4" style={{ borderBottom: '1px solid #F1F5F9' }}>
-            <h2 className="text-lg font-bold" style={{ color: '#0F172A' }}>Transactions</h2>
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#0D1426', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="px-5 py-4" style={{ borderBottom: '1px solid #0F1A2E' }}>
+            <h2 className="text-lg font-bold" style={{ color: '#F1F5F9' }}>Transactions</h2>
           </div>
 
           {loading ? (
             <div className="p-12 text-center">
-              <div className="w-8 h-8 rounded-full animate-spin mx-auto" style={{ border: '2px solid #E2E8F0', borderTopColor: '#10b981' }} />
-              <p className="text-sm mt-3" style={{ color: '#94A3B8' }}>Loading...</p>
+              <div className="w-8 h-8 rounded-full animate-spin mx-auto" style={{ border: '2px solid rgba(255,255,255,0.08)', borderTopColor: '#10b981' }} />
+              <p className="text-sm mt-3" style={{ color: '#7A8A9A' }}>Loading...</p>
             </div>
           ) : txs.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: '#F1F5F9' }}>
-                <Inbox className="w-8 h-8" style={{ color: '#CBD5E1' }} />
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: '#0F1A2E' }}>
+                <Inbox className="w-8 h-8" style={{ color: '#5A6A7A' }} />
               </div>
-              <p className="font-semibold text-sm" style={{ color: '#64748B' }}>No transactions yet</p>
-              <p className="text-xs mt-1" style={{ color: '#CBD5E1' }}>Send or receive to get started</p>
+              <p className="font-semibold text-sm" style={{ color: '#8494A7' }}>No transactions yet</p>
+              <p className="text-xs mt-1" style={{ color: '#5A6A7A' }}>Send or receive to get started</p>
             </div>
           ) : (
             <div className="max-h-[60vh] overflow-y-auto">
@@ -66,16 +66,16 @@ export default function TxHistory({ onBack }: { onBack: () => void }) {
                 return (
                   <div
                     key={tx.txid}
-                    className="flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-slate-50/50"
-                    style={{ borderBottom: i < txs.length - 1 ? '1px solid #F1F5F9' : 'none' }}
+                    className="flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-white/[0.04]"
+                    style={{ borderBottom: i < txs.length - 1 ? '1px solid #0F1A2E' : 'none' }}
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-xl flex items-center justify-center"
                         style={{
-                          background: isTokenOp ? '#F5F3FF' :
-                                     tx.direction === 'in' ? '#ECFDF5' :
-                                     tx.direction === 'reward' ? '#FFF7ED' : '#FEF2F2',
+                          background: isTokenOp ? 'rgba(168,85,247,0.12)' :
+                                     tx.direction === 'in' ? 'rgba(16,185,129,0.12)' :
+                                     tx.direction === 'reward' ? 'rgba(245,158,11,0.12)' : 'rgba(244,63,94,0.12)',
                         }}
                       >
                         {isTokenOp ? <Layers className="w-4 h-4" style={{ color: '#7c3aed' }} /> :
@@ -84,20 +84,20 @@ export default function TxHistory({ onBack }: { onBack: () => void }) {
                          <ArrowUpRight className="w-4 h-4" style={{ color: '#EF4444' }} />}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>
+                        <p className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>
                           {isTokenOp ? 'Token Transfer' :
                            tx.direction === 'reward' ? 'Block Reward' :
                            tx.direction === 'in' ? `From ${truncate(tx.from)}` :
                            `To ${truncate(tx.to)}`}
                         </p>
-                        <p className="text-xs" style={{ color: '#CBD5E1' }}>{timeAgo(tx.block_timestamp)}</p>
+                        <p className="text-xs" style={{ color: '#5A6A7A' }}>{timeAgo(tx.block_timestamp)}</p>
                       </div>
                     </div>
                     <div className="text-right">
                       {isTokenOp ? (
                         <>
                           <p className="text-sm font-bold" style={{ color: '#7c3aed' }}>-{(tx.fee / SENTRI).toLocaleString(undefined, { maximumFractionDigits: 4 })}</p>
-                          <p className="text-xs" style={{ color: '#CBD5E1' }}>SRX fee</p>
+                          <p className="text-xs" style={{ color: '#5A6A7A' }}>SRX fee</p>
                         </>
                       ) : (
                         <>
@@ -105,7 +105,7 @@ export default function TxHistory({ onBack }: { onBack: () => void }) {
                             {tx.direction === 'out' ? '-' : '+'}
                             {(tx.amount / SENTRI).toLocaleString(undefined, { maximumFractionDigits: 4 })}
                           </p>
-                          <p className="text-xs" style={{ color: '#CBD5E1' }}>SRX</p>
+                          <p className="text-xs" style={{ color: '#5A6A7A' }}>SRX</p>
                         </>
                       )}
                     </div>

@@ -19,13 +19,13 @@ export default function Receive({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#F8FAFC' }}>
+    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#030712' }}>
       <div className="w-full max-w-sm">
-        <button onClick={onBack} className="flex items-center gap-2 mb-5 text-sm font-medium transition-colors active:scale-95" style={{ color: '#64748B' }}>
+        <button onClick={onBack} className="flex items-center gap-2 mb-5 text-sm font-medium transition-colors active:scale-95" style={{ color: '#8494A7' }}>
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#0D1426', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, #10b981, #0d9488)' }}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
@@ -40,14 +40,14 @@ export default function Receive({ onBack }: { onBack: () => void }) {
 
           <div className="px-6 py-6 space-y-5">
             <div className="flex justify-center">
-              <div className="p-4 rounded-2xl" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
-                {address && <QRCodeSVG value={address} size={200} bgColor="#FFFFFF" fgColor="#0F172A" level="M" />}
+              <div className="p-4 rounded-2xl" style={{ background: '#0D1426', border: '1px solid rgba(255,255,255,0.08)' }}>
+                {address && <QRCodeSVG value={address} size={200} bgColor="#0D1426" fgColor="#F1F5F9" level="M" />}
               </div>
             </div>
 
-            <div className="rounded-xl p-4" style={{ background: '#F1F5F9' }}>
-              <p className="text-xs font-medium mb-2" style={{ color: '#64748B' }}>Your Address</p>
-              <p className="text-sm font-mono break-all" style={{ color: '#0F172A' }}>{address}</p>
+            <div className="rounded-xl p-4" style={{ background: '#0F1A2E' }}>
+              <p className="text-xs font-medium mb-2" style={{ color: '#8494A7' }}>Your Address</p>
+              <p className="text-sm font-mono break-all" style={{ color: '#F1F5F9' }}>{address}</p>
             </div>
 
             <button

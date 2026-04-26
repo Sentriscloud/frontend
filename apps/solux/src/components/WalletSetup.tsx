@@ -59,7 +59,7 @@ export default function WalletSetup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#F8FAFC' }}>
+    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#030712' }}>
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-10">
@@ -69,8 +69,8 @@ export default function WalletSetup() {
           >
             <Shield className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-extrabold" style={{ color: '#0F172A' }}>Sentrix Wallet</h1>
-          <p className="mt-2" style={{ color: '#94A3B8', fontSize: '15px' }}>Your gateway to the Sentrix blockchain</p>
+          <h1 className="text-3xl font-extrabold" style={{ color: '#F1F5F9' }}>Solux</h1>
+          <p className="mt-2" style={{ color: '#7A8A9A', fontSize: '15px' }}>Your gateway to the Sentrix blockchain</p>
         </div>
 
         {/* Buttons */}
@@ -78,33 +78,33 @@ export default function WalletSetup() {
           <button
             onClick={() => setModal('import')}
             className="w-full flex items-center gap-4 p-5 rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-            style={{ background: '#FFFFFF', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}
+            style={{ background: '#0D1426', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
           >
             <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #10b981, #0d9488)' }}>
               <KeyRound className="w-6 h-6 text-white" />
             </div>
             <div className="text-left">
-              <p className="font-semibold text-base" style={{ color: '#0F172A' }}>Import Wallet</p>
-              <p className="text-sm" style={{ color: '#94A3B8' }}>Use an existing private key</p>
+              <p className="font-semibold text-base" style={{ color: '#F1F5F9' }}>Import Wallet</p>
+              <p className="text-sm" style={{ color: '#7A8A9A' }}>Use an existing private key</p>
             </div>
           </button>
 
           <button
             onClick={() => { setModal('generate'); handleGenerate(); }}
             className="w-full flex items-center gap-4 p-5 rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-            style={{ background: '#FFFFFF', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #E2E8F0' }}
+            style={{ background: '#0D1426', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
           >
             <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899)' }}>
               <Plus className="w-6 h-6 text-white" />
             </div>
             <div className="text-left">
-              <p className="font-semibold text-base" style={{ color: '#0F172A' }}>Create New Wallet</p>
-              <p className="text-sm" style={{ color: '#94A3B8' }}>Generate a fresh wallet</p>
+              <p className="font-semibold text-base" style={{ color: '#F1F5F9' }}>Create New Wallet</p>
+              <p className="text-sm" style={{ color: '#7A8A9A' }}>Generate a fresh wallet</p>
             </div>
           </button>
         </div>
 
-        <p className="text-center text-xs mt-8" style={{ color: '#CBD5E1' }}>
+        <p className="text-center text-xs mt-8" style={{ color: '#5A6A7A' }}>
           Your keys stay on this device. Always.
         </p>
       </div>
@@ -112,32 +112,32 @@ export default function WalletSetup() {
       {/* Import Modal */}
       {modal === 'import' && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)' }}>
-          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden" style={{ background: '#FFFFFF' }}>
+          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden" style={{ background: '#0D1426' }}>
             <div className="flex items-center justify-between px-6 pt-6 pb-3">
-              <h2 className="text-lg font-bold" style={{ color: '#0F172A' }}>Import Wallet</h2>
-              <button onClick={closeModal} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#F1F5F9' }}>
-                <X className="w-4 h-4" style={{ color: '#64748B' }} />
+              <h2 className="text-lg font-bold" style={{ color: '#F1F5F9' }}>Import Wallet</h2>
+              <button onClick={closeModal} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#0F1A2E' }}>
+                <X className="w-4 h-4" style={{ color: '#8494A7' }} />
               </button>
             </div>
 
             <div className="px-6 pb-8 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: '#64748B' }}>Private Key</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#8494A7' }}>Private Key</label>
                 <textarea
                   value={inputKey}
                   onChange={(e) => { setInputKey(e.target.value); setPreviewAddress(''); }}
                   placeholder="Paste your 64-character hex key..."
                   className="w-full rounded-xl p-4 text-sm font-mono resize-none h-24 focus:outline-none transition-all"
-                  style={{ background: '#F1F5F9', border: '2px solid transparent', color: '#0F172A' }}
+                  style={{ background: '#0F1A2E', border: '2px solid transparent', color: '#F1F5F9' }}
                   onFocus={(e) => e.currentTarget.style.borderColor = '#10b981'}
                   onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
                 />
               </div>
 
               {previewAddress && (
-                <div className="rounded-xl p-4" style={{ background: '#ECFDF5', border: '1px solid #A7F3D0' }}>
+                <div className="rounded-xl p-4" style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)' }}>
                   <p className="text-xs font-medium mb-1" style={{ color: '#059669' }}>Wallet Address</p>
-                  <p className="text-sm font-mono break-all" style={{ color: '#047857' }}>{previewAddress}</p>
+                  <p className="text-sm font-mono break-all" style={{ color: '#34D399' }}>{previewAddress}</p>
                 </div>
               )}
 
@@ -145,7 +145,7 @@ export default function WalletSetup() {
                 <button
                   onClick={handlePreview}
                   className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all active:scale-95"
-                  style={{ background: '#F1F5F9', color: '#64748B' }}
+                  style={{ background: '#0F1A2E', color: '#8494A7' }}
                 >
                   <Eye className="w-4 h-4" /> Preview
                 </button>
@@ -165,25 +165,25 @@ export default function WalletSetup() {
       {/* Generate Modal */}
       {modal === 'generate' && generatedKey && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)' }}>
-          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden" style={{ background: '#FFFFFF' }}>
+          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden" style={{ background: '#0D1426' }}>
             <div className="flex items-center justify-between px-6 pt-6 pb-3">
-              <h2 className="text-lg font-bold" style={{ color: '#0F172A' }}>Your New Wallet</h2>
-              <button onClick={closeModal} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#F1F5F9' }}>
-                <X className="w-4 h-4" style={{ color: '#64748B' }} />
+              <h2 className="text-lg font-bold" style={{ color: '#F1F5F9' }}>Your New Wallet</h2>
+              <button onClick={closeModal} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#0F1A2E' }}>
+                <X className="w-4 h-4" style={{ color: '#8494A7' }} />
               </button>
             </div>
 
             <div className="px-6 pb-8 space-y-4">
               {/* Warning — self-custody reality check */}
-              <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
-                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#DC2626' }} />
+              <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.3)' }}>
+                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#FB7185' }} />
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: '#991B1B' }}>Your key, your responsibility.</p>
-                  <p className="text-xs mt-1" style={{ color: '#B91C1C' }}>
+                  <p className="text-sm font-semibold" style={{ color: '#FECDD3' }}>Your key, your responsibility.</p>
+                  <p className="text-xs mt-1" style={{ color: '#FCA5A5' }}>
                     Save this private key somewhere safe (password manager, offline backup).
                     It&apos;s the <strong>only</strong> way to access your funds.
                   </p>
-                  <p className="text-xs mt-1" style={{ color: '#B91C1C' }}>
+                  <p className="text-xs mt-1" style={{ color: '#FCA5A5' }}>
                     <strong>Lost key = lost wallet.</strong> There is no recovery, no password
                     reset, no support line. Nobody — including Sentrix — can restore it for you.
                   </p>
@@ -193,21 +193,21 @@ export default function WalletSetup() {
               {/* Private Key */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#94A3B8' }}>Private Key</label>
-                  <button onClick={copyKey} className="text-xs font-semibold flex items-center gap-1 transition-colors" style={{ color: copied ? '#10b981' : '#94A3B8' }}>
+                  <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#7A8A9A' }}>Private Key</label>
+                  <button onClick={copyKey} className="text-xs font-semibold flex items-center gap-1 transition-colors" style={{ color: copied ? '#10b981' : '#7A8A9A' }}>
                     {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     {copied ? 'Copied!' : 'Copy'}
                   </button>
                 </div>
-                <div className="rounded-xl p-4 font-mono text-xs break-all" style={{ background: '#F1F5F9', color: '#0F172A', border: '1px solid #E2E8F0' }}>
+                <div className="rounded-xl p-4 font-mono text-xs break-all" style={{ background: '#0F1A2E', color: '#F1F5F9', border: '1px solid rgba(255,255,255,0.08)' }}>
                   {generatedKey}
                 </div>
               </div>
 
               {/* Address */}
-              <div className="rounded-xl p-4" style={{ background: '#ECFDF5', border: '1px solid #A7F3D0' }}>
+              <div className="rounded-xl p-4" style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)' }}>
                 <p className="text-xs font-medium mb-1" style={{ color: '#059669' }}>Your Address</p>
-                <p className="text-sm font-mono break-all" style={{ color: '#047857' }}>{previewAddress}</p>
+                <p className="text-sm font-mono break-all" style={{ color: '#34D399' }}>{previewAddress}</p>
               </div>
 
               {/* Checkbox */}
@@ -218,7 +218,7 @@ export default function WalletSetup() {
                   onChange={(e) => setSavedKey(e.target.checked)}
                   className="w-5 h-5 rounded accent-emerald-500"
                 />
-                <span className="text-sm" style={{ color: '#475569' }}>I&apos;ve saved my private key securely</span>
+                <span className="text-sm" style={{ color: '#A8B5C2' }}>I&apos;ve saved my private key securely</span>
               </label>
 
               <button
@@ -226,7 +226,7 @@ export default function WalletSetup() {
                 disabled={!savedKey}
                 className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{
-                  background: savedKey ? 'linear-gradient(135deg, #10b981, #0d9488)' : '#CBD5E1',
+                  background: savedKey ? 'linear-gradient(135deg, #10b981, #0d9488)' : '#5A6A7A',
                   boxShadow: savedKey ? '0 4px 14px rgba(16,185,129,0.35)' : 'none',
                 }}
               >

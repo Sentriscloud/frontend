@@ -96,28 +96,28 @@ export default function Dashboard() {
   if (view === 'coming-soon') return <ComingSoon feature={comingSoonLabel} onBack={() => setView('main')} />;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#F8FAFC' }}>
+    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#030712' }}>
       <div className="w-full max-w-sm space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-extrabold" style={{ color: '#0F172A' }}>
-            Sentrix<span style={{ color: '#10b981' }}>.</span>
+          <h1 className="text-2xl font-extrabold" style={{ color: '#F1F5F9' }}>
+            Solux<span style={{ color: '#10b981' }}>.</span>
           </h1>
           <div className="flex items-center gap-1">
             <button
               onClick={fetchBalances}
               disabled={loading}
               className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90"
-              style={{ background: '#F1F5F9' }}
+              style={{ background: '#0F1A2E' }}
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} style={{ color: '#94A3B8' }} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} style={{ color: '#7A8A9A' }} />
             </button>
             <button
               onClick={clearWallet}
               className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90"
-              style={{ background: '#F1F5F9' }}
+              style={{ background: '#0F1A2E' }}
             >
-              <LogOut className="w-4 h-4" style={{ color: '#94A3B8' }} />
+              <LogOut className="w-4 h-4" style={{ color: '#7A8A9A' }} />
             </button>
           </div>
         </div>
@@ -126,13 +126,13 @@ export default function Dashboard() {
         <button
           onClick={copyAddress}
           className="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all active:scale-[0.98]"
-          style={{ background: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0' }}
+          style={{ background: '#0D1426', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
         >
-          <span className="text-sm font-mono" style={{ color: '#64748B' }}>
+          <span className="text-sm font-mono" style={{ color: '#8494A7' }}>
             {address ? truncate(address) : ''}
           </span>
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: copied ? '#ECFDF5' : '#F1F5F9' }}>
-            {copied ? <Check className="w-4 h-4" style={{ color: '#10b981' }} /> : <Copy className="w-4 h-4" style={{ color: '#94A3B8' }} />}
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: copied ? 'rgba(16,185,129,0.12)' : '#0F1A2E' }}>
+            {copied ? <Check className="w-4 h-4" style={{ color: '#10b981' }} /> : <Copy className="w-4 h-4" style={{ color: '#7A8A9A' }} />}
           </div>
         </button>
 
@@ -162,36 +162,36 @@ export default function Dashboard() {
         </div>
 
         {/* My Assets */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0' }}>
-          <div className="px-5 py-3" style={{ borderBottom: '1px solid #F1F5F9' }}>
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>My Assets</h3>
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#0D1426', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="px-5 py-3" style={{ borderBottom: '1px solid #0F1A2E' }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: '#8494A7' }}>My Assets</h3>
           </div>
           <button
             onClick={() => setView('send-srx')}
-            className="w-full flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-slate-50/50"
-            style={{ borderBottom: '1px solid #F1F5F9' }}
+            className="w-full flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-white/[0.04]"
+            style={{ borderBottom: '1px solid #0F1A2E' }}
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white" style={{ background: 'linear-gradient(135deg, #10b981, #0d9488)' }}>S</div>
               <div className="text-left">
-                <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>SRX</p>
-                <p className="text-xs" style={{ color: '#94A3B8' }}>Sentrix Native</p>
+                <p className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>SRX</p>
+                <p className="text-xs" style={{ color: '#7A8A9A' }}>Sentrix Native</p>
               </div>
             </div>
-            <p className="text-sm font-bold" style={{ color: '#0F172A' }}>{loading ? '—' : srxDisplay}</p>
+            <p className="text-sm font-bold" style={{ color: '#F1F5F9' }}>{loading ? '—' : srxDisplay}</p>
           </button>
           <button
             onClick={() => setView('send-sntx')}
-            className="w-full flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-slate-50/50"
+            className="w-full flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-white/[0.04]"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899)' }}>{sntxSymbol[0]}</div>
               <div className="text-left">
-                <p className="text-sm font-semibold" style={{ color: '#0F172A' }}>{sntxSymbol}</p>
-                <p className="text-xs" style={{ color: '#94A3B8' }}>Sentrix Token</p>
+                <p className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>{sntxSymbol}</p>
+                <p className="text-xs" style={{ color: '#7A8A9A' }}>Sentrix Token</p>
               </div>
             </div>
-            <p className="text-sm font-bold" style={{ color: '#0F172A' }}>{loading ? '—' : sntxDisplay}</p>
+            <p className="text-sm font-bold" style={{ color: '#F1F5F9' }}>{loading ? '—' : sntxDisplay}</p>
           </button>
         </div>
 
@@ -199,10 +199,10 @@ export default function Dashboard() {
         <button
           onClick={() => setView('history')}
           className="w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] group"
-          style={{ background: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0' }}
+          style={{ background: '#0D1426', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
         >
-          <span className="text-sm font-semibold" style={{ color: '#64748B' }}>Transaction History</span>
-          <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" style={{ color: '#CBD5E1' }} />
+          <span className="text-sm font-semibold" style={{ color: '#8494A7' }}>Transaction History</span>
+          <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" style={{ color: '#5A6A7A' }} />
         </button>
       </div>
     </div>
@@ -214,19 +214,19 @@ function ActionBtn({ icon, label, onClick, active }: { icon: React.ReactNode; la
     <button
       onClick={onClick}
       className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-2xl transition-all active:scale-95"
-      style={{ background: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0' }}
+      style={{ background: '#0D1426', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
     >
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center"
         style={{
-          background: active ? 'linear-gradient(135deg, #10b981, #06b6d4)' : '#F1F5F9',
-          color: active ? '#FFFFFF' : '#94A3B8',
+          background: active ? 'linear-gradient(135deg, #10b981, #06b6d4)' : '#0F1A2E',
+          color: active ? '#0D1426' : '#7A8A9A',
           boxShadow: active ? '0 4px 12px rgba(16,185,129,0.3)' : 'none',
         }}
       >
         {icon}
       </div>
-      <span className="text-[11px] font-semibold" style={{ color: active ? '#0F172A' : '#94A3B8' }}>{label}</span>
+      <span className="text-[11px] font-semibold" style={{ color: active ? '#F1F5F9' : '#7A8A9A' }}>{label}</span>
     </button>
   );
 }
