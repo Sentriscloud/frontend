@@ -90,8 +90,8 @@ export interface NetworkConfig {
 
 // Chain API moved to sentrixchain.com domain in 2026-04. Old sentriscloud.com
 // API hostnames have no DNS — wallet showed disconnected because every RPC
-// call failed to resolve. Mainnet round-robins VPS1/2/3, testnet is the
-// 4-validator stack on VPS4.
+// call failed to resolve. Mainnet endpoint round-robins across producer
+// validators behind the edge proxy; testnet is a separate 4-validator stack.
 export const NETWORKS: Record<Network, NetworkConfig> = {
   mainnet: {
     network: 'mainnet',

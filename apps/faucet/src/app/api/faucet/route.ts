@@ -22,7 +22,7 @@ function getConfig(network: Network): NetworkConfig {
   if (network === 'mainnet') {
     return {
       chainId: 7119,
-      restUrl: process.env.MAINNET_REST_URL ?? 'http://10.20.0.2:8545',
+      restUrl: process.env.MAINNET_REST_URL ?? 'http://127.0.0.1:8545',
       faucetAddress: process.env.MAINNET_FAUCET_ADDRESS,
       faucetPrivateKey: process.env.MAINNET_FAUCET_PRIVATE_KEY,
       amountSrx: parseFloat(process.env.MAINNET_DRIP_AMOUNT_SRX ?? '0.01'),

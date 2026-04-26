@@ -59,7 +59,7 @@ Push to `master` branch. GitHub Actions CI/CD will:
 2. Push to GHCR
 3. SSH to VPS and `docker compose up -d --force-recreate`
 
-Domain: `sentrix.sentriscloud.com` (VPS1, port 3004)
+Domain: `sentrixchain.com` (served by the edge proxy on port 3004)
 
 ## Brand
 
