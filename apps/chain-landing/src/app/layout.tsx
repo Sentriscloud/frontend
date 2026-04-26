@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     siteName: "Sentrix",
     title: "Sentrix — Layer-1 Blockchain | EVM Compatible",
     description: "High-performance Layer-1 blockchain built from scratch in Rust. 3-second finality, BFT consensus, deflationary tokenomics, Ethereum compatible.",
-    url: "https://sentrix.sentriscloud.com",
+    url: "https://sentrixchain.com",
     images: [{ url: "/sentrix-coin-og.png", width: 1024, height: 1024, alt: "Sentrix Chain" }],
   },
   twitter: {
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     description: "Built in Rust. 3s finality. EVM compatible. Chain ID 7119.",
     images: ["/sentrix-coin-og.png"],
   },
-  metadataBase: new URL("https://sentrix.sentriscloud.com"),
+  metadataBase: new URL("https://sentrixchain.com"),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
