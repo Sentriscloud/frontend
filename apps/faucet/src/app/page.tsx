@@ -397,7 +397,9 @@ export default function FaucetPage() {
           </p>
           <p className="text-xs">
             <a
-              href="https://sentrixchain.com/docs/faucet"
+              href={process.env.NEXT_PUBLIC_DOCS_URL ?? 'https://sentrix.sentriscloud.com/docs/faucet'}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-[var(--gold)]/70 hover:text-[var(--gold)] transition-colors"
             >
               How to use →
