@@ -6,7 +6,7 @@ export const sentrixMainnet = defineChain({
   nativeCurrency: { name: "Sentrix", symbol: "SRX", decimals: 8 },
   rpcUrls: {
     default: {
-      http: [process.env.NEXT_PUBLIC_MAINNET_RPC || "https://sentrix-rpc.sentriscloud.com/rpc"],
+      http: [process.env.NEXT_PUBLIC_MAINNET_RPC || "https://rpc.sentrixchain.com/rpc"],
     },
   },
   blockExplorers: {
@@ -20,11 +20,11 @@ export const sentrixTestnet = defineChain({
   nativeCurrency: { name: "Sentrix", symbol: "SRX", decimals: 8 },
   rpcUrls: {
     default: {
-      http: [process.env.NEXT_PUBLIC_TESTNET_RPC || "https://testnet-rpc.sentriscloud.com/rpc"],
+      http: [process.env.NEXT_PUBLIC_TESTNET_RPC || "https://testnet-rpc.sentrixchain.com/rpc"],
     },
   },
   blockExplorers: {
-    default: { name: "Sentrix Scan Testnet", url: "https://testnet-rpc.sentriscloud.com/explorer" },
+    default: { name: "Sentrix Scan Testnet", url: "https://scan.sentrixchain.com" },
   },
   testnet: true,
 });
@@ -37,8 +37,8 @@ export function getChain(network: NetworkId) {
 
 export function getApiUrl(network: NetworkId) {
   return network === "testnet"
-    ? (process.env.NEXT_PUBLIC_TESTNET_API || "https://testnet-api.sentriscloud.com")
-    : (process.env.NEXT_PUBLIC_MAINNET_API || "https://sentrix-api.sentriscloud.com");
+    ? (process.env.NEXT_PUBLIC_TESTNET_API || "https://testnet-api.sentrixchain.com")
+    : (process.env.NEXT_PUBLIC_MAINNET_API || "https://api.sentrixchain.com");
 }
 
 export function createClient(network: NetworkId) {

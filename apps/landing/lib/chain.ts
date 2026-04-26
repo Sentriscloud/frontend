@@ -1,6 +1,6 @@
 import { createPublicClient, http, type Chain } from "viem";
 
-const MAINNET_RPC = process.env.NEXT_PUBLIC_MAINNET_RPC ?? "https://sentrix-rpc.sentriscloud.com/rpc";
+const MAINNET_RPC = process.env.NEXT_PUBLIC_MAINNET_RPC ?? "https://rpc.sentrixchain.com/rpc";
 const MAINNET_CHAIN_ID = Number(process.env.NEXT_PUBLIC_MAINNET_CHAIN_ID ?? 7119);
 
 export const sentrixMainnet: Chain = {

@@ -282,7 +282,7 @@ export default function Landing() {
               Sentrix Chain
             </a>
             <a
-              href="https://sentrix-api.sentriscloud.com/chain/info"
+              href="https://api.sentrixchain.com/chain/info"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors"

@@ -11,7 +11,7 @@ export const SENTRIX_CHAIN_PARAMS = {
     symbol: 'SRX',
     decimals: 8,
   },
-  rpcUrls: [process.env.NEXT_PUBLIC_RPC_URL ?? 'https://sentrix-rpc.sentriscloud.com'],
+  rpcUrls: [process.env.NEXT_PUBLIC_RPC_URL ?? 'https://rpc.sentrixchain.com/rpc'],
   blockExplorerUrls: [
     process.env.NEXT_PUBLIC_EXPLORER_URL ?? 'https://sentrixscan.sentriscloud.com',
   ],
@@ -20,7 +20,7 @@ export const SENTRIX_CHAIN_PARAMS = {
 /** Read-only provider — for fetching balances, chain info, etc. */
 export function getReadProvider(): ethers.JsonRpcProvider {
   return new ethers.JsonRpcProvider(
-    process.env.NEXT_PUBLIC_RPC_URL ?? 'https://sentrix-rpc.sentriscloud.com'
+    process.env.NEXT_PUBLIC_RPC_URL ?? 'https://rpc.sentrixchain.com/rpc'
   )
 }
 
@@ -89,7 +89,7 @@ export async function getSRXBalance(address: string): Promise<number> {
 export async function getChainHeight(): Promise<number> {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? 'https://sentrix-api.sentriscloud.com'}/chain/info`
+      `${process.env.NEXT_PUBLIC_API_URL ?? 'https://api.sentrixchain.com'}/chain/info`
     )
     const data = await res.json()
     return data.height ?? 0

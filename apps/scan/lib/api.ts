@@ -610,8 +610,8 @@ export async function fetchEventLogs(
   toBlock: number | "latest" = "latest",
 ): Promise<EventLog[]> {
   const base = (network === "testnet"
-    ? (process.env.NEXT_PUBLIC_TESTNET_API || "https://testnet-api.sentriscloud.com")
-    : (process.env.NEXT_PUBLIC_MAINNET_API || "https://sentrix-api.sentriscloud.com"));
+    ? (process.env.NEXT_PUBLIC_TESTNET_API || "https://testnet-api.sentrixchain.com")
+    : (process.env.NEXT_PUBLIC_MAINNET_API || "https://api.sentrixchain.com"));
   const fromHex = typeof fromBlock === "number" ? `0x${fromBlock.toString(16)}` : fromBlock;
   const toHex = typeof toBlock === "number" ? `0x${toBlock.toString(16)}` : toBlock;
   try {
