@@ -7,7 +7,7 @@ const VALIDATOR_BENEFITS = [
   {
     icon: "reward",
     title: "Block Rewards",
-    desc: "Earn SRX for every block you produce. Era 0: 1 SRX/block. Halving every 42M blocks ensures long-term scarcity.",
+    desc: "Earn SRX for every block you produce. Era 0: 1 SRX/block. Halving every 126M blocks ensures long-term scarcity.",
   },
   {
     icon: "fee",
