@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 })
     }
 
-    const { address } = body as { address?: string }
+    const { address, captcha } = body as { address?: string; captcha?: string }
 
     if (!address || typeof address !== 'string') {
       return NextResponse.json({ success: false, error: 'Missing wallet address' }, { status: 400 })
@@ -95,6 +95,43 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Invalid wallet address (must be 0x + 40 hex characters)' },
         { status: 400 }
       )
+    }
+
+    // Cloudflare Turnstile verification — only enforced when secret is set,
+    // so testnet without TURNSTILE_SECRET_KEY skips this.
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY
+    if (turnstileSecret) {
+      if (!captcha || typeof captcha !== 'string') {
+        return NextResponse.json(
+          { success: false, error: 'Captcha token missing' },
+          { status: 400 }
+        )
+      }
+      try {
+        const verifyRes = await fetch(
+          'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ secret: turnstileSecret, response: captcha }),
+            signal: AbortSignal.timeout(5_000),
+          }
+        )
+        const verifyData = (await verifyRes.json()) as { success?: boolean; 'error-codes'?: string[] }
+        if (!verifyData.success) {
+          console.warn('[faucet] turnstile failed:', verifyData['error-codes'])
+          return NextResponse.json(
+            { success: false, error: 'Captcha verification failed — try again' },
+            { status: 403 }
+          )
+        }
+      } catch (err) {
+        console.error('[faucet] turnstile verify error:', err)
+        return NextResponse.json(
+          { success: false, error: 'Captcha verification unavailable — try again later' },
+          { status: 503 }
+        )
+      }
     }
 
     // Check rate limits — IP AND address
