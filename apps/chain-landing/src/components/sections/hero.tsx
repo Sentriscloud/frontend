@@ -44,13 +44,13 @@ export function Hero() {
         </h1>
 
         <TextGenerate
-          text="A Layer-1 blockchain engineered for fast, deterministic settlement. Built from scratch in Rust — 3-second finality, deflationary three-token economy, Ethereum-compatible tooling."
-          className="text-base text-[var(--tx-m)] max-w-[480px] leading-[1.7] font-light mb-11"
+          text="A Layer-1 blockchain engineered for fast, deterministic settlement. Built from scratch in Rust — 1-second blocks, instant BFT finality, single-token economy (SRX), Ethereum-compatible tooling."
+          className="text-base text-[var(--tx-m)] max-w-[520px] leading-[1.7] font-light mb-11"
         />
 
         <div className="flex gap-4 flex-wrap anim-hero-4 opacity-0">
           <Button href="#developers">Start Building</Button>
-          <Button href="https://sentrixscan.sentriscloud.com" variant="secondary" target="_blank">Explore Chain</Button>
+          <Button href="https://scan.sentrixchain.com" variant="secondary" target="_blank">Explore Chain</Button>
           <Button href="https://t.me/SentrixCommunity" variant="secondary">Join Community →</Button>
         </div>
       </div>

@@ -77,18 +77,18 @@ export function Developers() {
         <div className="rounded-2xl border border-[var(--brd)] bg-[var(--sf)] p-6">
           <p className="text-[10px] font-mono tracking-[.15em] text-[var(--cyan)] mb-2">MAINNET</p>
           <p className="text-sm text-[var(--tx-m)] leading-relaxed font-mono">
-            RPC: <span className="text-[var(--tx)]">https://sentrix-rpc.sentriscloud.com</span><br/>
+            RPC: <span className="text-[var(--tx)]">https://rpc.sentrixchain.com</span><br/>
             Chain ID: <span className="text-[var(--tx)]">7119</span> (0x1bcf)<br/>
-            Explorer: <span className="text-[var(--tx)]">sentrixscan.sentriscloud.com</span>
+            Explorer: <a href="https://scan.sentrixchain.com" target="_blank" rel="noopener noreferrer" className="text-[var(--cyan)] hover:underline">scan.sentrixchain.com</a>
           </p>
         </div>
         <div className="rounded-2xl border border-[var(--brd)] bg-[var(--sf)] p-6">
           <p className="text-[10px] font-mono tracking-[.15em] text-[var(--orange)] mb-2">TESTNET</p>
           <p className="text-sm text-[var(--tx-m)] leading-relaxed font-mono">
-            RPC: <span className="text-[var(--tx)]">https://testnet-rpc.sentriscloud.com</span><br/>
+            RPC: <span className="text-[var(--tx)]">https://testnet-rpc.sentrixchain.com</span><br/>
             Chain ID: <span className="text-[var(--tx)]">7120</span> (0x1bd0)<br/>
-            Explorer: <a href="https://testnet-scan.sentriscloud.com" target="_blank" rel="noopener noreferrer" className="text-[var(--cyan)] hover:underline">testnet-scan.sentriscloud.com</a><br/>
-            Free tokens via faucet — no real value
+            Explorer: <a href="https://scan.sentrixchain.com" target="_blank" rel="noopener noreferrer" className="text-[var(--cyan)] hover:underline">scan.sentrixchain.com</a> (toggle Testnet)<br/>
+            Faucet: <a href="https://faucet.sentrixchain.com" target="_blank" rel="noopener noreferrer" className="text-[var(--cyan)] hover:underline">faucet.sentrixchain.com</a> — free tokens, no real value
           </p>
         </div>
       </div>

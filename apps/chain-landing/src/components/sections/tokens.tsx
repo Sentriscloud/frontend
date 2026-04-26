@@ -27,9 +27,9 @@ export function Tokens() {
       <Reveal>
         <SectionHeader
           tag="Token Economy"
-          title="Three tokens,"
-          titleEm="one ecosystem."
-          subtitle="A balanced economy where each token serves a distinct purpose, creating sustainable value and organic demand."
+          title="One token."
+          titleEm="Three roles."
+          subtitle="SRX is the only protocol token. It pays for gas, secures the chain via staking, and aligns economic incentives across the network."
         />
       </Reveal>
 

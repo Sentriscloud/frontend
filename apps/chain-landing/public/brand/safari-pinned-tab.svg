@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <path d="M512,334 L691,513 L512,692 L333,513 Z M512,346 L679,513 L512,680 L345,513 Z" fill="black" fill-rule="evenodd"/>
+  <polygon points="512,438 586,512 512,586 438,512" fill="black"/>
+  <circle cx="512" cy="340" r="11" fill="black"/>
+  <circle cx="685" cy="513" r="11" fill="black"/>
+  <circle cx="512" cy="686" r="11" fill="black"/>
+  <circle cx="339" cy="513" r="11" fill="black"/>
+</svg>

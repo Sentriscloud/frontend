@@ -93,7 +93,7 @@ export function Navbar() {
         {/* Right side */}
         <div className="flex items-center gap-3 shrink-0">
           <ThemeToggle />
-          <a href="https://sentrixscan.sentriscloud.com" target="_blank" rel="noopener noreferrer" className="hidden md:inline-block border border-[var(--brd2)] text-[var(--gold)] px-5 py-2 text-[10px] font-normal tracking-[.12em] uppercase font-sans rounded-full hover:bg-[rgba(200,168,74,.08)] transition-colors">
+          <a href="https://scan.sentrixchain.com" target="_blank" rel="noopener noreferrer" className="hidden md:inline-block border border-[var(--brd2)] text-[var(--gold)] px-5 py-2 text-[10px] font-normal tracking-[.12em] uppercase font-sans rounded-full hover:bg-[rgba(200,168,74,.08)] transition-colors">
             Explorer
           </a>
           <button onClick={() => setOpen(!open)} className="xl:hidden" aria-label="Menu">

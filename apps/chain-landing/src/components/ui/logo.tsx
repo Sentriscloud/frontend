@@ -1,15 +1,11 @@
-import Image from "next/image";
-
-export function SentrixLogo({ size = 32 }: { size?: number }) {
+export function SentrixLogo({ size = 32, className }: { size?: number; className?: string }) {
   return (
-    <Image
-      src="/sentrix-coin-og.png"
+    <img
+      src="/brand/sentrix-mark.svg"
       alt="Sentrix"
       width={size}
       height={size}
-      className="object-contain"
-      quality={100}
-      priority
+      className={className ?? "object-contain"}
     />
   );
 }
