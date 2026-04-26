@@ -7,7 +7,7 @@ const COLUMNS = [
     links: [
       { label: "Explorer",          href: SITE.explorer },
       { label: "Testnet Explorer", href: "https://testnet-scan.sentriscloud.com" },
-      { label: "Wallet",           href: "https://sentrix-wallet.sentriscloud.com" },
+      { label: "Solux Wallet",     href: "https://solux.sentriscloud.com" },
       { label: "Faucet",           href: "https://faucet.sentriscloud.com" },
     ],
   },
