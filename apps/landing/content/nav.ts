@@ -14,7 +14,7 @@ export const primaryNav: NavLink[] = [
 export const footerLinks = {
   products: [
     { label: "SentrixScan", href: "https://sentrixscan.sentriscloud.com", external: true },
-    { label: "Solux", href: "https://solux.sentriscloud.com", external: true },
+    { label: "Solux", href: "https://wallet.sentriscloud.com", external: true },
     { label: "Sentrix Faucet", href: "https://sentrix-faucet.sentriscloud.com", external: true },
     { label: "CoinBlast", href: "#", external: false },
   ],

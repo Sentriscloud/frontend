@@ -37,7 +37,7 @@ export const products = [
     tagline: "Self-custody wallet for SRX",
     description:
       "Send, receive, and manage SRX and SRC-20 tokens. Web today, mobile (Flutter) in development. Same brand, same keys, two surfaces.",
-    href: "https://solux.sentriscloud.com",
+    href: "https://wallet.sentriscloud.com",
     status: "in-development",
     icon: Wallet,
     external: true,
