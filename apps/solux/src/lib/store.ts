@@ -88,22 +88,23 @@ export interface NetworkConfig {
   accent: 'gold' | 'teal';
 }
 
-// Per Caddyfile + memory: testnet API at testnet-api.sentriscloud.com
-// (4-validator stack on VPS4, migrated 2026-04-23). Mainnet round-robins
-// VPS1/2/3 via sentrix-api.sentriscloud.com.
+// Chain API moved to sentrixchain.com domain in 2026-04. Old sentriscloud.com
+// API hostnames have no DNS — wallet showed disconnected because every RPC
+// call failed to resolve. Mainnet round-robins VPS1/2/3, testnet is the
+// 4-validator stack on VPS4.
 export const NETWORKS: Record<Network, NetworkConfig> = {
   mainnet: {
     network: 'mainnet',
     label: 'Mainnet',
     chainId: 7119,
-    apiUrl: 'https://sentrix-api.sentriscloud.com',
+    apiUrl: 'https://api.sentrixchain.com',
     accent: 'gold',
   },
   testnet: {
     network: 'testnet',
     label: 'Testnet',
     chainId: 7120,
-    apiUrl: 'https://testnet-api.sentriscloud.com',
+    apiUrl: 'https://testnet-api.sentrixchain.com',
     accent: 'teal',
   },
 };
