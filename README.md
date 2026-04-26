@@ -21,12 +21,12 @@
 |-----|------------|----------|
 | **chain-landing** | Sentrix Chain protocol website + docs | [sentrixchain.com](https://sentrixchain.com) |
 | **landing** | SentrisCloud brand site | [sentriscloud.com](https://sentriscloud.com) |
-| **scan** | Block explorer for Sentrix Chain | [scan.sentrixchain.com](https://scan.sentrixchain.com) |
-| **faucet** | Testnet SRX faucet | [faucet.sentrixchain.com](https://faucet.sentrixchain.com) |
-| **coinblast** | DEX + token launchpad | [coinblast.sentriscloud.com](https://coinblast.sentriscloud.com) (in development) |
-| **solux** | Solux wallet web companion | [solux.sentriscloud.com](https://solux.sentriscloud.com) (in development) |
+| **scan** | Block explorer for Sentrix Chain (mainnet + testnet, in-app toggle) | [scan.sentrixchain.com](https://scan.sentrixchain.com) |
+| **faucet** | Mainnet + testnet SRX faucet, Turnstile-protected | [faucet.sentrixchain.com](https://faucet.sentrixchain.com) |
+| **solux** | Self-custody web wallet — keys stay on-device, multi-account, staking, SRC-20 | [solux.sentriscloud.com](https://solux.sentriscloud.com) |
+| **coinblast** | DEX + memecoin launchpad | [coinblast.sentriscloud.com](https://coinblast.sentriscloud.com) (alpha) |
 
-The Solux **mobile** wallet (Flutter) lives in its own repo: [`sentriscloud/solux`](https://github.com/sentriscloud/solux).
+The Solux **mobile** wallet (Flutter) lives in its own repo: [`sentriscloud/solux`](https://github.com/sentriscloud/solux). Web and mobile share the same brand and the same protocol; keys are managed independently per device.
 
 ## Layout
 
