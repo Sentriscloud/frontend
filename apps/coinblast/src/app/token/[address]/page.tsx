@@ -60,7 +60,7 @@ export default async function TokenDetailPage({ params }: Props) {
                 <span>·</span>
                 <span>Created {formatTimestamp(token.createdAt)}</span>
                 <Link
-                  href={`${process.env.NEXT_PUBLIC_EXPLORER_URL ?? 'https://sentrixscan.sentriscloud.com'}/address/${token.address}`}
+                  href={`${process.env.NEXT_PUBLIC_EXPLORER_URL ?? 'https://scan.sentrixchain.com'}/address/${token.address}`}
                   target="_blank"
                   className="flex items-center gap-1 hover:text-[var(--gold)] transition-colors"
                 >

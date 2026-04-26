@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Sentrix Labs" }],
   creator: "Sentrix Labs",
   publisher: "Sentrix Labs",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://sentrixscan.sentriscloud.com"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://scan.sentrixchain.com"),
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
 };
 

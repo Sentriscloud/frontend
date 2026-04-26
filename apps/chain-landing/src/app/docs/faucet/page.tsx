@@ -68,8 +68,8 @@ export default function FaucetDocsPage() {
             </Step>
             <Step n={2} title="Pick the right faucet">
               Open{" "}
-              <Anchor href="https://faucet.sentriscloud.com">
-                faucet.sentriscloud.com
+              <Anchor href="https://faucet.sentrixchain.com">
+                faucet.sentrixchain.com
               </Anchor>
               . The header shows the current network. Make sure it matches the
               chain you actually want to use.
@@ -88,7 +88,7 @@ export default function FaucetDocsPage() {
               The site signs the transaction server-side and broadcasts to a
               Sentrix node. Once confirmed, you&apos;ll see the transaction
               hash with a link to{" "}
-              <Anchor href="https://sentrixscan.sentriscloud.com">
+              <Anchor href="https://scan.sentrixchain.com">
                 SentrixScan
               </Anchor>
               .
@@ -198,7 +198,7 @@ export default function FaucetDocsPage() {
             </Trouble>
             <Trouble q="Transaction sent but balance hasn't appeared">
               Click the transaction link to{" "}
-              <Anchor href="https://sentrixscan.sentriscloud.com">
+              <Anchor href="https://scan.sentrixchain.com">
                 SentrixScan
               </Anchor>{" "}
               and confirm it was included. Wallets vary in how aggressively

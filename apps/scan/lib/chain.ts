@@ -10,7 +10,7 @@ export const sentrixMainnet = defineChain({
     },
   },
   blockExplorers: {
-    default: { name: "Sentrix Scan", url: "https://sentrixscan.sentriscloud.com" },
+    default: { name: "Sentrix Scan", url: "https://scan.sentrixchain.com" },
   },
 });
 

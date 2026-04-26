@@ -26,7 +26,7 @@ export const products = [
     tagline: "Block explorer for Sentrix Chain",
     description:
       "Browse blocks, transactions, addresses, validators, and SRC-20 tokens. Real-time stats, smart search, mainnet + testnet.",
-    href: "https://sentrixscan.sentriscloud.com",
+    href: "https://scan.sentrixchain.com",
     status: "live",
     icon: Search,
     external: true,
@@ -48,7 +48,7 @@ export const products = [
     tagline: "Testnet token tap for builders",
     description:
       "Request testnet SRX in seconds. Rate-limited, no signup, ready for CI and integration testing.",
-    href: "https://sentrix-faucet.sentriscloud.com",
+    href: "https://faucet.sentrixchain.com",
     status: "live",
     icon: Droplets,
     external: true,

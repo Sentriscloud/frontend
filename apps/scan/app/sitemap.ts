@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://sentrixscan.sentriscloud.com";
+  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://scan.sentrixchain.com";
   const now = new Date();
 
   const paths: { path: string; changeFrequency: "always" | "hourly" | "monthly"; priority: number }[] = [

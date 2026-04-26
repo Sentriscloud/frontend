@@ -6,9 +6,9 @@ const COLUMNS = [
     heading: "Ecosystem",
     links: [
       { label: "Explorer",          href: SITE.explorer },
-      { label: "Testnet Explorer", href: "https://testnet-scan.sentriscloud.com" },
+      { label: "Testnet Explorer", href: "https://scan.sentrixchain.com" },
       { label: "Solux Wallet",     href: "https://solux.sentriscloud.com" },
-      { label: "Faucet",           href: "https://faucet.sentriscloud.com" },
+      { label: "Faucet",           href: "https://faucet.sentrixchain.com" },
     ],
   },
   {

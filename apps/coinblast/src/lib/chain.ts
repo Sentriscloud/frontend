@@ -13,7 +13,7 @@ export const SENTRIX_CHAIN_PARAMS = {
   },
   rpcUrls: [process.env.NEXT_PUBLIC_RPC_URL ?? 'https://rpc.sentrixchain.com/rpc'],
   blockExplorerUrls: [
-    process.env.NEXT_PUBLIC_EXPLORER_URL ?? 'https://sentrixscan.sentriscloud.com',
+    process.env.NEXT_PUBLIC_EXPLORER_URL ?? 'https://scan.sentrixchain.com',
   ],
 }
 
