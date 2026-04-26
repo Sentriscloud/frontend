@@ -4,7 +4,7 @@
 
 <h1 align="center">sentriscloud-frontend</h1>
 
-<p align="center">Monorepo for SentrisCloud user-facing products.</p>
+<p align="center">Monorepo for the user-facing apps and tooling around <a href="https://sentrixchain.com">Sentrix Chain</a>.</p>
 
 ---
 
@@ -15,28 +15,36 @@
 - **Language:** TypeScript 5 (shared `tsconfig.base.json`)
 - **Node:** 20+
 
+## Apps
+
+| App | What it is | Live URL |
+|-----|------------|----------|
+| **chain-landing** | Sentrix Chain protocol website + docs | [sentrixchain.com](https://sentrixchain.com) |
+| **landing** | SentrisCloud brand site | [sentriscloud.com](https://sentriscloud.com) |
+| **scan** | Block explorer for Sentrix Chain | [scan.sentrixchain.com](https://scan.sentrixchain.com) |
+| **faucet** | Testnet SRX faucet | [faucet.sentrixchain.com](https://faucet.sentrixchain.com) |
+| **coinblast** | DEX + token launchpad | [coinblast.sentriscloud.com](https://coinblast.sentriscloud.com) (in development) |
+| **solux** | Solux wallet web companion | [solux.sentriscloud.com](https://solux.sentriscloud.com) (in development) |
+
+The Solux **mobile** wallet (Flutter) lives in its own repo: [`sentriscloud/solux`](https://github.com/sentriscloud/solux).
+
 ## Layout
 
 ```
 sentriscloud-frontend/
-├── apps/              ← Deployable applications
-│   ├── (sentrix-scan)        block explorer
-│   ├── (sentrix-wallet-web)  web wallet
-│   ├── (sentrix-faucet)      testnet faucet
-│   ├── (coinblast)           DEX + launchpad
-│   └── (landing)             sentriscloud.com
-├── packages/          ← Shared internal libraries
-│   ├── (ui)                  shared design-system components
-│   ├── (chain-client)        Sentrix Chain RPC + indexer client
-│   ├── (config)              shared config (eslint, tsconfig, etc.)
-│   └── (utils)               shared utilities
+├── apps/
+│   ├── chain-landing/    sentrixchain.com — protocol site + docs
+│   ├── landing/          sentriscloud.com — brand site
+│   ├── scan/             block explorer
+│   ├── faucet/           testnet faucet
+│   ├── coinblast/        DEX + launchpad
+│   └── solux/            wallet web companion
+├── packages/             (shared libs — added as needed)
 ├── package.json
 ├── pnpm-workspace.yaml
 ├── turbo.json
 └── tsconfig.base.json
 ```
-
-Apps and packages are added incrementally as products migrate in. The `apps/` and `packages/` folders start empty.
 
 ## Commands
 
@@ -44,16 +52,17 @@ Apps and packages are added incrementally as products migrate in. The `apps/` an
 |---------|--------------|
 | `pnpm install` | Install all workspace dependencies |
 | `pnpm dev` | Run all apps' dev servers in parallel |
-| `pnpm build` | Build all packages and apps |
+| `pnpm --filter <app> dev` | Run a single app's dev server |
+| `pnpm build` | Build all apps |
+| `pnpm --filter <app> build` | Build a single app |
 | `pnpm lint` | Lint all workspaces |
 | `pnpm typecheck` | Type-check all workspaces |
-| `pnpm test` | Run all tests |
 
 ## Where things live
 
-- **Protocol, SDKs, contracts, brand assets** → [`sentrix-labs`](https://github.com/sentrix-labs)
-- **Products and applications (this repo)** → [`sentriscloud`](https://github.com/sentriscloud)
-- **Mobile (Flutter)** → `sentriscloud/sentriscloud-mobile` (separate repo, different stack)
+- **Protocol, Rust node, SDKs, contracts, brand-kit** → [`sentrix-labs`](https://github.com/sentrix-labs)
+- **User-facing TS apps (this repo)** → [`sentriscloud/frontend`](https://github.com/sentriscloud/frontend)
+- **Solux mobile wallet (Flutter)** → [`sentriscloud/solux`](https://github.com/sentriscloud/solux)
 
 ## Adding a new app
 
@@ -65,7 +74,3 @@ pnpm init
 ```
 
 The workspace will pick it up automatically via `pnpm-workspace.yaml`.
-
-## Adding a new package
-
-Same as above but under `packages/`. Use `@sentriscloud/<name>` for the package name.
