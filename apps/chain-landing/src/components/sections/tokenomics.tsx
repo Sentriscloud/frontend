@@ -34,7 +34,7 @@ export function Tokenomics() {
           tag="Tokenomics"
           title="Supply"
           titleEm="distribution."
-          subtitle="Hard-capped at 210 million SRX. Transparent allocation with built-in deflation and halving schedule."
+          subtitle="Hard-capped at 315 million SRX. Transparent allocation with built-in deflation and halving schedule."
         />
       </Reveal>
 

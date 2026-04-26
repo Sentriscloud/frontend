@@ -24,8 +24,8 @@ export const STATS = [
 export const ABOUT_POINTS = [
   {
     num: "01",
-    title: "210M Hard Cap, Zero Inflation",
-    desc: "210 million SRX minted at genesis. Block rewards halve every 42M blocks (~4 years per era). Once total_minted hits MAX_SUPPLY, rewards drop to zero. No exceptions.",
+    title: "315M Hard Cap, Zero Inflation",
+    desc: "315 million SRX max supply (tokenomics v2 fork active since 2026-04-26). Block rewards halve every 126M blocks (BTC-parity 4-year cadence). Once total_minted hits MAX_SUPPLY, rewards drop to zero. No exceptions.",
   },
   {
     num: "02",
@@ -73,7 +73,7 @@ export const FEATURES = [
   {
     icon: "flame",
     title: "Deflationary by Protocol",
-    desc: "50% of every fee permanently burned. Block-reward halving every 42M blocks. Eventually burn rate exceeds issuance — circulating supply decreases over time.",
+    desc: "50% of every fee permanently burned. Block-reward halving every 126M blocks. Eventually burn rate exceeds issuance — circulating supply decreases over time.",
   },
   {
     icon: "lock",
@@ -112,7 +112,7 @@ export const TOKENS = [
     name: "Staking & Consensus",
     type: "Native Coin · DPoS",
     desc: "Validators stake SRX to be eligible for block production. Delegators stake SRX to validators and earn a share of block rewards + fees, paid in SRX. Slashing burns staked SRX.",
-    supply: "MAX: 210,000,000 SRX",
+    supply: "MAX: 315,000,000 SRX",
   },
   {
     symbol: "SRX",
@@ -140,7 +140,7 @@ export const TOKENOMICS_CARDS = [
   {
     icon: "clock",
     title: "Halving Schedule",
-    desc: "Era 0: 1 SRX/block (0–42M), Era 1: 0.5 SRX (42M–84M), Era 2: 0.25 SRX (84M–126M), Era 3: 0.125 SRX. Halves every ~4 years. Capped by remaining headroom.",
+    desc: "Era 0: 1 SRX/block (0–126M), Era 1: 0.5 SRX (126M–252M), Era 2: 0.25 SRX (252M–378M), Era 3: 0.125 SRX. Halves every ~4 years (BTC-parity). Capped by remaining headroom (315M max).",
   },
   {
     icon: "trend",
@@ -222,7 +222,7 @@ export const ROADMAP = [
   {
     phase: "Voyager",
     status: "active" as const,
-    statusText: "● Live on Mainnet (v2.1.36)",
+    statusText: "● Live on Mainnet (v2.1.39)",
     title: "DPoS + BFT + EVM",
     items: ["Delegated Proof of Stake with reward distribution v2", "BFT finality (2/3+1 votes) wired and active", "EVM via revm 37 — eth_sendRawTransaction live", "ClaimRewards op + treasury escrow, 4 validators in production"],
   },
@@ -243,7 +243,7 @@ export const ROADMAP = [
 ];
 
 export const TICKER_ITEMS = [
-  "SRX|$0.00", "CHAIN ID|7119 (0x1bcf)", "HARD CAP|210,000,000", "BURN|50% per tx",
+  "SRX|$0.00", "CHAIN ID|7119 (0x1bcf)", "HARD CAP|315,000,000", "BURN|50% per tx",
   "BLOCK TIME|1s", "FINALITY|Instant (BFT 2/3+1)", "CONSENSUS|DPoS + BFT", "UNIT|1 sentri = 10⁻⁸ SRX",
   "TOKEN STD|SRC-20", "MIN FEE|0.0001 SRX", "MAX TX/BLOCK|5,000", "P2P|libp2p",
   "STORAGE|libmdbx", "STATUS|● MAINNET LIVE",
