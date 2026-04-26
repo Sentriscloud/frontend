@@ -32,12 +32,12 @@ export const products = [
     external: true,
   },
   {
-    slug: "wallet",
-    name: "Sentrix Wallet",
+    slug: "solux",
+    name: "Solux",
     tagline: "Self-custody wallet for SRX",
     description:
-      "Send, receive, and manage SRX and SRC-20 tokens. Web wallet today; mobile app in development.",
-    href: "https://sentrix-wallet.sentriscloud.com",
+      "Send, receive, and manage SRX and SRC-20 tokens. Web today, mobile (Flutter) in development. Same brand, same keys, two surfaces.",
+    href: "https://solux.sentriscloud.com",
     status: "in-development",
     icon: Wallet,
     external: true,
