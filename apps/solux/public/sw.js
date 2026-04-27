@@ -43,7 +43,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Skip cross-origin requests entirely (API calls go to sentrix-api.* etc).
+  // Skip cross-origin requests entirely (API calls go to api.sentrixchain.com).
   if (url.origin !== self.location.origin) return;
 
   // Static build assets — cache-first

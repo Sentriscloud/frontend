@@ -1,89 +1,61 @@
-# Sentrix Wallet
+# Solux
 
-Web wallet UI for the Sentrix blockchain (Chain ID 7119).
+Web wallet UI for Sentrix Chain (Chain ID 7119 mainnet, 7120 testnet).
 
-**Live:** https://sentrix-wallet.sentriscloud.com
+**Live:** https://solux.sentriscloud.com
 
 ## Features
 
 - Create new wallet (ECDSA secp256k1 key generation)
-- Import existing wallet via private key
-- Dashboard — SRX and SNTX token balances
-- Send SRX (native token) with confirmation dialog
-- Send SNTX (SRC-20 token) with confirmation dialog
-- Transaction history
+- Import existing wallet via private key, mnemonic, or keystore
+- Dashboard — SRX balance, transaction history, validator delegations
+- Send SRX with confirmation dialog
+- Stake / unstake / claim rewards (Voyager DPoS)
+- Mainnet / Testnet network switcher
+- Address book + per-address notifications
+- PWA install (offline shell, no offline tx)
 
 ## Tech Stack
 
 - Next.js 16 + React 19 + TypeScript
 - @noble/secp256k1 + @noble/hashes (ECDSA signing, keccak256, sha256)
-- Zustand (state management, private key NOT persisted to storage)
+- @scure/bip32 + @scure/bip39 (HD derivation, mnemonic)
+- Zustand (state; private key NOT persisted to storage)
 - Tailwind CSS 4
-- Axios (API client)
+- Axios (API client, baseURL switched per active network)
 
 ## Security
 
-- Private key never sent over network — only signature + public key
-- No wallet state persisted to storage — key lives in memory only, cleared on refresh
-- Integer arithmetic for amount calculations (no floating-point precision loss)
+- Private key never leaves the browser — only signature + public key are sent
+- Wallet key lives in memory only; cleared on lock / refresh / browser close
+- Mnemonic kept session-only (never persisted)
+- Integer arithmetic for sentri amounts (no floating-point precision loss)
 - Confirmation dialog before every transaction
-- Clipboard auto-cleared 60s after private key copy
+- Clipboard auto-cleared 60s after private-key copy
 - Private key bytes zeroed after signing
 
 ## Development
 
 ```bash
-npm install
-npm run dev      # http://localhost:3000
-npm run build    # production build (standalone)
+pnpm install
+pnpm --filter @sentriscloud/solux dev      # http://localhost:3000
+pnpm --filter @sentriscloud/solux build    # production build
 ```
 
 ## Deployment
 
-Docker + GitHub Actions CI/CD:
-
-```
-git push master → GitHub Actions → Docker build → GHCR → SSH deploy to VPS
-```
+Production runs `next start` directly on the host as a systemd service, behind a Caddy edge proxy that adds TLS and the public hostname. Build is performed in-place on the host (`.next/` is read by `next start` at boot). To roll out a new version: `git pull && pnpm --filter @sentriscloud/solux build && systemctl restart solux`.
 
 ### Environment Variables
 
 | Variable | Value |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | `https://sentrix-api.sentriscloud.com` |
+| `NEXT_PUBLIC_API_URL` | `https://api.sentrixchain.com` |
 | `NEXT_PUBLIC_CHAIN_ID` | `7119` |
 | `NEXT_PUBLIC_CHAIN_NAME` | `Sentrix` |
 | `NEXT_PUBLIC_NATIVE_TOKEN` | `SRX` |
-| `NEXT_PUBLIC_SNTX_CONTRACT` | `SRX20_16d17385cad3ef46d63c93f4daeb8b2f7571afd3` |
 
-## Architecture
-
-```
-sentrix-wallet/
-├── src/
-│   ├── app/              # Next.js app router
-│   │   ├── page.tsx      # Landing → redirect /wallet
-│   │   ├── layout.tsx    # Root layout + Toaster
-│   │   └── wallet/
-│   │       └── page.tsx  # Wallet page (WalletSetup or Dashboard)
-│   ├── components/
-│   │   ├── WalletSetup.tsx   # Create/import wallet
-│   │   ├── Dashboard.tsx     # Balances + navigation
-│   │   ├── SendSRX.tsx       # Send native SRX
-│   │   ├── SendSNTX.tsx      # Send SNTX token
-│   │   └── TxHistory.tsx     # Transaction history
-│   ├── lib/
-│   │   ├── crypto.ts     # ECDSA signing, address derivation, payload builder
-│   │   ├── api.ts        # Blockchain API client
-│   │   └── store.ts      # Zustand wallet store
-│   └── types/
-│       └── index.ts      # TypeScript interfaces
-├── Dockerfile            # Multi-stage Node 20 Alpine
-├── docker-compose.yml    # Production container config
-├── nginx.conf            # Reverse proxy reference config
-└── .github/workflows/
-    └── deploy.yml        # CI/CD: build → GHCR → VPS deploy
-```
+Note: the runtime API URL is also hardcoded in `src/lib/store.ts` (`NETWORKS`) so the network switcher works without env reloads. The env var is informational.
 
 ## License
 
