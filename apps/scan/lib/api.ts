@@ -28,6 +28,8 @@ export interface ChainInfo {
   height: number;
   total_minted_srx: number;
   total_burned_srx: number;
+  // Fork-aware: pre tokenomics-v2 fork = 210M, post-fork = 315M.
+  max_supply_srx: number;
   mempool_size: number;
   active_validators: number;
   deployed_tokens: number;
