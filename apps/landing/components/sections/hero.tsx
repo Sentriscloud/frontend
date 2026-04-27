@@ -4,7 +4,7 @@ import { ArrowDown } from "lucide-react";
 /**
  * Hero — editorial type-led, asymmetric. No grid background, no eyebrow tag,
  * no double CTA. The headline does the work; everything else is supporting.
- * Backdrop numeral provides a quiet editorial signature without the AI-grid feel.
+ * Backdrop numeral provides a quiet editorial signature without the generic-grid feel.
  */
 export function Hero() {
   return (

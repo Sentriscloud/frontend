@@ -10,8 +10,9 @@ type Props = HTMLMotionProps<"div"> & {
 
 /**
  * Subtle in-view reveal. Starts at opacity 0.6 (still readable) and animates
- * to 1 — so SSR / no-JS content remains visible, and "AI scroll-spam" feel is
- * dialled down. Don't use on hero / above-the-fold content.
+ * to 1 — so SSR / no-JS content remains visible, and the generic
+ * marketing-spam reveal feel is dialled down. Don't use on hero /
+ * above-the-fold content.
  */
 export function ScrollReveal({ children, delay = 0, ...rest }: Props) {
   return (
