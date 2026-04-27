@@ -16,7 +16,7 @@ export const SITE = {
 
 export const STATS = [
   { value: "1", unit: "s", label: "Block Time" },
-  { value: "210", unit: "M", label: "Hard Cap Supply" },
+  { value: "315", unit: "M", label: "Hard Cap Supply" },
   { value: "7119", unit: "", label: "Chain ID" },
   { value: "50", unit: "%", label: "Fee Burned" },
 ];
