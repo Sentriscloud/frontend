@@ -257,7 +257,15 @@ export default function Dashboard() {
             className="flex items-center gap-2.5 group"
             aria-label="Switch account"
           >
-            <span className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)] font-mono font-bold text-sm">
+            <span
+              className="w-10 h-10 rounded-full flex items-center justify-center font-mono font-bold text-sm text-[var(--gold)]"
+              style={{
+                background:
+                  'radial-gradient(circle at 30% 25%, var(--gold-bg-s) 0%, var(--gold-bg) 60%, var(--bk-2) 100%)',
+                boxShadow:
+                  'inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px var(--gold-bg-s)',
+              }}
+            >
               {avatarChar}
             </span>
             <div className="text-left">
@@ -280,45 +288,52 @@ export default function Dashboard() {
         </header>
 
         {/* ── Balance hero ──────────────────────────────── */}
-        <div className="corner-lines relative mb-5 rounded-2xl bg-[var(--sf)] border border-[var(--brd)] overflow-hidden animate-fade-up delay-1">
-          {/* Hex-grid texture overlay */}
-          <div
-            aria-hidden
-            className="absolute inset-0 pointer-events-none opacity-60"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 50% 0%, rgba(200,168,74,0.10) 0%, transparent 60%), radial-gradient(circle at 1px 1px, rgba(255,255,255,0.025) 1px, transparent 0)',
-              backgroundSize: 'auto, 18px 18px',
-            }}
-          />
+        <div className="luxe-card corner-lines relative mb-5 rounded-2xl overflow-hidden animate-fade-up delay-1">
+          {/* Decorative slow sheen */}
+          <div aria-hidden className="sheen-line" />
 
           <div className="relative px-6 pt-5 pb-5">
-            {/* Top row: zap + name + network · eye */}
-            <div className="flex items-start justify-between mb-5">
+            {/* Top row: brand mark · network · eye */}
+            <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-lg flex items-center justify-center bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)]">
-                  <Zap className="w-4 h-4" fill="currentColor" />
+                <span
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{
+                    background:
+                      'radial-gradient(circle at 30% 25%, var(--gold-bg-s) 0%, var(--gold-bg) 70%, transparent 100%)',
+                    border: '1px solid var(--gold-bg-s)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+                  }}
+                >
+                  <img src="/srx-mark.svg" alt="" className="w-5 h-5" />
                 </span>
                 <div>
                   <div className="font-serif text-base text-[var(--tx)] leading-tight">Solux</div>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <span className={`w-1.5 h-1.5 rounded-full ${
-                      net.accent === 'teal' ? 'bg-[#2dd4bf]' : 'bg-[var(--green)]'
-                    }`} />
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--tx-d)]">
-                      SRX {net.label}
-                    </span>
-                  </div>
+                  <span
+                    className="inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider"
+                    style={{
+                      background: 'var(--bk-2)',
+                      border: '1px solid var(--brd)',
+                      color: 'var(--tx-2)',
+                    }}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full animate-pulse-live ${
+                        net.accent === 'teal' ? 'bg-[#2dd4bf]' : 'bg-[var(--green)]'
+                      }`}
+                    />
+                    SRX · {net.label}
+                  </span>
                 </div>
               </div>
               <button
                 onClick={() => setHideBalances(!hideBalances)}
                 aria-label={hideBalances ? 'Show balances' : 'Hide balances'}
-                className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--bk-2)]/60 border border-[var(--brd)] hover:bg-[var(--sf-2)] transition-colors"
+                className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--bk-2)] border border-[var(--brd)] hover:bg-[var(--sf-2)] hover:border-[var(--gold-bg-s)] transition-colors"
               >
                 {hideBalances
-                  ? <EyeOff className="w-3.5 h-3.5 text-[var(--tx-m)]" />
-                  : <Eye className="w-3.5 h-3.5 text-[var(--tx-m)]" />}
+                  ? <EyeOff className="w-4 h-4 text-[var(--tx-m)]" />
+                  : <Eye className="w-4 h-4 text-[var(--tx-m)]" />}
               </button>
             </div>
 
@@ -326,9 +341,9 @@ export default function Dashboard() {
             <div className="eyebrow mb-2">Total balance</div>
             <div className="flex items-baseline gap-2 mb-5">
               {loading || srxBalance === null ? (
-                <span className="skeleton h-10 w-36" />
+                <span className="skeleton h-12 w-44" />
               ) : (
-                <span className="font-serif text-4xl text-[var(--tx)] tab-num leading-none">
+                <span className="font-serif text-[44px] text-[var(--tx)] tab-num leading-none tracking-tight">
                   {hideBalances ? '••••••' : formatBalance(srxBalance)}
                 </span>
               )}
@@ -338,12 +353,12 @@ export default function Dashboard() {
             {/* Address pill */}
             <button
               onClick={copyAddress}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--bk-2)]/60 border border-[var(--brd)] hover:bg-[var(--sf-2)] transition-colors"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[var(--bk-2)] border border-[var(--brd)] hover:border-[var(--gold-bg-s)] transition-colors group"
             >
               <span className="flex items-center gap-2 text-xs font-mono text-[var(--tx-2)]">
                 {copied
-                  ? <Check className="w-3 h-3 text-[var(--gold)]" />
-                  : <Copy className="w-3 h-3 text-[var(--tx-d)]" />}
+                  ? <Check className="w-3.5 h-3.5 text-[var(--gold)]" />
+                  : <Copy className="w-3.5 h-3.5 text-[var(--tx-d)] group-hover:text-[var(--gold)] transition-colors" />}
                 {address ? truncate(address) : '—'}
               </span>
               <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)]">
@@ -353,21 +368,21 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── Action grid ─ 5 buttons match mockup ───── */}
-        <div className="grid grid-cols-5 gap-1.5 mb-6 animate-fade-up delay-2">
+        {/* ── Action grid ─ 5 buttons ─────────────────── */}
+        <div className="grid grid-cols-5 gap-2 mb-6 animate-fade-up delay-2">
           <ActionBtn
-            icon={<Send className="w-4 h-4" />}
+            icon={<Send className="w-[18px] h-[18px]" />}
             label="Send"
             onClick={() => setView({ kind: 'send' })}
             disabled={watchOnly}
           />
           <ActionBtn
-            icon={<Download className="w-4 h-4" />}
+            icon={<Download className="w-[18px] h-[18px]" />}
             label="Receive"
             onClick={() => setView({ kind: 'receive' })}
           />
           <ActionBtn
-            icon={<ArrowLeftRight className="w-4 h-4" />}
+            icon={<ArrowLeftRight className="w-[18px] h-[18px]" />}
             label="Swap"
             onClick={() => setComingSoon({
               feature: 'Token swaps',
@@ -377,12 +392,12 @@ export default function Dashboard() {
             soon
           />
           <ActionBtn
-            icon={<TrendingUp className="w-4 h-4" />}
+            icon={<TrendingUp className="w-[18px] h-[18px]" />}
             label="Stake"
             onClick={() => setView({ kind: 'staking' })}
           />
           <ActionBtn
-            icon={<Plus className="w-4 h-4" />}
+            icon={<Plus className="w-[18px] h-[18px]" />}
             label="Buy"
             onClick={() => setComingSoon({
               feature: 'Buy SRX with fiat',
@@ -401,12 +416,20 @@ export default function Dashboard() {
               {1 + tokens.length} total
             </span>
           </div>
-          <div className="rounded-xl bg-[var(--sf)] border border-[var(--brd)] divide-y divide-[var(--brd)] overflow-hidden">
+          <div className="flat-card rounded-2xl divide-y divide-[var(--brd)] overflow-hidden">
             {/* SRX (always shown) */}
-            <div className="flex items-center justify-between px-4 py-3.5">
+            <div className="flex items-center justify-between px-4 py-4 group">
               <div className="flex items-center gap-3">
-                <span className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)] shrink-0">
-                  <Zap className="w-4 h-4" fill="currentColor" />
+                <span
+                  className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+                  style={{
+                    background:
+                      'radial-gradient(circle at 30% 25%, var(--gold-bg-s) 0%, var(--gold-bg) 65%, var(--bk-2) 100%)',
+                    border: '1px solid var(--gold-bg-s)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <img src="/srx-mark.svg" alt="" className="w-6 h-6" />
                 </span>
                 <div>
                   <p className="text-sm font-medium text-[var(--tx)]">SRX</p>
@@ -433,13 +456,13 @@ export default function Dashboard() {
                 key={t.info.contract_address}
                 onClick={() => !watchOnly && setView({ kind: 'send-token', token: t.info })}
                 disabled={watchOnly}
-                className={`w-full flex items-center justify-between px-4 py-3.5 transition-colors text-left ${
+                className={`w-full flex items-center justify-between px-4 py-4 transition-colors text-left ${
                   !watchOnly ? 'hover:bg-[var(--sf-2)]' : 'cursor-default'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)] shrink-0">
-                    <Layers className="w-4 h-4" />
+                  <span className="w-11 h-11 rounded-full flex items-center justify-center bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)] shrink-0">
+                    <Layers className="w-[18px] h-[18px]" />
                   </span>
                   <div>
                     <p className="text-sm font-medium text-[var(--tx)]">{t.info.symbol}</p>
@@ -475,11 +498,20 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="rounded-xl bg-[var(--sf)] border border-[var(--brd)] overflow-hidden">
+          <div className="flat-card rounded-2xl overflow-hidden">
             {loading ? (
-              <div className="p-6 text-center text-xs text-[var(--tx-d)] font-mono">Loading…</div>
+              <div className="p-8 text-center text-xs text-[var(--tx-d)] font-mono">Loading…</div>
             ) : recent.length === 0 ? (
-              <div className="p-6 text-center">
+              <div className="p-8 text-center">
+                <div
+                  className="w-10 h-10 mx-auto mb-3 rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'var(--bk-2)',
+                    border: '1px dashed var(--brd)',
+                  }}
+                >
+                  <ArrowDownLeft className="w-4 h-4 text-[var(--tx-d)]" />
+                </div>
                 <p className="text-sm text-[var(--tx-m)]">No activity yet</p>
                 <p className="text-[11px] text-[var(--tx-d)] mt-1">
                   {watchOnly ? 'Watching for incoming transactions' : 'Send or receive SRX to begin'}
@@ -492,6 +524,12 @@ export default function Dashboard() {
                 const isReward = tx.direction === 'reward';
                 const isOut = tx.direction === 'out';
                 const amt = isTokenOp ? tx.fee : tx.amount;
+                const tone =
+                  isReward || isStaking || isTokenOp ? 'gold' :
+                  isOut ? 'red' : 'green';
+                const discTint =
+                  tone === 'gold' ? '' :
+                  tone === 'red'  ? 'tint-red' : 'tint-green';
                 return (
                   <button
                     key={tx.txid}
@@ -500,16 +538,12 @@ export default function Dashboard() {
                     style={{ borderTop: i === 0 ? 'none' : '1px solid var(--brd)' }}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        isReward || isStaking || isTokenOp ? 'bg-[var(--gold-bg)]' :
-                        isOut    ? 'bg-[var(--red-bg)]'  :
-                                   'bg-[var(--green-bg)]'
-                      }`}>
-                        {isStaking ? <Coins className="w-4 h-4 text-[var(--gold)]" /> :
-                         isTokenOp ? <Layers className="w-4 h-4 text-[var(--gold)]" /> :
-                         isReward  ? <Coins className="w-4 h-4 text-[var(--gold)]" /> :
-                         isOut     ? <ArrowUpRight className="w-4 h-4 text-[var(--red)]" /> :
-                                     <ArrowDownLeft className="w-4 h-4 text-[var(--green)]" />}
+                      <div className={`action-disc ${discTint}`} style={{ width: 40, height: 40 }}>
+                        {isStaking ? <Coins className="w-[18px] h-[18px]" /> :
+                         isTokenOp ? <Layers className="w-[18px] h-[18px]" /> :
+                         isReward  ? <Coins className="w-[18px] h-[18px]" /> :
+                         isOut     ? <ArrowUpRight className="w-[18px] h-[18px]" /> :
+                                     <ArrowDownLeft className="w-[18px] h-[18px]" />}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-[var(--tx)]">
@@ -522,9 +556,9 @@ export default function Dashboard() {
                     </div>
                     <div className="text-right">
                       <p className={`text-sm font-mono tab-num ${
-                        isReward || isStaking || isTokenOp ? 'text-[var(--gold)]' :
-                        isOut    ? 'text-[var(--red)]'  :
-                                   'text-[var(--green)]'
+                        tone === 'gold' ? 'text-[var(--gold)]' :
+                        tone === 'red'  ? 'text-[var(--red)]'  :
+                                          'text-[var(--green)]'
                       }`}>
                         {hideBalances ? '••••' : `${isOut || isTokenOp ? '−' : '+'}${(amt / SENTRI).toLocaleString(undefined, { maximumFractionDigits: 4 })}`}
                       </p>
@@ -561,30 +595,29 @@ function ActionBtn({
 }) {
   return (
     <button
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled || soon ? undefined : onClick}
       disabled={disabled}
-      className={`relative flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all active:scale-[0.97] group ${
-        soon
-          ? 'bg-[var(--bk-2)] border-[var(--brd)] cursor-not-allowed'
-          : disabled
-            ? 'bg-[var(--sf)] border-[var(--brd)] opacity-50 cursor-not-allowed'
-            : 'bg-[var(--sf)] border-[var(--brd-s)] hover:bg-[var(--sf-2)] hover:border-[var(--gold)]'
-      }`}
+      className="action-tile"
     >
       {soon && (
-        <span className="absolute top-1 right-1 text-[7px] font-mono uppercase tracking-wider px-1 py-0.5 rounded bg-[var(--gold)] text-[var(--bk)] leading-none font-bold">
+        <span
+          className="absolute top-1.5 right-1.5 text-[8px] font-mono uppercase tracking-wider px-1 py-0.5 rounded leading-none"
+          style={{
+            background: 'var(--bk-2)',
+            color: 'var(--tx-m)',
+            border: '1px solid var(--brd)',
+          }}
+        >
           Soon
         </span>
       )}
-      <span className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors border ${
-        soon ? 'bg-[var(--sf)] border-[var(--brd)] text-[var(--tx-m)]' :
-                'bg-[var(--gold-bg)] border-[var(--gold-bg-s)] text-[var(--gold)] group-hover:bg-[var(--gold-bg-s)]'
-      }`}>
+      <span className={`action-disc ${soon ? 'muted' : ''}`}>
         {icon}
       </span>
-      <span className={`text-[10px] font-mono uppercase tracking-wider transition-colors ${
-        soon ? 'text-[var(--tx-d)]' : 'text-[var(--tx-2)] group-hover:text-[var(--tx)]'
-      }`}>
+      <span
+        className="text-[10px] font-mono uppercase tracking-wider"
+        style={{ color: soon ? 'var(--tx-d)' : 'var(--tx-2)' }}
+      >
         {label}
       </span>
     </button>
