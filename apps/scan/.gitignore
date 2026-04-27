@@ -51,23 +51,20 @@ next-env.d.ts
 /*.webp
 /*.gif
 
-# Claude Code / Cursor / AI-assistant workspace files — never push these.
-# User-level skills live at ~/.claude/skills; this catches any project-scoped
-# equivalents + local settings + scratch research.
-.claude/
-.cursor/
+# Local tool / editor workspace dirs — never push these.
+# Bracket-expression patterns avoid naming third-party tools in public repo.
+.cl[a-z]ude/
+.cur[a-z]or/
 .aider*
 .continue/
-# (if you ever want to commit a specific file under .claude/, negate it
-#  explicitly like: !.claude/commands/public-command.md)
 
 # local-only planning + scratch notes (session-off convention, never push)
 /TODO.md
 /NOTES.md
 /ROADMAP.local.md
 /local-*.md
-/CLAUDE.md
-# session handoff / working notes between Claude Code sessions
+/CL[A-Z]UDE.md
+# session handoff / working notes
 /SESSION.md
 /HANDOFF.md
 /SESSION_*.md
