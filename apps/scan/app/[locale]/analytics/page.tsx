@@ -131,7 +131,7 @@ export default function AnalyticsPage() {
             <SupplyStat label="Minted" value={formatSRX(stats.total_minted_srx)} icon={Flame} color="var(--green)" />
             <SupplyStat label="Burned" value={formatSRX(stats.total_burned_srx)} icon={Flame} color="var(--red)" />
             <SupplyStat label="Circulating" value={formatSRX(stats.total_minted_srx - stats.total_burned_srx)} icon={Activity} color="var(--gold)" />
-            <SupplyStat label="Supply Cap" value={`${formatNumber(210_000_000)} SRX`} icon={Users} color="var(--tx-d)" />
+            <SupplyStat label="Supply Cap" value={`${formatNumber(stats.max_supply_srx)} SRX`} icon={Users} color="var(--tx-d)" />
           </CardContent>
         </Card>
       )}

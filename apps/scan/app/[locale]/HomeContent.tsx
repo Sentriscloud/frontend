@@ -235,11 +235,11 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
                 <p className="eyebrow mb-2">Supply in Circulation</p>
                 <div className="flex items-baseline gap-3">
                   <span className="font-serif font-light leading-none" style={{ fontSize: "clamp(30px, 4vw, 52px)" }}>
-                    {((stats.total_minted_srx / 210_000_000) * 100).toFixed(2)}
+                    {((stats.total_minted_srx / stats.max_supply_srx) * 100).toFixed(2)}
                     <em className="not-italic text-[0.6em] ml-1 text-[var(--gold)]">%</em>
                   </span>
                   <span className="font-mono text-xs text-[var(--tx-m)]">
-                    {formatSRX(stats.total_minted_srx)} of {formatNumber(210_000_000)} SRX
+                    {formatSRX(stats.total_minted_srx)} of {formatNumber(stats.max_supply_srx)} SRX
                   </span>
                 </div>
               </div>
@@ -251,7 +251,7 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
             <div className="relative h-1.5 w-full rounded-full bg-[color-mix(in_oklab,var(--foreground)_6%,transparent)] overflow-hidden">
               <div
                 className="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--gold)] to-[var(--gold-l)] rounded-full"
-                style={{ width: `${Math.min(100, (stats.total_minted_srx / 210_000_000) * 100)}%` }}
+                style={{ width: `${Math.min(100, (stats.total_minted_srx / stats.max_supply_srx) * 100)}%` }}
               />
             </div>
           </CardContent>
