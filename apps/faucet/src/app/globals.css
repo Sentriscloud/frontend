@@ -1,6 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Playfair+Display:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
+/* Decorative gold-orb is positioned fixed at right:-100px, which creates
+   horizontal overflow on intermediate viewport widths (e.g. 1024) and
+   forces a horizontal scrollbar. Clip horizontal overflow at the root
+   so the orb stays clipped and the page never offers right-scroll. */
+html, body { overflow-x: hidden; }
+
 /* ── Design tokens — harmonized with Solux post-redesign ──
    Saturated satin gold (#f4c75e), neutral deep dark, clean whites.
    Reference: apps/solux/src/app/globals.css */
