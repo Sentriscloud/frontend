@@ -168,17 +168,12 @@ export function Header() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 lg:px-6 h-16 flex items-center gap-4">
-        {/* Logo — pearl-dots mark + SENTRIX wordmark, baseline-aligned.
-            Mark height (22px) === Playfair cap-height @ 30px. Tight line-
-            height + items-center + translate-y nudge puts mark TOP exactly
-            at cap-top and mark BOTTOM exactly on baseline. */}
+        {/* Logo — pearl-dots mark + SENTRIX wordmark, visually balanced. */}
         <Link href="/" className="flex items-center gap-2 text-[var(--gold)] shrink-0">
-          <span className="-translate-y-[4px]">
-            <SentrixLogo size={22} />
-          </span>
-          <span className="hidden sm:inline font-serif text-[30px] font-light tracking-[.04em] uppercase text-[var(--gold)] leading-[22px]">
+          <SentrixLogo size={28} />
+          <span className="hidden sm:inline font-serif text-[18px] font-light tracking-[.04em] uppercase text-[var(--gold)] leading-none">
             SENTRIX
-            <span className="ml-1.5 text-[11px] tracking-[.05em] text-[var(--tx-d)] font-sans normal-case">Scan</span>
+            <span className="ml-1.5 text-[10px] tracking-[.05em] text-[var(--tx-d)] font-sans normal-case">Scan</span>
           </span>
         </Link>
 

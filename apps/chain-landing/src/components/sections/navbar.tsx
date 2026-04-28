@@ -59,15 +59,15 @@ export function Navbar() {
           ? "border-b border-[var(--brd)] bg-[var(--bk)]/90 shadow-[0_1px_20px_rgba(0,0,0,.3)]"
           : "border-b border-transparent bg-transparent shadow-none"
       }`}>
-        {/* Logo — pearl-dots mark + SENTRIX wordmark, baseline-aligned.
-            Mark height (26px) matches Playfair cap-height @ 36px (cap_height
-            ≈ 0.722 × font_size). items-center alone leaves mark 5px low
-            because flex centers the line-box (which includes descender
-            area) — corrected by translate-y on the mark so its top edge
-            sits exactly on the letter cap-top, bottom on the baseline. */}
-        <a href="#" className="flex items-center gap-3 text-[var(--gold)] shrink-0">
-          <SentrixLogo size={26} className="object-contain -translate-y-[5px]" />
-          <span className="font-serif text-[36px] font-light tracking-[.04em] uppercase text-[var(--gold)] leading-[26px]">
+        {/* Logo — pearl-dots mark + SENTRIX wordmark, visually balanced.
+            Mark slightly larger than wordmark cap-height (32 vs ~16) so
+            pearl dots stay legible and the mark holds visual weight
+            against the serif wordmark. items-center aligns visual mass
+            centers — both diamond and "SENTRIX" caps are vertically
+            symmetric, so visual center alignment reads as "in line". */}
+        <a href="#" className="flex items-center gap-2.5 text-[var(--gold)] shrink-0">
+          <SentrixLogo size={32} />
+          <span className="font-serif text-[22px] font-light tracking-[.04em] uppercase text-[var(--gold)] leading-none">
             SENTRIX
           </span>
         </a>

@@ -70,8 +70,8 @@ export function Footer() {
       {/* ── Top bar: logo + socials ─────────────────────────── */}
       <div className="px-6 md:px-[60px] pt-12 pb-8 flex items-center justify-between gap-6 flex-wrap">
         <div className="flex items-center gap-2.5 text-[var(--gold-dk)]">
-          <SentrixLogo size={20} className="object-contain -translate-y-[5px]" />
-          <span className="font-serif text-[26px] font-light tracking-[.04em] uppercase text-[var(--gold-dk)] leading-[20px]">
+          <SentrixLogo size={24} />
+          <span className="font-serif text-[16px] font-light tracking-[.04em] uppercase text-[var(--gold-dk)] leading-none">
             SENTRIX
           </span>
         </div>
