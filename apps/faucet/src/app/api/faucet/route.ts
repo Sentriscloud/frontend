@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { checkRateLimits, recordClaim, getTotalDistributed, type Network } from '@/lib/rateLimit'
+import {
+  tryReserveClaim, commitClaim, releaseClaim, getTotalDistributed,
+  type Network,
+} from '@/lib/rateLimit'
 import * as secp from '@noble/secp256k1'
 import { sha256 } from '@noble/hashes/sha2'
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils'
 
 const ADDRESS_REGEX = /^0x[0-9a-fA-F]{40}$/
+const PRIVATE_KEY_REGEX = /^[0-9a-fA-F]{64}$/
 const SENTRI_PER_SRX = 100_000_000
 const MIN_FEE_SENTRI = 10_000
+
+// Origins that may POST to /api/faucet. Strict allowlist — same-origin
+// requests already work without an Origin header (browser policy), this
+// catches the cross-site case where a malicious page tries to drain the
+// faucet through a victim's IP.
+const ALLOWED_ORIGINS = new Set(
+  (process.env.FAUCET_ALLOWED_ORIGINS ?? 'https://faucet.sentrixchain.com')
+    .split(',').map((s) => s.trim()).filter(Boolean)
+)
 
 type NetworkConfig = {
   chainId: number
@@ -41,11 +54,41 @@ function getConfig(network: Network): NetworkConfig {
   }
 }
 
+// Per-faucet-address nonce mutex. Two requests landing on the same network
+// in flight would otherwise both fetch the same on-chain nonce, sign tx
+// with identical nonce, and the second would fail with InvalidNonce. The
+// mutex serialises nonce fetch + sign + broadcast per faucet identity.
+const nonceMutex = new Map<string, Promise<unknown>>()
+function withNonceLock<T>(faucetAddress: string, fn: () => Promise<T>): Promise<T> {
+  const prev = nonceMutex.get(faucetAddress) ?? Promise.resolve()
+  const result = prev.then(() => fn())
+  nonceMutex.set(faucetAddress, result.catch(() => undefined))
+  return result
+}
+
+// Read the client IP from headers in order of trustworthiness:
+//   1. `CF-Connecting-IP` — set by Cloudflare (the public proxy fronting
+//      the Caddy edge). This is authoritative when traffic arrives via
+//      CF, which is the normal path for faucet.sentrixchain.com.
+//   2. `X-Real-IP` — set by Caddy if explicitly configured. Optional.
+//   3. `X-Forwarded-For` — last resort. Caddy v2 by default *preserves*
+//      any client-supplied X-Forwarded-For chain and appends the real
+//      socket IP, so taking the first entry is spoofable. We take the
+//      LAST entry instead (the closest trusted hop's view of the
+//      client), which the local Caddy controls.
+//
+// The faucet is rate-limited per IP and an attacker bypassing this gate
+// drains shared funds — header trust matters.
 function getClientIP(request: NextRequest): string {
+  const cf = request.headers.get('cf-connecting-ip')
+  if (cf) return cf.trim()
   const realIP = request.headers.get('x-real-ip')
   if (realIP) return realIP.trim()
   const forwarded = request.headers.get('x-forwarded-for')
-  if (forwarded) return forwarded.split(',')[0].trim()
+  if (forwarded) {
+    const parts = forwarded.split(',').map((s) => s.trim()).filter(Boolean)
+    if (parts.length > 0) return parts[parts.length - 1]
+  }
   return '127.0.0.1'
 }
 
@@ -91,8 +134,41 @@ function parseNetwork(value: unknown): Network | null {
   return null
 }
 
+// Map opaque chain errors into stable, user-facing strings. Internal state
+// like nonce numbers / mempool sizes shouldn't bleed to the end user. Falls
+// back to a generic message if the error is unrecognised.
+function sanitizeChainError(raw: string | undefined): string {
+  if (!raw) return 'Transaction rejected by node'
+  const lower = raw.toLowerCase()
+  if (lower.includes('invalidnonce') || lower.includes('nonce')) {
+    return 'Faucet busy — try again in a moment'
+  }
+  if (lower.includes('insufficient') || lower.includes('balance')) {
+    return 'Faucet temporarily depleted — try again later'
+  }
+  if (lower.includes('mempool') && lower.includes('full')) {
+    return 'Network congested — try again in a moment'
+  }
+  if (lower.includes('signature')) {
+    return 'Faucet misconfigured — contact admin'
+  }
+  return 'Transaction rejected by node'
+}
+
+function checkOrigin(request: NextRequest): boolean {
+  const origin = request.headers.get('origin')
+  // Same-origin browser POSTs may omit Origin in some edge cases (older
+  // browsers, file:// pages). Treat null as same-origin since the browser
+  // would have set it for any cross-origin request.
+  if (!origin) return true
+  return ALLOWED_ORIGINS.has(origin)
+}
+
 // POST /api/faucet — request tokens
 export async function POST(request: NextRequest) {
+  if (!checkOrigin(request)) {
+    return NextResponse.json({ success: false, error: 'Cross-origin requests not allowed' }, { status: 403 })
+  }
   try {
     let body: unknown
     try {
@@ -161,134 +237,141 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Atomically check + reserve the rate-limit slot. Concurrent requests
+    // can't both pass — the second one sees the first one's reservation.
     const ip = getClientIP(request)
-    const { allowed, cooldownSeconds, reason } = checkRateLimits(network, ip, address)
-    if (!allowed) {
-      const msg =
-        reason === 'address'
-          ? 'This address already claimed today — come back in 24h'
-          : 'Rate limit: 1 request per 24 hours per IP address'
+    const reservation = await tryReserveClaim(network, ip, address)
+    if (!reservation.allowed) {
+      const msg = reservation.reason === 'address'
+        ? 'This address already claimed today — come back in 24h'
+        : 'Rate limit: 1 request per 24 hours per IP address'
       return NextResponse.json(
-        { success: false, error: msg, cooldown: cooldownSeconds },
+        { success: false, error: msg, cooldown: reservation.cooldownSeconds },
         { status: 429 }
       )
     }
 
+    // Validate config; if missing, release the reservation we just made
+    // so the user can retry once the operator fixes things.
+    const fail = async (status: number, error: string) => {
+      await releaseClaim(reservation.reservation)
+      return NextResponse.json({ success: false, error }, { status })
+    }
+
     if (!config.faucetPrivateKey || config.faucetPrivateKey === 'PLACEHOLDER') {
       console.error(`[faucet:${network}] FAUCET_PRIVATE_KEY not configured`)
-      return NextResponse.json(
-        { success: false, error: `${network} faucet not configured — contact admin` },
-        { status: 503 }
-      )
+      return fail(503, `${network} faucet not configured — contact admin`)
     }
     if (!config.faucetAddress || config.faucetAddress === 'PLACEHOLDER') {
       console.error(`[faucet:${network}] FAUCET_ADDRESS not configured`)
-      return NextResponse.json(
-        { success: false, error: `${network} faucet not configured — contact admin` },
-        { status: 503 }
-      )
+      return fail(503, `${network} faucet not configured — contact admin`)
+    }
+    const cleanedKey = config.faucetPrivateKey.startsWith('0x')
+      ? config.faucetPrivateKey.slice(2)
+      : config.faucetPrivateKey
+    if (!PRIVATE_KEY_REGEX.test(cleanedKey)) {
+      console.error(`[faucet:${network}] FAUCET_PRIVATE_KEY is not 64 hex chars`)
+      return fail(503, `${network} faucet misconfigured — contact admin`)
     }
 
     const amountSentri = Math.round(config.amountSrx * SENTRI_PER_SRX)
 
-    let nonce: number
-    try {
-      nonce = await fetchNonce(config.restUrl, config.faucetAddress)
-    } catch (err) {
-      console.error(`[faucet:${network}] Failed to fetch nonce:`, err)
+    // Sign + broadcast under the per-faucet-address nonce mutex so
+    // concurrent claims don't collide on the same nonce.
+    const broadcastResult = await withNonceLock(config.faucetAddress, async () => {
+      let nonce: number
+      try {
+        nonce = await fetchNonce(config.restUrl, config.faucetAddress!)
+      } catch (err) {
+        console.error(`[faucet:${network}] Failed to fetch nonce:`, err)
+        return { ok: false as const, status: 503, error: 'Sentrix node unreachable — try again later' }
+      }
+
+      const timestamp = Math.floor(Date.now() / 1000)
+      const data = ''
+      const signingPayload = buildSigningPayload(
+        amountSentri, config.chainId, data, config.feeSentri,
+        config.faucetAddress!.toLowerCase(), nonce, timestamp,
+        address.toLowerCase(),
+      )
+
+      const privKeyBytes = hexToBytes(cleanedKey)
+      const pubKeyUncompressed = secp.getPublicKey(privKeyBytes, false)
+      const pubKeyHex = bytesToHex(pubKeyUncompressed)
+      const fromAddress = await deriveAddress(pubKeyUncompressed)
+
+      if (fromAddress.toLowerCase() !== config.faucetAddress!.toLowerCase()) {
+        console.error(`[faucet:${network}] FAUCET_PRIVATE_KEY does not match FAUCET_ADDRESS`)
+        return { ok: false as const, status: 503, error: 'Faucet misconfigured — contact admin' }
+      }
+
+      const msgHash = sha256(new TextEncoder().encode(signingPayload))
+      const sig = await secp.signAsync(msgHash, privKeyBytes)
+      const sigHex = bytesToHex(sig.toCompactRawBytes())
+      const txid = bytesToHex(sha256(new TextEncoder().encode(signingPayload)))
+
+      const signedTx = {
+        txid,
+        from_address: fromAddress.toLowerCase(),
+        to_address: address.toLowerCase(),
+        amount: amountSentri,
+        fee: config.feeSentri,
+        nonce,
+        data,
+        timestamp,
+        chain_id: config.chainId,
+        signature: sigHex,
+        public_key: pubKeyHex,
+      }
+
+      let restRes: Response
+      try {
+        restRes = await fetch(`${config.restUrl}/transactions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(process.env.SENTRIX_API_KEY ? { 'X-API-Key': process.env.SENTRIX_API_KEY } : {}),
+          },
+          body: JSON.stringify({ transaction: signedTx }),
+          signal: AbortSignal.timeout(15_000),
+        })
+      } catch (err) {
+        console.error(`[faucet:${network}] REST unreachable:`, err)
+        return { ok: false as const, status: 503, error: 'Sentrix node unreachable — try again later' }
+      }
+
+      let restData: { success?: boolean; txid?: string; error?: string; message?: string }
+      try {
+        restData = await restRes.json()
+      } catch {
+        return { ok: false as const, status: 502, error: 'Invalid response from Sentrix node' }
+      }
+
+      if (!restData.success) {
+        console.error(`[faucet:${network}] REST error:`, restData.error ?? restData.message)
+        return {
+          ok: false as const,
+          status: 400,
+          error: sanitizeChainError(restData.error ?? restData.message),
+        }
+      }
+
+      return { ok: true as const, txHash: restData.txid ?? signedTx.txid }
+    })
+
+    if (!broadcastResult.ok) {
+      // Roll back the rate-limit reservation so the user can retry.
+      await releaseClaim(reservation.reservation)
       return NextResponse.json(
-        { success: false, error: 'Sentrix node unreachable — try again later' },
-        { status: 503 }
+        { success: false, error: broadcastResult.error },
+        { status: broadcastResult.status }
       )
     }
 
-    const timestamp = Math.floor(Date.now() / 1000)
-    const data = ''
+    await commitClaim(network, config.amountSrx)
+    console.info(`[faucet:${network}] Sent ${config.amountSrx} SRX → ${address} | tx: ${broadcastResult.txHash} | ip: ${ip}`)
 
-    const signingPayload = buildSigningPayload(
-      amountSentri, config.chainId, data, config.feeSentri,
-      config.faucetAddress.toLowerCase(), nonce, timestamp,
-      address.toLowerCase(),
-    )
-
-    const privKeyBytes = hexToBytes(config.faucetPrivateKey.startsWith('0x')
-      ? config.faucetPrivateKey.slice(2)
-      : config.faucetPrivateKey)
-
-    const pubKeyUncompressed = secp.getPublicKey(privKeyBytes, false)
-    const pubKeyHex = bytesToHex(pubKeyUncompressed)
-    const fromAddress = await deriveAddress(pubKeyUncompressed)
-
-    if (fromAddress.toLowerCase() !== config.faucetAddress.toLowerCase()) {
-      console.error(`[faucet:${network}] FAUCET_PRIVATE_KEY does not match FAUCET_ADDRESS`)
-      return NextResponse.json(
-        { success: false, error: 'Faucet misconfigured — contact admin' },
-        { status: 503 }
-      )
-    }
-
-    const msgHash = sha256(new TextEncoder().encode(signingPayload))
-    const sig = await secp.signAsync(msgHash, privKeyBytes)
-    const sigHex = bytesToHex(sig.toCompactRawBytes())
-    const txid = bytesToHex(sha256(new TextEncoder().encode(signingPayload)))
-
-    const signedTx = {
-      txid,
-      from_address: fromAddress.toLowerCase(),
-      to_address: address.toLowerCase(),
-      amount: amountSentri,
-      fee: config.feeSentri,
-      nonce,
-      data,
-      timestamp,
-      chain_id: config.chainId,
-      signature: sigHex,
-      public_key: pubKeyHex,
-    }
-
-    let restRes: Response
-    try {
-      restRes = await fetch(`${config.restUrl}/transactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(process.env.SENTRIX_API_KEY ? { 'X-API-Key': process.env.SENTRIX_API_KEY } : {}),
-        },
-        body: JSON.stringify({ transaction: signedTx }),
-        signal: AbortSignal.timeout(15_000),
-      })
-    } catch (err) {
-      console.error(`[faucet:${network}] REST unreachable:`, err)
-      return NextResponse.json(
-        { success: false, error: 'Sentrix node unreachable — try again later' },
-        { status: 503 }
-      )
-    }
-
-    let restData: { success?: boolean; txid?: string; error?: string; message?: string }
-    try {
-      restData = await restRes.json()
-    } catch {
-      return NextResponse.json(
-        { success: false, error: 'Invalid response from Sentrix node' },
-        { status: 502 }
-      )
-    }
-
-    if (!restData.success) {
-      console.error(`[faucet:${network}] REST error:`, restData.error ?? restData.message)
-      return NextResponse.json(
-        { success: false, error: restData.error ?? restData.message ?? 'Transaction rejected by node' },
-        { status: 400 }
-      )
-    }
-
-    const txHash = restData.txid ?? signedTx.txid
-
-    recordClaim(network, ip, address, amountSentri)
-    console.info(`[faucet:${network}] Sent ${config.amountSrx} SRX → ${address} | tx: ${txHash} | ip: ${ip}`)
-
-    return NextResponse.json({ success: true, txHash })
+    return NextResponse.json({ success: true, txHash: broadcastResult.txHash })
   } catch (err) {
     console.error('[faucet] Unexpected error:', err)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })

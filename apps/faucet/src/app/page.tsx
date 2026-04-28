@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import { FaucetMark } from './_components/faucet-mark'
 
 export const metadata = {
@@ -9,110 +10,104 @@ export const metadata = {
 export default function FaucetLanding() {
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-16">
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          background:
-            'radial-gradient(ellipse 70% 60% at 50% 40%, rgba(200,168,74,0.07) 0%, transparent 70%)',
-        }}
-      />
+      <div aria-hidden className="gold-orb fixed top-[-120px] right-[-100px] z-0" />
 
       <div className="relative z-10 w-full max-w-[640px] animate-fade-up">
-        <div className="flex flex-col items-center text-center mb-10">
-          <FaucetMark className="w-24 h-24 mb-6 drop-shadow-[0_0_36px_rgba(200,168,74,0.22)]" />
-          <h1 className="font-serif text-3xl tracking-[.16em] uppercase text-[var(--tx)] mb-2">
+        {/* Hero — gradient halo + brand mark + Playfair wordmark */}
+        <div className="flex flex-col items-center text-center mb-12">
+          <div className="relative mb-6">
+            <div
+              aria-hidden
+              className="absolute inset-0 -m-6 rounded-full opacity-50 blur-3xl"
+              style={{ background: 'radial-gradient(circle, rgba(244,199,94,0.35) 0%, transparent 65%)' }}
+            />
+            <div className="relative w-20 h-20 rounded-2xl flex items-center justify-center bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)]">
+              <FaucetMark className="w-12 h-12" />
+            </div>
+          </div>
+          <h1 className="font-serif text-[44px] tracking-tight text-[var(--tx)] mb-3 leading-none">
             Sentrix <span className="text-[var(--gold)]">Faucet</span>
           </h1>
-          <p className="text-[10px] text-[var(--tx-d)] tracking-[.18em] uppercase">
-            Pick a network to continue
+          <p className="text-[14px] text-[var(--tx-m)] max-w-[400px]">
+            Pick a network to claim SRX. Testnet for development, mainnet for new-wallet onboarding.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Testnet */}
+        {/* Network cards — testnet primary (free), mainnet secondary (gas-only) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Link
             href="/testnet"
-            className="group relative bg-[var(--sf)] border border-[var(--brd)] rounded-2xl p-6 transition-all hover:border-emerald-500/40 hover:bg-[var(--sf2)]"
+            className="group relative bg-[var(--sf)] border border-[var(--brd)] rounded-2xl p-6 transition-all hover:border-[var(--gold-bg-s)] hover:bg-[var(--sf-2)]"
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] tracking-[.2em] uppercase text-emerald-400/80 font-mono">
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-[rgba(34,197,94,0.10)] text-[var(--green)] text-[11px] font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse-live" />
                 Testnet
               </span>
-              <span className="text-[10px] tracking-[.16em] uppercase text-[var(--tx-d)] font-mono">
-                Chain 7120
-              </span>
+              <span className="text-[12px] text-[var(--tx-m)] font-mono">Chain 7120</span>
             </div>
-            <p className="font-serif text-xl text-[var(--tx)] mb-2">
+            <p className="text-[18px] font-bold text-[var(--tx)] mb-2 leading-snug">
               Free SRX <span className="text-[var(--gold)]">for testing</span>
             </p>
-            <p className="text-xs text-[var(--tx-m)] leading-relaxed mb-4">
-              Generous drips for builders. Deploy contracts, run scripts, hammer the chain.
-              No real value.
+            <p className="text-[13px] text-[var(--tx-m)] leading-relaxed mb-5">
+              Generous drips for builders. Deploy contracts, run scripts, hammer the chain. No real value.
             </p>
-            <div className="flex items-center gap-4 text-[11px] text-[var(--tx-d)] tracking-wider">
-              <span className="text-[var(--gold)]">10 SRX</span>
-              <span>·</span>
+            <div className="flex items-center gap-3 text-[12px] text-[var(--tx-m)]">
+              <span className="text-[var(--gold)] font-semibold">10 SRX</span>
+              <span className="opacity-40">·</span>
               <span>24h cooldown</span>
-              <span>·</span>
+              <span className="opacity-40">·</span>
               <span>No captcha</span>
             </div>
-            <span className="absolute bottom-6 right-6 text-[var(--gold)] opacity-0 group-hover:opacity-100 transition-opacity">
-              →
-            </span>
+            <ArrowRight className="absolute bottom-6 right-6 w-4 h-4 text-[var(--gold)] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
           </Link>
 
-          {/* Mainnet */}
           <Link
             href="/mainnet"
-            className="group relative bg-[var(--sf)] border border-[var(--brd)] rounded-2xl p-6 transition-all hover:border-rose-500/40 hover:bg-[var(--sf2)]"
+            className="group relative bg-[var(--sf)] border border-[var(--brd)] rounded-2xl p-6 transition-all hover:border-[var(--gold-bg-s)] hover:bg-[var(--sf-2)]"
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] tracking-[.2em] uppercase text-rose-400 font-mono">
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-[rgba(248,113,113,0.10)] text-[var(--red)] text-[11px] font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--red)] animate-pulse-live" />
                 Mainnet
               </span>
-              <span className="text-[10px] tracking-[.16em] uppercase text-[var(--tx-d)] font-mono">
-                Chain 7119
-              </span>
+              <span className="text-[12px] text-[var(--tx-m)] font-mono">Chain 7119</span>
             </div>
-            <p className="font-serif text-xl text-[var(--tx)] mb-2">
+            <p className="text-[18px] font-bold text-[var(--tx)] mb-2 leading-snug">
               Tiny SRX <span className="text-[var(--gold)]">for onboarding</span>
             </p>
-            <p className="text-xs text-[var(--tx-m)] leading-relaxed mb-4">
-              Gas-only drip for new wallets. Enough to make your first transaction —
-              not for testing or speculation.
+            <p className="text-[13px] text-[var(--tx-m)] leading-relaxed mb-5">
+              Gas-only drip for new wallets. Enough to make your first transaction — not for testing or speculation.
             </p>
-            <div className="flex items-center gap-4 text-[11px] text-[var(--tx-d)] tracking-wider">
-              <span className="text-[var(--gold)]">0.01 SRX</span>
-              <span>·</span>
+            <div className="flex items-center gap-3 text-[12px] text-[var(--tx-m)]">
+              <span className="text-[var(--gold)] font-semibold">0.01 SRX</span>
+              <span className="opacity-40">·</span>
               <span>24h cooldown</span>
-              <span>·</span>
+              <span className="opacity-40">·</span>
               <span>Captcha required</span>
             </div>
-            <span className="absolute bottom-6 right-6 text-[var(--gold)] opacity-0 group-hover:opacity-100 transition-opacity">
-              →
-            </span>
+            <ArrowRight className="absolute bottom-6 right-6 w-4 h-4 text-[var(--gold)] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
           </Link>
         </div>
 
-        <div className="text-center mt-8 space-y-2">
-          <p className="text-xs text-[var(--tx-d)]">
+        <div className="text-center mt-10 space-y-2">
+          <p className="text-[13px] text-[var(--tx-m)]">
             Powered by{' '}
             <a
               href="https://sentrixchain.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--gold)]/70 hover:text-[var(--gold)] transition-colors"
+              className="text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors font-medium"
             >
               Sentrix Chain
             </a>
           </p>
-          <p className="text-xs">
+          <p className="text-[12px]">
             <a
               href="https://sentrixchain.com/docs/faucet"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--gold)]/70 hover:text-[var(--gold)] transition-colors"
+              className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors"
             >
               How to use →
             </a>

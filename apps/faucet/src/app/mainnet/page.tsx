@@ -13,6 +13,7 @@ export default function MainnetFaucetPage() {
       defaultAmountSrx={parseFloat(process.env.MAINNET_DRIP_AMOUNT_SRX ?? '0.01')}
       turnstileSiteKey={process.env.NEXT_PUBLIC_MAINNET_TURNSTILE_SITE_KEY}
       explorerUrl={process.env.NEXT_PUBLIC_EXPLORER_URL ?? 'https://scan.sentrixchain.com'}
+      publicRestUrl={process.env.NEXT_PUBLIC_MAINNET_REST_URL ?? 'https://api.sentrixchain.com'}
       docsUrl={process.env.NEXT_PUBLIC_DOCS_URL ?? 'https://sentrixchain.com/docs/faucet'}
     />
   )

@@ -1,28 +1,42 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Playfair+Display:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
-/* ── Design tokens (gold-on-black, Sentrix Chain infrastructure tone) ── */
+/* ── Design tokens — harmonized with Solux post-redesign ──
+   Saturated satin gold (#f4c75e), neutral deep dark, clean whites.
+   Reference: apps/solux/src/app/globals.css */
 :root {
-  --gold:   #C8A84A;
-  --gold-l: #F0D080;
-  --gold-d: #8a6f2a;
-  --bk:     #0c0c10;
-  --sf:     #111116;
-  --sf2:    #16161c;
-  --brd:    rgba(200,168,74,.10);
-  --brd2:   rgba(200,168,74,.20);
-  --tx:     #EADBA0;
-  --tx-d:   #58566a;
-  --tx-m:   #908a7e;
+  --gold:        #f4c75e;
+  --gold-l:      #ffd97a;
+  --gold-d:      #d4a937;
+  --bk:          #0a0a0b;
+  --bk-2:        #111114;
+  --sf:          #18181c;
+  --sf-2:        #232328;
+  --sf-3:        #2e2e34;
+  --brd:         rgba(255, 255, 255, 0.08);
+  --brd-s:       rgba(244, 199, 94, 0.32);
+  --gold-bg:     rgba(244, 199, 94, 0.14);
+  --gold-bg-s:   rgba(244, 199, 94, 0.30);
+  --gold-glow:   rgba(244, 199, 94, 0.40);
+  --tx:          #fafafa;
+  --tx-2:        #d4d4d8;
+  --tx-m:        #9b9ba3;
+  --tx-d:        #65656d;
+  --green:       #22c55e;
+  --red:         #f87171;
+
+  /* Aliases retained for compatibility with existing class hooks */
+  --sf2:         var(--sf-2);
+  --brd2:        var(--brd-s);
 }
 
 /* Tailwind theme bridge */
 @theme inline {
   --color-background: var(--bk);
   --color-foreground: var(--tx);
-  --font-sans: 'Sora', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: 'Newsreader', ui-serif, Georgia, serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
   --color-gold: var(--gold);
   --color-gold-l: var(--gold-l);
 }
@@ -33,55 +47,79 @@ html { background-color: var(--bk); }
 body {
   background-color: var(--bk);
   color: var(--tx);
-  font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
 }
 
+/* Subtle ambient grain — the same SVG fractalNoise overlay Solux uses on
+   the hero card, scaled to whole-document. Keeps the page from reading as
+   a flat fill without screaming for attention. */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 0;
 }
 
-/* Newsreader display class — used for the Sentrix Faucet wordmark
-   and the "Get free SRX" headline. opsz=24 keeps proportions tight at
-   medium display sizes. */
+/* Display serif for the wordmark + hero copy. */
 .font-serif,
 [class*="font-serif"] {
-  font-family: 'Newsreader', ui-serif, Georgia, serif !important;
-  font-variation-settings: "opsz" 24;
-  font-weight: 500;
+  font-family: 'Playfair Display', ui-serif, Georgia, serif !important;
+  font-weight: 600;
   letter-spacing: -0.005em;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bk); }
-::-webkit-scrollbar-thumb { background: var(--brd2); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--brd-s); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gold-d); }
 
-::selection { background: rgba(200,168,74,0.25); color: #fff; }
+::selection { background: rgba(244, 199, 94, 0.25); color: #fff; }
 
 * { box-sizing: border-box; }
 
-/* Animations */
+/* ── Animations ───────────────────────────────────────────── */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+@keyframes orb-pulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.05); }
+}
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
 
-.animate-fade-up   { animation: fade-up 0.5s ease both; }
-.animate-spin-slow { animation: spin-slow 1s linear infinite; }
+.animate-fade-up      { animation: fade-up 0.5s ease both; }
+.animate-spin-slow    { animation: spin-slow 1s linear infinite; }
+.animate-pulse-live   { animation: pulse-live 2s ease-in-out infinite; }
+
+/* Decorative gold orb — same component Solux's hero card uses so the
+   two products read as one brand family. */
+.gold-orb {
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(244, 199, 94, 0.28) 0%, rgba(244, 199, 94, 0.10) 30%, transparent 65%);
+  filter: blur(24px);
+  pointer-events: none;
+  animation: orb-pulse 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gold-orb { animation: none; }
+}
 
 /* Cloudflare Turnstile widget — let it auto-style on dark theme */
 .cf-turnstile-mount iframe {
