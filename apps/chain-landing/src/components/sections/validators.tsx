@@ -22,7 +22,7 @@ const VALIDATOR_BENEFITS = [
   {
     icon: "uptime",
     title: "High Uptime, Low Overhead",
-    desc: "Single 4.4MB static binary. No JVM, no runtime dependencies. Runs on a modest VPS with minimal resources.",
+    desc: "Single 4.4MB static binary. No JVM, no runtime dependencies. Runs on a modest validator host with minimal resources.",
   },
   {
     icon: "bft",
@@ -77,7 +77,7 @@ export function Validators() {
           tag="Run a Node"
           title="For"
           titleEm="validators."
-          subtitle="7 validators across 3 VPS. Secure the network, earn rewards, shape the chain's future."
+          subtitle="4 production validators with DPoS+BFT consensus. Secure the network, earn rewards, shape the chain's future."
         />
       </Reveal>
 

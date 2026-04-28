@@ -5,10 +5,14 @@ import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
 import { TOKENS } from "@/data/content";
 
+// All three SRX cards use the same gold accent — they describe ONE token,
+// three roles. Previously rotated through gold/cyan/green which read as
+// three different tokens at first glance and undercut "SRX is the only
+// protocol token" framing in the section subtitle.
 const TOKEN_COLORS = [
-  { accent: "var(--gold)", bg: "rgba(200,168,74,.05)", border: "rgba(200,168,74,.12)", glow: "rgba(200,168,74,.15)", gradient: "from-[rgba(200,168,74,.08)] to-transparent" },
-  { accent: "var(--cyan)", bg: "rgba(122,184,200,.05)", border: "rgba(122,184,200,.12)", glow: "rgba(122,184,200,.15)", gradient: "from-[rgba(122,184,200,.08)] to-transparent" },
-  { accent: "var(--green)", bg: "rgba(126,200,164,.05)", border: "rgba(126,200,164,.12)", glow: "rgba(126,200,164,.15)", gradient: "from-[rgba(126,200,164,.08)] to-transparent" },
+  { accent: "var(--gold)",   bg: "rgba(200,168,74,.05)", border: "rgba(200,168,74,.12)", glow: "rgba(200,168,74,.15)", gradient: "from-[rgba(200,168,74,.08)] to-transparent" },
+  { accent: "var(--gold-l)", bg: "rgba(240,208,128,.05)", border: "rgba(240,208,128,.12)", glow: "rgba(240,208,128,.15)", gradient: "from-[rgba(240,208,128,.08)] to-transparent" },
+  { accent: "var(--gold-d)", bg: "rgba(138,111,42,.05)", border: "rgba(138,111,42,.12)", glow: "rgba(138,111,42,.15)", gradient: "from-[rgba(138,111,42,.08)] to-transparent" },
 ];
 
 const cardVariants = {

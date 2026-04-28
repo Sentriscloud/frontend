@@ -173,7 +173,7 @@ export const TOKENOMICS_CARDS = [
 export const ECOSYSTEM = [
   { tag: "Block Explorer", name: "SentrixScan", desc: "Browse blocks, transactions, addresses, validators, and SRC-20 tokens on Sentrix Chain.", badge: "Live" },
   { tag: "Testnet Faucet", name: "Sentrix Faucet", desc: "Get free testnet SRX to experiment, deploy contracts, and build dApps on Sentrix Chain (chain ID 7120).", badge: "Live" },
-  { tag: "Mobile Wallet", name: "Solux", desc: "Self-custody mobile wallet for SRX. Multi-platform (iOS + Android), built in Flutter.", badge: "In Development" },
+  { tag: "Wallet", name: "Solux", desc: "Self-custody web wallet for SRX. Encrypted vault, password unlock, multi-account HD support, built-in staking and SentrixScan integration.", badge: "Live" },
   { tag: "Token Launchpad", name: "CoinBlast", desc: "Launch SRC-20 tokens fairly via bonding curve. No pre-sale, no rugs. Graduates to DEX at threshold.", badge: "In Development" },
 ];
 
@@ -238,7 +238,7 @@ export const ROADMAP = [
   {
     phase: "Voyager",
     status: "active" as const,
-    statusText: "● Live on Mainnet (v2.1.39)",
+    statusText: "● Live on Mainnet (v2.1.47)",
     title: "DPoS + BFT + EVM",
     items: ["Delegated Proof of Stake with reward distribution v2", "BFT finality (2/3+1 votes) wired and active", "EVM via revm 37 — eth_sendRawTransaction live", "ClaimRewards op + treasury escrow, 4 validators in production"],
   },
