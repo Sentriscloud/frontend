@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { getChainInfo, getFinalizedHeight } from '@/lib/api';
 import { usePolling } from '@/lib/usePolling';
-import { useSettingsStore } from '@/lib/store';
+import { useSettingsStore, NETWORKS } from '@/lib/store';
+import { useLatestBlock, useLatestFinalized } from '@/lib/ws';
 
 type Health = 'healthy' | 'lagging' | 'unreachable';
 
@@ -15,8 +16,17 @@ interface State {
   validators: number | null;
 }
 
+function deriveWsUrl(apiUrl: string): string {
+  const u = new URL(apiUrl);
+  const host = u.host.replace(/^api\./, 'rpc.').replace(/^testnet-api\./, 'testnet-rpc.');
+  return `wss://${host}/ws`;
+}
+
 export default function NetworkHealth() {
   const network = useSettingsStore((s) => s.network);
+  const wsUrl = deriveWsUrl(NETWORKS[network].apiUrl);
+  const wsHead = useLatestBlock(wsUrl);
+  const wsFinalized = useLatestFinalized(wsUrl);
   const [state, setState] = useState<State>({
     health: 'unreachable', height: null, finalized: null, mempool: null, validators: null,
   });
@@ -28,6 +38,10 @@ export default function NetworkHealth() {
     setState({ health: 'unreachable', height: null, finalized: null, mempool: null, validators: null });
   }, [network]);
 
+  // Slow REST poll keeps mempool + validators (which aren't on the WS
+  // newHeads / finalized streams) fresh, and backstops the WS stream
+  // during reconnect windows. Drops 5s → 30s now that WS handles the
+  // hot fields (height + finalized).
   usePolling(async () => {
     let aborted = false;
     try {
@@ -51,7 +65,19 @@ export default function NetworkHealth() {
       setState((s) => ({ ...s, health: 'unreachable' }));
     }
     return () => { aborted = true; };
-  }, 5000);
+  }, 30_000);
+
+  // Apply WS-fresh values + recompute health on every WS tick.
+  useEffect(() => {
+    if (wsHead?.number == null && wsFinalized == null) return;
+    setState((prev) => {
+      const height = wsHead?.number ?? prev.height;
+      const finalized = wsFinalized ?? prev.finalized;
+      const lag = (height !== null && finalized !== null) ? Math.max(0, height - finalized) : 0;
+      const health: Health = (height !== null) ? (lag > 30 ? 'lagging' : 'healthy') : prev.health;
+      return { ...prev, height, finalized, health };
+    });
+  }, [wsHead?.number, wsFinalized]);
 
   const dotColor =
     state.health === 'healthy'    ? 'bg-[var(--green)]' :
