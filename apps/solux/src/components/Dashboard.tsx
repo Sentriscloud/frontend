@@ -7,6 +7,7 @@ import {
 } from '@/lib/api';
 import type { TxHistoryItem, TokenInfo } from '@/types';
 import SendSRX from './SendSRX';
+import SrxMark from './SrxMark';
 import SendToken from './SendToken';
 import TxHistory from './TxHistory';
 import TxDetail from './TxDetail';
@@ -373,8 +374,8 @@ export default function Dashboard() {
             {/* SRX (always shown) */}
             <div className="flex items-center justify-between px-4 py-4">
               <div className="flex items-center gap-3">
-                <span className="token-mark">
-                  <img src="/srx-mark.svg" alt="" className="w-6 h-6" />
+                <span className="token-mark text-[var(--gold)]">
+                  <SrxMark className="w-7 h-7" />
                 </span>
                 <div>
                   <p className="text-[15px] font-semibold text-[var(--tx)]">SRX</p>
