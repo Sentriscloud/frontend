@@ -194,6 +194,91 @@ export default function TokenomicsDocsPage() {
           </p>
         </Section>
 
+        {/* Reward escrow + sentinels */}
+        <Section title="Reward escrow & protocol sentinels">
+          <p className="mt-4 text-sm text-[var(--tx-m)] leading-relaxed">
+            Three addresses on Sentrix Chain hold balances but have{" "}
+            <strong>no private key</strong> — they&apos;re protocol-reserved
+            sentinels, mutated only by consensus-level operations. If you spot
+            them in the explorer&apos;s top accounts and wonder where the funds
+            came from, this is the explainer.
+          </p>
+
+          <ul className="mt-6 space-y-4">
+            <li className="rounded-xl border border-[var(--brd)] bg-[var(--sf)] p-5">
+              <div className="flex items-baseline justify-between gap-4 flex-wrap">
+                <h3 className="font-serif text-lg text-[var(--gold)]">
+                  Protocol Treasury (Reward Escrow)
+                </h3>
+                <p className="font-mono text-[10px] text-[var(--tx-d)] break-all">
+                  0x0000000000000000000000000000000000000002
+                </p>
+              </div>
+              <p className="mt-3 text-sm text-[var(--tx-m)] leading-relaxed">
+                Active since the V4 reward-v2 fork at{" "}
+                <code>VOYAGER_REWARD_V2_HEIGHT=590100</code> (2026-04-25). Every
+                block&apos;s 1 SRX coinbase mints into this address instead of
+                going directly to the proposer. The staking registry tracks
+                each validator&apos;s + delegator&apos;s pro-rata share as
+                accumulators (<code>pending_rewards</code>,{" "}
+                <code>delegator_rewards</code>) and they drain the escrow via{" "}
+                <code>StakingOp::ClaimRewards</code>. Balance ≈ unclaimed
+                rewards owed by protocol to participants — <strong>not</strong>{" "}
+                a foundation/operator-controlled treasury.
+              </p>
+            </li>
+
+            <li className="rounded-xl border border-[var(--brd)] bg-[var(--sf)] p-5">
+              <div className="flex items-baseline justify-between gap-4 flex-wrap">
+                <h3 className="font-serif text-lg text-[var(--teal)]">
+                  Token Op sentinel
+                </h3>
+                <p className="font-mono text-[10px] text-[var(--tx-d)] break-all">
+                  0x0000000000000000000000000000000000000000
+                </p>
+              </div>
+              <p className="mt-3 text-sm text-[var(--tx-m)] leading-relaxed">
+                Routing marker for native SRC-20 token operations (the{" "}
+                <code>to</code> field of <code>TokenOp::Deploy</code> /{" "}
+                <code>Transfer</code> / <code>Burn</code> txs) and EVM CREATE
+                deploys. Holds zero balance under normal operation — token-burn
+                ops have it as the destination, but the burned supply is
+                accounted in <code>total_burned</code> not in this
+                address&apos;s balance.
+              </p>
+            </li>
+
+            <li className="rounded-xl border border-[var(--brd)] bg-[var(--sf)] p-5">
+              <div className="flex items-baseline justify-between gap-4 flex-wrap">
+                <h3 className="font-serif text-lg text-[var(--purple)]">
+                  Staking sentinel (reserved)
+                </h3>
+                <p className="font-mono text-[10px] text-[var(--tx-d)] break-all">
+                  0x0000000000000000000000000000000000000100
+                </p>
+              </div>
+              <p className="mt-3 text-sm text-[var(--tx-m)] leading-relaxed">
+                Reserved for the staking-op routing convention. Not currently
+                used as a tx <code>to</code> field — staking ops route via{" "}
+                <code>PROTOCOL_TREASURY</code> in the V4 reward-v2 era.
+                Reserved so dApps don&apos;t accidentally claim it as their own
+                EOA address.
+              </p>
+            </li>
+          </ul>
+
+          <p className="mt-5 text-xs text-[var(--tx-d)] leading-relaxed">
+            On-chain verification: query each address via{" "}
+            <Anchor href="https://rpc.sentrixchain.com/accounts/top">
+              <code>/accounts/top</code>
+            </Anchor>{" "}
+            or scan address page. The Protocol Treasury balance changes block-
+            by-block (1 SRX in per block, draining whenever a validator/
+            delegator claims) — it&apos;s a real-time mirror of unclaimed
+            rewards owed by the protocol.
+          </p>
+        </Section>
+
         {/* Vesting summary */}
         <Section title="Vesting & governance">
           <ul className="mt-5 space-y-3">

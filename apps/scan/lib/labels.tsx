@@ -24,10 +24,11 @@ type LabelMap = Map<string, LabelEntry>;
 
 const LabelContext = createContext<LabelMap>(new Map());
 
-// Premine + governance addresses are always known at compile time and rarely
-// surface in /accounts/top (they hold large balances and don't move often, so
-// the dynamic top-N feed misses them on quiet chains). Hard-code so they
-// always render with the right tag — Solscan-style "Foundation"/"Treasury".
+// Premine + governance + protocol-reserved sentinels are always known at
+// compile time and rarely surface in /accounts/top (they hold large balances
+// and don't move often, so the dynamic top-N feed misses them on quiet
+// chains). Hard-code so they always render with the right tag — Solscan-style
+// "Foundation"/"Treasury".
 //
 // chain-id agnostic: same addresses are seeded in genesis for both 7119 and
 // 7120, so these labels apply on either network.
@@ -42,6 +43,11 @@ const STATIC_LABELS: ReadonlyArray<[string, LabelEntry]> = [
   ["0xa25236925bc10954e0519731cc7ba97f4bb5714b", { name: "Authority Wallet", kind: "treasury" }],
   ["0x6272dc0c842f05542f9ff7b5443e93c0642a3b26", { name: "SentrixSafe (Mainnet)", kind: "treasury" }],
   ["0xc9d7a61d7c2f428f6a055916488041fd00532110", { name: "SentrixSafe (Testnet)", kind: "treasury" }],
+
+  // Protocol-reserved sentinels (no private key — consensus-level only)
+  ["0x0000000000000000000000000000000000000000", { name: "Sentrix Token Op (sentinel)", kind: "treasury" }],
+  ["0x0000000000000000000000000000000000000002", { name: "Protocol Treasury (Reward Escrow)", kind: "treasury" }],
+  ["0x0000000000000000000000000000000000000100", { name: "Sentrix Staking (sentinel)", kind: "treasury" }],
 ];
 
 function buildMap(entries: Array<[string, LabelEntry]>): LabelMap {
