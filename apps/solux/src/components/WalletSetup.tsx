@@ -14,6 +14,7 @@ import {
   Plus, FileText, KeyRound, FileLock2, Eye, EyeOff, Cpu, AlertTriangle, Copy, Check, X, ChevronRight, ArrowLeft, Upload, Lock,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import SrxMark from './SrxMark';
 
 type Modal = 'none' | 'create' | 'import-seed' | 'import-key' | 'import-keystore' | 'watch' | 'set-password';
 
@@ -248,43 +249,53 @@ export default function WalletSetup() {
       <div className="w-full max-w-sm">
         {/* Hero */}
         <div className="text-center mb-10 animate-fade-up">
-          <div className="text-[12px] font-medium text-[var(--tx-m)] mb-3 tracking-[0.18em] uppercase">Sentrix Chain · Self-custody</div>
+          <div className="relative inline-block mb-5">
+            <div
+              aria-hidden
+              className="absolute inset-0 -m-6 rounded-full opacity-50 blur-3xl"
+              style={{ background: 'radial-gradient(circle, rgba(244,199,94,0.35) 0%, transparent 65%)' }}
+            />
+            <div className="relative w-16 h-16 mx-auto rounded-2xl flex items-center justify-center bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)]">
+              <SrxMark className="w-9 h-9" />
+            </div>
+          </div>
           <h1 className="font-serif text-5xl text-[var(--tx)] tracking-tight mb-3">Solux</h1>
-          <p className="text-sm text-[var(--tx-m)] leading-relaxed max-w-[280px] mx-auto">
-            Choose a method to set up your wallet. All keys stay on this device.
+          <p className="text-[14px] text-[var(--tx-m)] leading-relaxed max-w-[280px] mx-auto">
+            A self-custody wallet for Sentrix Chain. Keys stay on this device.
           </p>
         </div>
 
-        {/* Method list */}
+        {/* Method list — primary action emphasized; rest are quiet rows */}
         <div className="space-y-2 animate-fade-up delay-1">
           <Method
-            icon={<Plus className="w-4 h-4" />}
+            icon={<Plus className="w-4 h-4" strokeWidth={2.5} />}
             title="Create new wallet"
-            body="Generate a 12-word recovery phrase and a fresh address"
+            body="Generate a 12-word recovery phrase"
             onClick={openCreate}
+            primary
           />
           <Method
             icon={<FileText className="w-4 h-4" />}
             title="Import seed phrase"
-            body="Restore using a 12 or 24-word BIP39 phrase"
+            body="12 or 24-word BIP39 phrase"
             onClick={() => setModal('import-seed')}
           />
           <Method
             icon={<KeyRound className="w-4 h-4" />}
             title="Import private key"
-            body="Restore using a raw 64-character hex key"
+            body="Raw 64-character hex key"
             onClick={() => setModal('import-key')}
           />
           <Method
             icon={<FileLock2 className="w-4 h-4" />}
             title="Import keystore JSON"
-            body="Decrypt a MetaMask / Geth v3 keystore file"
+            body="MetaMask / Geth v3 keystore"
             onClick={() => setModal('import-keystore')}
           />
           <Method
             icon={<Eye className="w-4 h-4" />}
             title="Watch address"
-            body="Monitor any address read-only — no key needed"
+            body="Read-only monitoring — no key needed"
             onClick={() => setModal('watch')}
           />
           <Method
@@ -587,37 +598,43 @@ export default function WalletSetup() {
 }
 
 function Method({
-  icon, title, body, onClick, disabled, badge,
+  icon, title, body, onClick, disabled, badge, primary,
 }: {
   icon: React.ReactNode; title: string; body: string;
-  onClick?: () => void; disabled?: boolean; badge?: string;
+  onClick?: () => void; disabled?: boolean; badge?: string; primary?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`w-full flex items-center gap-4 p-4 rounded-xl bg-[var(--sf)] border border-[var(--brd)] transition-colors text-left ${
+      className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${
         disabled
-          ? 'opacity-50 cursor-not-allowed'
-          : 'hover:bg-[var(--sf-2)] hover:border-[var(--gold-bg-s)] active:scale-[0.99]'
+          ? 'bg-[var(--sf)] border-[var(--brd)] opacity-50 cursor-not-allowed'
+          : primary
+            ? 'bg-[var(--gold-bg)] border-[var(--gold-bg-s)] hover:bg-[var(--gold-bg-s)] hover:border-[var(--gold)] active:scale-[0.99]'
+            : 'bg-[var(--sf)] border-[var(--brd)] hover:bg-[var(--sf-2)] hover:border-[var(--gold-bg-s)] active:scale-[0.99]'
       }`}
     >
-      <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)]">
+      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+        primary
+          ? 'bg-[var(--gold)] text-[#3a2a0e]'
+          : 'bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)]'
+      }`}>
         {icon}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="font-medium text-sm text-[var(--tx)]">{title}</p>
+          <p className="font-semibold text-[14px] text-[var(--tx)]">{title}</p>
           {badge && (
-            <span className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-[var(--bk-2)] text-[var(--tx-d)] border border-[var(--brd)]">
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-[var(--bk-2)] text-[var(--tx-d)] border border-[var(--brd)]">
               {badge}
             </span>
           )}
         </div>
-        <p className="text-[11px] text-[var(--tx-d)] mt-0.5 leading-snug">{body}</p>
+        <p className="text-[12px] text-[var(--tx-m)] mt-0.5 leading-snug">{body}</p>
       </div>
       {!disabled && (
-        <ChevronRight className="w-4 h-4 text-[var(--tx-d)] shrink-0" />
+        <ChevronRight className={`w-4 h-4 shrink-0 ${primary ? 'text-[var(--gold)]' : 'text-[var(--tx-d)]'}`} />
       )}
     </button>
   );

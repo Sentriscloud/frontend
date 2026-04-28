@@ -37,14 +37,24 @@ export default function Receive({ onBack }: { onBack: () => void }) {
 
         <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] p-6 animate-fade-up delay-2">
           <div className="flex justify-center mb-5">
-            <div className="rounded-xl bg-white p-4">
+            <div className="rounded-2xl bg-white p-5 shadow-[0_8px_28px_rgba(244,199,94,0.12)]">
               {address && (
                 <QRCodeSVG
                   value={address}
-                  size={192}
+                  size={196}
                   bgColor="#ffffff"
                   fgColor="#0a0a0b"
-                  level="M"
+                  level="H"
+                  marginSize={0}
+                  imageSettings={{
+                    // Embed the SRX rhombus as a center watermark — Phantom /
+                    // Trust pattern. Error correction "H" (~30%) is high enough
+                    // that the QR still scans cleanly with this 18% cutout.
+                    src: '/srx-mark.svg',
+                    width: 38,
+                    height: 38,
+                    excavate: true,
+                  }}
                 />
               )}
             </div>
