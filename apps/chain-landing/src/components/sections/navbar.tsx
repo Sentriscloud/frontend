@@ -59,12 +59,15 @@ export function Navbar() {
           ? "border-b border-[var(--brd)] bg-[var(--bk)]/90 shadow-[0_1px_20px_rgba(0,0,0,.3)]"
           : "border-b border-transparent bg-transparent shadow-none"
       }`}>
-        {/* Logo — pearl-dots ceremonial mark + SENTRIX serif wordmark.
-            Mark size ~1.5× wordmark cap-height keeps pearl dots legible
-            while the items-center flex visually balances the pair. */}
+        {/* Logo — pearl-dots mark + SENTRIX wordmark, baseline-aligned.
+            Mark height (26px) matches Playfair cap-height @ 36px (cap_height
+            ≈ 0.722 × font_size). items-center alone leaves mark 5px low
+            because flex centers the line-box (which includes descender
+            area) — corrected by translate-y on the mark so its top edge
+            sits exactly on the letter cap-top, bottom on the baseline. */}
         <a href="#" className="flex items-center gap-3 text-[var(--gold)] shrink-0">
-          <SentrixLogo size={38} />
-          <span className="font-serif text-[22px] font-light tracking-[.04em] uppercase text-[var(--gold)] leading-none">
+          <SentrixLogo size={26} className="object-contain -translate-y-[5px]" />
+          <span className="font-serif text-[36px] font-light tracking-[.04em] uppercase text-[var(--gold)] leading-[26px]">
             SENTRIX
           </span>
         </a>
