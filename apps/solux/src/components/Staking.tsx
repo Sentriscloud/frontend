@@ -9,6 +9,13 @@ import {
 import { signTransaction } from '@/lib/crypto';
 import { parseSRXToSentri, sentriToSRX, formatCompactSRX, SENTRI, MIN_FEE, AmountOverflowError } from '@/lib/amount';
 import { useEscape } from '@/lib/useEscape';
+import { useLatestFinalized } from '@/lib/ws';
+
+function deriveWsUrl(apiUrl: string): string {
+  const u = new URL(apiUrl);
+  const host = u.host.replace(/^api\./, 'rpc.').replace(/^testnet-api\./, 'testnet-rpc.');
+  return `wss://${host}/ws`;
+}
 import type { StakingValidator, Delegation, UnbondingEntry } from '@/types';
 import {
   ArrowLeft, Coins, TrendingUp, Lock, Loader2, Check, X, AlertCircle,
@@ -51,6 +58,10 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
   const [pending, setPending] = useState<PendingTx | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const txNetworkRef = useRef<string | null>(null);
+  // WS subscription to sentrix_finalized — see SendToken.tsx for the
+  // same pattern. Once a staking tx is in a block, the WS event flips
+  // status to 'finalized' instantly without waiting for the 1.5s tick.
+  const wsFinalized = useLatestFinalized(deriveWsUrl(net.apiUrl));
 
   const fetchAll = useCallback(async () => {
     if (!address) return;
@@ -118,6 +129,17 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
     pollRef.current = setInterval(poll, 1500);
     return stopPolling;
   }, [pending?.txid, pending?.startedAt, fetchAll, network]);
+
+  // WS fast-path: when sentrix_finalized advances past the staking tx's
+  // block, mark finalized immediately. The 1.5s poll stays as backup.
+  useEffect(() => {
+    if (!pending || pending.status !== 'in-block' || !pending.blockHeight || wsFinalized === null) return;
+    if (wsFinalized >= pending.blockHeight) {
+      setPending((p) => (p ? { ...p, status: 'finalized' } : p));
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      setTimeout(() => setPending(null), 4000);
+    }
+  }, [wsFinalized, pending]);
 
   const totalDelegated = delegations.reduce((s, d) => s + d.amount, 0);
   const totalUnbonding = unbonding.reduce((s, u) => s + u.amount, 0);

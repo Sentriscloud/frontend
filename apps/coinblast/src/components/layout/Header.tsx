@@ -63,14 +63,16 @@ export function Header() {
         style={{ background: 'rgba(12,12,16,0.92)', backdropFilter: 'blur(20px)' }}
       >
         <div className="max-w-7xl mx-auto px-6 h-[60px] flex items-center justify-between gap-6">
-          {/* Logo */}
+          {/* Logo — canonical Sentrix mark + CoinBlast wordmark (sub-brand
+              pairs with the parent Sentrix mark, no longer the rocket icon). */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-7 h-7 rounded-lg bg-[var(--gold)]/15 border border-[var(--brd2)] flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M7 1L12 4v6l-5 3L2 10V4l5-3z" stroke="var(--gold)" strokeWidth="1.5" fill="none" />
-                <path d="M7 4v6M4 5.5l3 1.5 3-1.5" stroke="var(--gold)" strokeWidth="1" />
-              </svg>
-            </div>
+            <img
+              src="/brand/sentrix-mark.svg"
+              alt="Sentrix"
+              width={26}
+              height={26}
+              className="object-contain"
+            />
             <span className="font-serif text-sm tracking-[.25em] uppercase text-[var(--tx)] group-hover:text-[var(--gold)] transition-colors hidden sm:block">
               Coin<span className="text-[var(--gold)]">Blast</span>
             </span>

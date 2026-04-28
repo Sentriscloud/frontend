@@ -10,6 +10,13 @@ import {
 import { signTransaction, isValidAddress } from '@/lib/crypto';
 import { parseAmount as parseTokenAmount, formatAmount as formatTokenAmount, SENTRI, MIN_FEE, AmountOverflowError } from '@/lib/amount';
 import { useEscape } from '@/lib/useEscape';
+import { useLatestFinalized } from '@/lib/ws';
+
+function deriveWsUrl(apiUrl: string): string {
+  const u = new URL(apiUrl);
+  const host = u.host.replace(/^api\./, 'rpc.').replace(/^testnet-api\./, 'testnet-rpc.');
+  return `wss://${host}/ws`;
+}
 import type { TokenInfo } from '@/types';
 import { ArrowLeft, Loader2, Check, Clipboard, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -46,6 +53,11 @@ export default function SendToken({
   const [srxBalanceSentri, setSrxBalanceSentri] = useState<number | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const txNetworkRef = useRef<string | null>(null);
+  // WS subscription to sentrix_finalized — fires the instant a block
+  // gets BFT-finalized. Once we know which block our tx landed in
+  // (via REST polling below), we cross-check the WS height and flip to
+  // 'finalized' without waiting for the next 1.5s REST tick.
+  const wsFinalized = useLatestFinalized(deriveWsUrl(net.apiUrl));
 
   useEscape(showConfirm, () => setShowConfirm(false));
   useEscape(showBookPicker, () => setShowBookPicker(false));
@@ -106,6 +118,17 @@ export default function SendToken({
     pollRef.current = setInterval(poll, 1500);
     return stopPolling;
   }, [txid, network]);
+
+  // WS fast-path: when sentrix_finalized advances past our tx's block,
+  // mark finalized immediately and cancel the REST poll. The 1.5s poll
+  // stays as a backup for WS reconnect windows.
+  useEffect(() => {
+    if (txStatus !== 'in-block' || txBlockHeight === null || wsFinalized === null) return;
+    if (wsFinalized >= txBlockHeight) {
+      setTxStatus('finalized');
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    }
+  }, [wsFinalized, txBlockHeight, txStatus]);
 
   const handlePaste = async () => {
     try {
