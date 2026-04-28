@@ -36,7 +36,7 @@ export default function Receive({ onBack }: { onBack: () => void }) {
           </p>
         </div>
 
-        <div className="corner-lines rounded-2xl bg-[var(--sf)] border border-[var(--brd)] p-6 animate-fade-up delay-2">
+        <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] p-6 animate-fade-up delay-2">
           <div className="flex justify-center mb-5">
             <div className="rounded-xl bg-[var(--bk)] border border-[var(--brd)] p-4">
               {address && (

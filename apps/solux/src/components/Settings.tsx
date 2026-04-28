@@ -12,17 +12,6 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-/** Deterministic gradient stops from address — same wallet always same colors. */
-function avatarGradient(addr: string): { from: string; to: string } {
-  const a = addr.replace(/^0x/, '').toLowerCase();
-  const h1 = parseInt(a.slice(0, 6), 16) % 360;
-  const h2 = (h1 + 40) % 360;
-  return {
-    from: `hsl(${h1}, 50%, 45%)`,
-    to:   `hsl(${h2}, 60%, 55%)`,
-  };
-}
-
 const APP_VERSION = '0.1.0';
 const LOCK_OPTIONS: Array<{ minutes: number; label: string }> = [
   { minutes: 0,    label: 'Never' },
@@ -45,7 +34,7 @@ export default function Settings({
   onOpenAccounts?: () => void;
   inline?: boolean;
 }) {
-  const { address, privateKey, watchOnly, mnemonic, activeIndex, clearWallet } = useWalletStore();
+  const { address, privateKey, watchOnly, mnemonic, activeIndex, vault, lock, clearWallet } = useWalletStore();
   const {
     autoLockMinutes, hideBalances, network, theme,
     setAutoLockMinutes, setHideBalances, setNetwork, setTheme,
@@ -65,7 +54,6 @@ export default function Settings({
   const [ksEncrypting, setKsEncrypting] = useState(false);
   const [addrCopied, setAddrCopied] = useState(false);
 
-  const grad = address ? avatarGradient(address) : { from: '#c8a84a', to: '#9b6f3f' };
   const avatarChar = address ? address.slice(2, 3).toUpperCase() : 'S';
   const truncateLong = (s: string) => s.slice(0, 8) + '…' + s.slice(-6);
 
@@ -120,9 +108,17 @@ export default function Settings({
     }
   };
 
+  // Encrypted wallet: keep the vault, drop the in-memory key — refresh
+  // hits the unlock screen. Watch-only or no vault: full wipe (vault is
+  // just an address, no value in keeping it locked).
   const lockNow = () => {
-    clearWallet();
-    toast.success('Wallet locked');
+    if (vault?.kind === 'encrypted') {
+      lock();
+      toast.success('Wallet locked');
+    } else {
+      clearWallet();
+      toast.success(watchOnly ? 'Stopped watching' : 'Wallet removed');
+    }
   };
 
   const truncate = (s: string) => s.slice(0, 6) + '…' + s.slice(-4);
@@ -138,7 +134,7 @@ export default function Settings({
   };
 
   return (
-    <div className={inline ? 'flex justify-center px-5 pt-6 pb-28' : 'min-h-screen flex justify-center px-5 py-8'}>
+    <div className={inline ? 'flex justify-center px-5 pt-6 pb-32' : 'min-h-screen flex justify-center px-5 py-8'}>
       <div className="w-full max-w-sm">
         {!inline && onBack && (
           <button
@@ -149,25 +145,25 @@ export default function Settings({
           </button>
         )}
 
-        {/* Identity hero — merged from Profile */}
+        {/* Identity hero — merged from Profile. Avatar uses the same
+            gradient-gold disc as Dashboard so the brand reads as one
+            single coin face across surfaces. */}
         <div className="text-center mb-7 animate-fade-up">
           <div className="relative inline-block mb-3">
-            {/* Outer ring */}
             <div
-              className="absolute inset-0 rounded-full -m-1.5 opacity-50 blur-xl"
-              style={{ background: `linear-gradient(135deg, ${grad.from}, ${grad.to})` }}
+              className="absolute inset-0 rounded-full -m-2 opacity-60 blur-2xl"
+              style={{ background: 'radial-gradient(circle, rgba(244, 199, 94, 0.5) 0%, transparent 70%)' }}
               aria-hidden
             />
             <button
               onClick={() => mnemonic && onOpenAccounts?.()}
               disabled={!mnemonic}
               aria-label={mnemonic ? 'Switch account' : 'Wallet identity'}
-              className="relative w-20 h-20 rounded-full flex items-center justify-center font-mono font-bold text-2xl text-white shadow-[0_8px_28px_rgba(0,0,0,0.45),inset_0_2px_8px_rgba(255,255,255,0.15)] ring-2 ring-[var(--brd-s)] group disabled:cursor-default hover:ring-[var(--gold)] transition-all active:scale-[0.98]"
-              style={{ background: `linear-gradient(135deg, ${grad.from}, ${grad.to})` }}
+              className="grad-avatar relative w-20 h-20 rounded-full flex items-center justify-center font-bold text-2xl text-[#3a2a0e] group disabled:cursor-default transition-all active:scale-[0.98]"
             >
               {avatarChar}
               {mnemonic && (
-                <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[var(--gold)] ring-[3px] ring-[var(--bk)] flex items-center justify-center text-[var(--bk)] group-hover:bg-[var(--gold-l)] transition-colors shadow-[0_4px_12px_var(--gold-glow)]">
+                <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[var(--gold)] ring-[3px] ring-[var(--bk)] flex items-center justify-center text-[var(--bk)] group-hover:bg-[var(--gold-l)] transition-colors">
                   <Plus className="w-3.5 h-3.5" strokeWidth={3} />
                 </span>
               )}

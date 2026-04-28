@@ -596,7 +596,7 @@ function Method({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`corner-lines w-full flex items-center gap-4 p-4 rounded-xl bg-[var(--sf)] border border-[var(--brd)] transition-colors text-left ${
+      className={`w-full flex items-center gap-4 p-4 rounded-xl bg-[var(--sf)] border border-[var(--brd)] transition-colors text-left ${
         disabled
           ? 'opacity-50 cursor-not-allowed'
           : 'hover:bg-[var(--sf-2)] hover:border-[var(--gold-bg-s)] active:scale-[0.99]'
