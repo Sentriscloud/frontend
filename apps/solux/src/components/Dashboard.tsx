@@ -274,56 +274,65 @@ export default function Dashboard() {
         </header>
 
         {/* ── Balance hero ──────────────────────────────── */}
-        <div className="luxe-card relative mb-7 rounded-2xl overflow-hidden animate-fade-up delay-1">
-          <div className="relative px-6 pt-7 pb-6">
-            {/* Total balance */}
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[13px] text-[var(--tx-m)]">Total balance</span>
-              <button
-                onClick={() => setHideBalances(!hideBalances)}
-                aria-label={hideBalances ? 'Show balances' : 'Hide balances'}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--tx-m)] hover:text-[var(--tx)] hover:bg-[var(--sf-2)] transition-colors"
-              >
-                {hideBalances
-                  ? <EyeOff className="w-4 h-4" />
-                  : <Eye className="w-4 h-4" />}
-              </button>
+        <div className="luxe-card relative mb-7 rounded-[20px] overflow-hidden animate-fade-up delay-1">
+          <div className="relative px-6 pt-6 pb-6">
+            {/* Top label row */}
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[13px] text-[var(--tx-m)] font-medium">Total balance</span>
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-medium bg-[rgba(255,255,255,0.06)] text-[var(--tx-2)]">
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    net.accent === 'teal' ? 'bg-[#2dd4bf]' : 'bg-[var(--green)]'
+                  }`} />
+                  {net.label}
+                </span>
+                <button
+                  onClick={() => setHideBalances(!hideBalances)}
+                  aria-label={hideBalances ? 'Show balances' : 'Hide balances'}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--tx-m)] hover:text-[var(--tx)] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
+                >
+                  {hideBalances
+                    ? <EyeOff className="w-4 h-4" />
+                    : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
+            {/* Hero amount — Playfair, gold-tinted for confident pop */}
             {loading || srxBalance === null ? (
-              <span className="skeleton h-[52px] w-48 mb-6 block" />
+              <span className="skeleton h-[64px] w-56 mb-5 block" />
             ) : (
-              <div className="flex items-baseline gap-2 mb-6">
-                <span className="font-serif text-[52px] text-[var(--tx)] tab-num leading-none tracking-[-0.02em]">
+              <div className="flex items-baseline gap-2.5 mb-5">
+                <span
+                  className="font-serif text-[60px] tab-num leading-none tracking-[-0.025em]"
+                  style={{
+                    background: 'linear-gradient(180deg, #ffd97a 0%, #f4c75e 50%, #d4a937 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
                   {hideBalances ? '••••••' : formatBalance(srxBalance)}
                 </span>
-                <span className="text-[15px] text-[var(--gold)]">SRX</span>
+                <span className="text-[14px] font-medium text-[var(--gold-d)] tracking-wide">SRX</span>
               </div>
             )}
 
-            {/* Address + network row */}
-            <div className="flex items-center justify-between">
-              <button
-                onClick={copyAddress}
-                className="flex items-center gap-2 text-[13px] font-mono text-[var(--tx-2)] hover:text-[var(--gold)] transition-colors"
-              >
-                {copied
-                  ? <Check className="w-3.5 h-3.5 text-[var(--gold)]" />
-                  : <Copy className="w-3.5 h-3.5" />}
-                {address ? truncate(address) : '—'}
-              </button>
-              <span className="flex items-center gap-1.5 text-[12px] text-[var(--tx-m)]">
-                <span className={`w-1.5 h-1.5 rounded-full ${
-                  net.accent === 'teal' ? 'bg-[#2dd4bf]' : 'bg-[var(--green)]'
-                }`} />
-                {net.label}
-              </span>
-            </div>
+            {/* Address row */}
+            <button
+              onClick={copyAddress}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] font-mono bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.08)] text-[var(--tx-2)] hover:text-[var(--gold-l)] transition-colors"
+            >
+              {copied
+                ? <Check className="w-3 h-3 text-[var(--gold)]" />
+                : <Copy className="w-3 h-3" />}
+              {address ? truncate(address) : '—'}
+            </button>
           </div>
         </div>
 
         {/* ── Action row ─ 4 buttons ─────────────────── */}
-        <div className="grid grid-cols-4 gap-1 mb-8 animate-fade-up delay-2">
+        <div className="grid grid-cols-4 gap-2 mb-7 animate-fade-up delay-2">
           <ActionBtn
             icon={<Send className="w-[18px] h-[18px]" />}
             label="Send"
@@ -513,10 +522,12 @@ function ActionBtn({
       <span className={`action-disc ${soon ? 'muted' : ''}`}>
         {icon}
       </span>
-      <span className="text-[12px] text-[var(--tx-2)]">{label}</span>
+      <span className={`text-[12px] font-medium ${soon ? 'text-[var(--tx-d)]' : 'text-[var(--tx-2)]'}`}>
+        {label}
+      </span>
       {soon && (
-        <span className="absolute top-1.5 right-2.5 text-[9px] text-[var(--tx-d)]">
-          soon
+        <span className="absolute top-0 right-2 text-[9px] font-mono uppercase tracking-wider text-[var(--tx-d)]">
+          Soon
         </span>
       )}
     </button>
