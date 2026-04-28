@@ -43,38 +43,37 @@ export default function TxHistory({ onBack, inline = false }: { onBack?: () => v
   };
 
   return (
-    <div className={`flex justify-center px-5 ${inline ? 'pt-6 pb-28' : 'min-h-screen py-8'}`}>
+    <div className={`flex justify-center px-5 ${inline ? 'pt-6 pb-32' : 'min-h-screen py-8'}`}>
       <div className="w-full max-w-sm">
         {!inline && onBack && (
           <button
             onClick={onBack}
-            className="flex items-center gap-2 mb-6 text-xs font-mono uppercase tracking-wider text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
+            className="flex items-center gap-1.5 mb-6 text-[13px] text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back
+            <ArrowLeft className="w-4 h-4" /> Back
           </button>
         )}
 
-        <div className="mb-6 animate-fade-up delay-1">
-          <div className="eyebrow">Ledger</div>
-          <h1 className="font-serif text-3xl text-[var(--tx)] mt-1">Activity</h1>
-        </div>
+        <h1 className="text-[22px] font-bold text-[var(--tx)] mb-6 animate-fade-up delay-1 px-1">
+          Activity
+        </h1>
 
-        <div className="rounded-xl bg-[var(--sf)] border border-[var(--brd)] overflow-hidden animate-fade-up delay-2">
+        <div className="animate-fade-up delay-2">
           {loading ? (
-            <div className="p-10 text-center">
-              <div className="w-7 h-7 rounded-full mx-auto mb-3 animate-spin border-2 border-[var(--brd)] border-t-[var(--gold)]" />
-              <p className="text-xs font-mono uppercase tracking-wider text-[var(--tx-d)]">Loading</p>
+            <div className="px-1 py-12 text-center">
+              <div className="w-6 h-6 rounded-full mx-auto mb-3 animate-spin border-2 border-[var(--brd)] border-t-[var(--gold)]" />
+              <p className="text-[12px] text-[var(--tx-d)]">Loading…</p>
             </div>
           ) : txs.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center bg-[var(--bk-2)] border border-[var(--brd)]">
+            <div className="px-1 py-16 text-center">
+              <div className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center bg-[var(--sf)] border border-[var(--brd)]">
                 <Inbox className="w-5 h-5 text-[var(--tx-d)]" />
               </div>
-              <p className="text-sm text-[var(--tx-2)]">No transactions yet</p>
-              <p className="text-[11px] text-[var(--tx-d)] mt-1">Your activity will appear here</p>
+              <p className="text-[14px] font-medium text-[var(--tx-m)]">No transactions yet</p>
+              <p className="text-[12px] text-[var(--tx-d)] mt-1.5">Your activity will appear here</p>
             </div>
           ) : (
-            <div className="max-h-[70vh] overflow-y-auto divide-y divide-[var(--brd)]">
+            <div className="space-y-1 max-h-[72vh] overflow-y-auto">
               {txs.map((tx) => {
                 const isTokenOp = tx.to === TOKEN_OP_ADDRESS && tx.direction === 'out';
                 const isStaking = tx.to.toLowerCase() === STAKING_ADDRESS;
@@ -82,8 +81,9 @@ export default function TxHistory({ onBack, inline = false }: { onBack?: () => v
                 const isOut     = tx.direction === 'out';
 
                 const Icon  = isTokenOp ? Layers : isStaking ? Coins : isReward ? Coins : isOut ? ArrowUpRight : ArrowDownLeft;
-                const tone  = isTokenOp ? 'gold' : isStaking ? 'gold' : isReward ? 'gold' : isOut ? 'red' : 'green';
-                const label = isTokenOp ? 'Token op' : isStaking ? 'Staking' : isReward ? 'Block reward' : isOut ? 'Sent' : 'Received';
+                const tone  = isTokenOp || isStaking || isReward ? 'gold' : isOut ? 'red' : 'green';
+                const discTint = tone === 'gold' ? '' : tone === 'red' ? 'tint-red' : 'tint-green';
+                const label = isTokenOp ? 'Token op' : isStaking ? 'Staking' : isReward ? 'Reward' : isOut ? 'Sent' : 'Received';
                 const counter = isOut ? tx.to : tx.from;
                 const amt   = isTokenOp ? tx.fee : tx.amount;
                 const sign  = isOut || isTokenOp ? '−' : '+';
@@ -92,39 +92,26 @@ export default function TxHistory({ onBack, inline = false }: { onBack?: () => v
                   <button
                     key={tx.txid}
                     onClick={() => setSelected(tx)}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--sf-2)] transition-colors text-left"
+                    className="w-full flex items-center justify-between px-2 py-3 rounded-xl hover:bg-[rgba(255,255,255,0.04)] transition-colors text-left"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                        tone === 'gold'  ? 'bg-[var(--gold-bg)]' :
-                        tone === 'red'   ? 'bg-[var(--red-bg)]'  :
-                                            'bg-[var(--green-bg)]'
-                      }`}>
-                        <Icon className={`w-4 h-4 ${
-                          tone === 'gold'  ? 'text-[var(--gold)]' :
-                          tone === 'red'   ? 'text-[var(--red)]'  :
-                                              'text-[var(--green)]'
-                        }`} />
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`action-disc ${discTint}`} style={{ width: 40, height: 40 }}>
+                        <Icon className="w-[18px] h-[18px]" />
                       </div>
-                      <div>
-                        <p className="text-sm text-[var(--tx)]">{label}</p>
-                        <p className="text-[10px] font-mono text-[var(--tx-d)] mt-0.5">
+                      <div className="min-w-0">
+                        <p className="text-[14px] font-semibold text-[var(--tx)]">{label}</p>
+                        <p className="text-[12px] text-[var(--tx-m)] mt-0.5 truncate">
                           {truncate(counter)} · {timeAgo(tx.block_timestamp)}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className={`text-sm font-mono tab-num ${
-                        tone === 'gold'  ? 'text-[var(--gold)]' :
-                        tone === 'red'   ? 'text-[var(--red)]'  :
-                                            'text-[var(--green)]'
-                      }`}>
-                        {hideBalances ? '••••' : `${sign}${(amt / SENTRI).toLocaleString(undefined, { maximumFractionDigits: 4 })}`}
-                      </p>
-                      <p className="text-[9px] font-mono uppercase tracking-wider text-[var(--tx-d)] mt-0.5">
-                        {isTokenOp ? 'fee · srx' : 'srx'}
-                      </p>
-                    </div>
+                    <p className={`text-[14px] font-semibold tab-num shrink-0 pl-3 ${
+                      tone === 'gold' ? 'text-[var(--gold)]' :
+                      tone === 'red'  ? 'text-[var(--red)]'  :
+                                        'text-[var(--green)]'
+                    }`}>
+                      {hideBalances ? '••••' : `${sign}${(amt / SENTRI).toLocaleString(undefined, { maximumFractionDigits: 4 })}`}
+                    </p>
                   </button>
                 );
               })}

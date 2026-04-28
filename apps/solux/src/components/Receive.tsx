@@ -23,42 +23,41 @@ export default function Receive({ onBack }: { onBack: () => void }) {
       <div className="w-full max-w-sm">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 mb-6 text-xs font-mono uppercase tracking-wider text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
+          className="flex items-center gap-1.5 mb-6 text-[13px] text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back
+          <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
         <div className="mb-6 animate-fade-up delay-1">
-          <div className="eyebrow">Inbound</div>
-          <h1 className="font-serif text-3xl text-[var(--tx)] mt-1">Receive SRX</h1>
-          <p className="text-sm text-[var(--tx-m)] mt-2">
+          <h1 className="text-[22px] font-bold text-[var(--tx)]">Receive SRX</h1>
+          <p className="text-[13px] text-[var(--tx-m)] mt-2 leading-relaxed">
             Share this address with the sender. Works for native SRX and any SRC-20 tokens on Sentrix Chain.
           </p>
         </div>
 
         <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] p-6 animate-fade-up delay-2">
           <div className="flex justify-center mb-5">
-            <div className="rounded-xl bg-[var(--bk)] border border-[var(--brd)] p-4">
+            <div className="rounded-xl bg-white p-4">
               {address && (
                 <QRCodeSVG
                   value={address}
                   size={192}
-                  bgColor="transparent"
-                  fgColor="#f1f1f3"
+                  bgColor="#ffffff"
+                  fgColor="#0a0a0b"
                   level="M"
                 />
               )}
             </div>
           </div>
 
-          <div className="rounded-lg bg-[var(--bk-2)] border border-[var(--brd)] p-3 mb-4">
-            <div className="eyebrow mb-1.5">Your address</div>
-            <p className="text-xs font-mono break-all text-[var(--tx)] leading-relaxed">{address}</p>
+          <div className="rounded-xl bg-[var(--bk-2)] border border-[var(--brd)] p-4 mb-4">
+            <div className="text-[12px] font-medium text-[var(--tx-m)] mb-1.5">Your address</div>
+            <p className="text-[13px] font-mono break-all text-[var(--tx)] leading-relaxed">{address}</p>
           </div>
 
           <button
             onClick={copy}
-            className="w-full py-3 rounded-lg text-sm font-semibold bg-[var(--gold)] text-[var(--bk)] hover:bg-[var(--gold-l)] transition-colors active:scale-[0.99] flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl text-[14px] font-semibold bg-[var(--gold)] text-[#3a2a0e] hover:bg-[var(--gold-l)] transition-colors active:scale-[0.99] flex items-center justify-center gap-2"
           >
             {copied ? <><Check className="w-4 h-4" /> Copied</> : <><Copy className="w-4 h-4" /> Copy address</>}
           </button>

@@ -169,15 +169,15 @@ export default function Settings({
               )}
             </button>
           </div>
-          <div className="eyebrow mb-1.5">
+          <p className="text-[12px] font-medium text-[var(--tx-m)] mb-1">
             {watchOnly ? 'Watch-only' : `Account ${activeIndex + 1}`}
-          </div>
-          <h1 className="font-serif text-[26px] text-[var(--tx)] mb-2.5 leading-tight">
+          </p>
+          <h1 className="text-[24px] font-bold text-[var(--tx)] mb-3 leading-tight">
             {watchOnly ? 'Address watcher' : `Wallet ${activeIndex + 1}`}
           </h1>
           <button
             onClick={copyAddress}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bk-2)] border border-[var(--brd)] text-xs font-mono text-[var(--tx-2)] hover:bg-[var(--sf-2)] hover:text-[var(--gold)] hover:border-[var(--gold-bg-s)] transition-all"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bk-2)] border border-[var(--brd)] text-[12px] font-mono text-[var(--tx-2)] hover:bg-[var(--sf-2)] hover:text-[var(--gold)] hover:border-[var(--gold-bg-s)] transition-all"
           >
             {address ? truncateLong(address) : '—'}
             {addrCopied ? <Check className="w-3 h-3 text-[var(--gold)]" /> : <Copy className="w-3 h-3" />}
@@ -185,13 +185,13 @@ export default function Settings({
           <div className="mt-4 flex items-center justify-center gap-2">
             <button
               onClick={() => setSheet('qr')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--sf)] border border-[var(--brd-s)] text-xs font-mono uppercase tracking-wider text-[var(--tx)] hover:bg-[var(--sf-2)] hover:border-[var(--gold)] hover:text-[var(--gold)] transition-all active:scale-[0.97]"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--sf)] border border-[var(--brd)] text-[12px] font-semibold text-[var(--tx)] hover:bg-[var(--sf-2)] hover:border-[var(--gold-bg-s)] transition-all active:scale-[0.97]"
             >
               <QrCode className="w-3.5 h-3.5" /> QR
             </button>
             <button
               onClick={lockNow}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--red-bg)] border border-[var(--red)]/40 text-xs font-mono uppercase tracking-wider text-[var(--red)] hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] transition-all active:scale-[0.97]"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--red-bg)] border border-[var(--red)]/30 text-[12px] font-semibold text-[var(--red)] hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] transition-all active:scale-[0.97]"
             >
               <Lock className="w-3.5 h-3.5" /> {watchOnly ? 'Stop' : 'Lock'}
             </button>
@@ -713,8 +713,8 @@ export default function Settings({
 function Section({ label, delay, children }: { label: string; delay: number; children: React.ReactNode }) {
   return (
     <section className={`mb-5 animate-fade-up delay-${delay}`}>
-      <div className="eyebrow mb-2 px-1">{label}</div>
-      <div className="rounded-xl bg-[var(--sf)] border border-[var(--brd)] divide-y divide-[var(--brd)] overflow-hidden">
+      <h2 className="text-[13px] font-semibold text-[var(--tx-m)] mb-2 px-1">{label}</h2>
+      <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] divide-y divide-[var(--brd)] overflow-hidden">
         {children}
       </div>
     </section>

@@ -272,27 +272,26 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
       <div className="w-full max-w-sm">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 mb-6 text-xs font-mono uppercase tracking-wider text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
+          className="flex items-center gap-1.5 mb-6 text-[13px] text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back
+          <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="mb-6 animate-fade-up delay-1">
-          <div className="eyebrow">Native transfer</div>
-          <h1 className="font-serif text-3xl text-[var(--tx)] mt-1">Send SRX</h1>
-        </div>
+        <h1 className="text-[22px] font-bold text-[var(--tx)] mb-6 animate-fade-up delay-1">
+          Send SRX
+        </h1>
 
         <div className="space-y-4 animate-fade-up delay-2">
           {/* Recipient */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="eyebrow">Recipient</label>
+              <label className="text-[13px] font-medium text-[var(--tx-2)]">Recipient</label>
               {addressBook.length > 0 && (
                 <button
                   onClick={() => setShowBookPicker(true)}
-                  className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors flex items-center gap-1"
+                  className="text-[12px] font-medium text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors flex items-center gap-1"
                 >
-                  <BookOpen className="w-3 h-3" /> Address book
+                  <BookOpen className="w-3.5 h-3.5" /> Address book
                 </button>
               )}
             </div>
@@ -312,7 +311,7 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
               </button>
             </div>
             {recipientLabel && (
-              <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] mt-1.5">
+              <p className="text-[12px] text-[var(--gold)] mt-1.5 font-medium">
                 ↳ {recipientLabel}
               </p>
             )}
@@ -321,9 +320,9 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
           {/* Amount */}
           <div>
             <div className="flex items-baseline justify-between mb-2">
-              <label className="eyebrow">Amount</label>
-              <span className="text-[10px] font-mono text-[var(--tx-d)]">
-                Balance <span className="text-[var(--gold)]">{balanceDisplay}</span> SRX
+              <label className="text-[13px] font-medium text-[var(--tx-2)]">Amount</label>
+              <span className="text-[12px] text-[var(--tx-m)]">
+                Balance <span className="text-[var(--gold)] font-medium">{balanceDisplay}</span> SRX
               </span>
             </div>
             <div className="relative">
@@ -333,11 +332,11 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
                 placeholder="0.00"
                 type="text"
                 inputMode="decimal"
-                className="w-full rounded-lg p-3.5 pr-16 text-base font-mono bg-[var(--sf)] border border-[var(--brd)] text-[var(--tx)] placeholder:text-[var(--tx-d)] focus:outline-none focus:border-[var(--gold-d)] transition-colors"
+                className="w-full rounded-xl p-4 pr-16 text-[16px] font-mono bg-[var(--sf)] border border-[var(--brd)] text-[var(--tx)] placeholder:text-[var(--tx-d)] focus:outline-none focus:border-[var(--gold-d)] transition-colors"
               />
               <button
                 onClick={loadMax}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono uppercase tracking-wider px-2.5 py-1.5 rounded-md bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)] hover:bg-[var(--gold-bg-s)] transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-[var(--gold-bg)] text-[var(--gold)] hover:bg-[var(--gold-bg-s)] transition-colors"
               >
                 Max
               </button>
@@ -345,14 +344,14 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
           </div>
 
           {/* Fee / total */}
-          <div className="rounded-lg bg-[var(--bk-2)] border border-[var(--brd)] divide-y divide-[var(--brd)]">
-            <div className="flex justify-between items-baseline px-4 py-2.5">
-              <span className="text-[11px] text-[var(--tx-m)]">Network fee</span>
-              <span className="text-xs font-mono text-[var(--tx-2)] tab-num">{feeDisplay} SRX</span>
+          <div className="rounded-xl bg-[var(--sf)] border border-[var(--brd)] divide-y divide-[var(--brd)]">
+            <div className="flex justify-between items-baseline px-4 py-3">
+              <span className="text-[13px] text-[var(--tx-m)]">Network fee</span>
+              <span className="text-[13px] font-mono text-[var(--tx-2)] tab-num">{feeDisplay} SRX</span>
             </div>
-            <div className="flex justify-between items-baseline px-4 py-2.5">
-              <span className="text-[11px] uppercase tracking-wider text-[var(--tx-m)] font-mono">Total</span>
-              <span className="text-sm font-mono text-[var(--tx)] tab-num">{totalDisplay} SRX</span>
+            <div className="flex justify-between items-baseline px-4 py-3">
+              <span className="text-[13px] font-medium text-[var(--tx-2)]">Total</span>
+              <span className="text-[15px] font-mono font-semibold text-[var(--tx)] tab-num">{totalDisplay} SRX</span>
             </div>
           </div>
 

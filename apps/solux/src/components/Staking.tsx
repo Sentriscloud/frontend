@@ -218,21 +218,20 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
   };
 
   return (
-    <div className={`flex justify-center px-5 ${inline ? 'pt-6 pb-28' : 'min-h-screen py-8'}`}>
+    <div className={`flex justify-center px-5 ${inline ? 'pt-6 pb-32' : 'min-h-screen py-8'}`}>
       <div className="w-full max-w-sm">
         {!inline && onBack && (
           <button
             onClick={onBack}
-            className="flex items-center gap-2 mb-6 text-xs font-mono uppercase tracking-wider text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
+            className="flex items-center gap-1.5 mb-6 text-[13px] text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back
+            <ArrowLeft className="w-4 h-4" /> Back
           </button>
         )}
 
         <div className="mb-6 animate-fade-up delay-1">
-          <div className="eyebrow">Sentrix DPoS</div>
-          <h1 className="font-serif text-3xl text-[var(--tx)] mt-1">Stake SRX</h1>
-          <p className="text-sm text-[var(--tx-m)] mt-2 leading-relaxed">
+          <h1 className="text-[22px] font-bold text-[var(--tx)]">Stake SRX</h1>
+          <p className="text-[13px] text-[var(--tx-m)] mt-2 leading-relaxed">
             Delegate to a validator to earn block rewards. Unbonding takes one epoch to release.
           </p>
         </div>
@@ -254,21 +253,21 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
         )}
 
         {/* Your delegations summary */}
-        <div className="rounded-xl bg-[var(--sf)] border border-[var(--brd)] p-5 mb-5 animate-fade-up delay-2">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="luxe-card relative rounded-2xl p-5 mb-5 overflow-hidden animate-fade-up delay-2">
+          <div className="grid grid-cols-2 gap-4 relative">
             <div>
-              <div className="eyebrow mb-1">Delegated</div>
-              <div className="font-serif text-xl text-[var(--tx)] tab-num">
+              <div className="text-[12px] text-[var(--tx-m)] font-medium mb-1.5">Delegated</div>
+              <div className="text-[22px] font-bold text-[var(--tx)] tab-num leading-none">
                 {mask(sentriToSRX(totalDelegated))}
               </div>
-              <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] mt-0.5">SRX</div>
+              <div className="text-[12px] font-medium text-[var(--gold)] mt-1.5">SRX</div>
             </div>
             <div>
-              <div className="eyebrow mb-1">Unbonding</div>
-              <div className="font-serif text-xl text-[var(--tx)] tab-num">
+              <div className="text-[12px] text-[var(--tx-m)] font-medium mb-1.5">Unbonding</div>
+              <div className="text-[22px] font-bold text-[var(--tx)] tab-num leading-none">
                 {mask(sentriToSRX(totalUnbonding))}
               </div>
-              <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--tx-d)] mt-0.5">SRX</div>
+              <div className="text-[12px] font-medium text-[var(--tx-d)] mt-1.5">SRX</div>
             </div>
           </div>
         </div>
@@ -276,7 +275,7 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
         {/* Your delegations list */}
         {delegations.length > 0 && (
           <section className="mb-5 animate-fade-up delay-3">
-            <div className="eyebrow mb-2 px-1">Your delegations</div>
+            <h2 className="text-[15px] font-semibold text-[var(--tx)] mb-2 px-1">Your delegations</h2>
             <div className="rounded-xl bg-[var(--sf)] border border-[var(--brd)] divide-y divide-[var(--brd)] overflow-hidden">
               {delegations.map((d) => {
                 const v = validators.find((x) => x.address.toLowerCase() === d.validator.toLowerCase());
@@ -312,7 +311,7 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
         {/* Unbonding queue */}
         {unbonding.length > 0 && (
           <section className="mb-5 animate-fade-up delay-3">
-            <div className="eyebrow mb-2 px-1">Unbonding</div>
+            <h2 className="text-[15px] font-semibold text-[var(--tx)] mb-2 px-1">Unbonding</h2>
             <div className="rounded-xl bg-[var(--sf)] border border-[var(--brd)] divide-y divide-[var(--brd)] overflow-hidden">
               {unbonding.map((u, i) => (
                 <div key={i} className="flex items-center justify-between px-4 py-3">
@@ -348,7 +347,10 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
 
         {/* Validator list */}
         <section className="animate-fade-up delay-4">
-          <div className="eyebrow mb-2 px-1">Validators · {activeValidators.length} active</div>
+          <div className="flex items-baseline justify-between mb-2 px-1">
+            <h2 className="text-[15px] font-semibold text-[var(--tx)]">Validators</h2>
+            <span className="text-[12px] text-[var(--tx-m)]">{activeValidators.length} active</span>
+          </div>
           <div className="rounded-xl bg-[var(--sf)] border border-[var(--brd)] overflow-hidden">
             {loading ? (
               <div className="p-10 text-center">
@@ -386,10 +388,10 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
                           )}
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-xs font-mono tab-num text-[var(--gold)]">
+                          <p className="text-[13px] font-mono font-semibold tab-num text-[var(--gold)]">
                             {sentriToSRX(v.total_stake)}
                           </p>
-                          <p className="text-[9px] font-mono uppercase tracking-wider text-[var(--tx-d)] mt-0.5">
+                          <p className="text-[11px] text-[var(--tx-d)] mt-0.5">
                             SRX staked
                           </p>
                         </div>
