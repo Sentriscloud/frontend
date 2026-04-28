@@ -195,12 +195,12 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               spark={isChainIdle ? undefined : tpsSpark}
               title={isChainIdle && latestBlockAgeSec !== null ? `Chain paused — last block ${latestBlockAgeSec < 3600 ? `${Math.round(latestBlockAgeSec / 60)}m` : `${(latestBlockAgeSec / 3600).toFixed(1)}h`} ago` : undefined}
             />
-            <StatCard label={t("stats.block_height")} value={stats ? stats.height.toLocaleString() : "—"} loading={statsLoading} accent="var(--cyan)" />
+            <StatCard label={t("stats.block_height")} value={stats ? stats.height.toLocaleString() : "—"} loading={statsLoading} accent="var(--gold)" />
             <StatCard
               label={t("stats.block_time")}
               value={isChainIdle ? "—" : blockTime}
               loading={!blocks}
-              accent={isChainIdle ? "var(--orange)" : "var(--teal)"}
+              accent={isChainIdle ? "var(--orange)" : "var(--gold-l)"}
               spark={isChainIdle ? undefined : blockTimeSpark}
               title={isChainIdle ? "Chain paused — block time stale" : undefined}
             />
@@ -208,12 +208,12 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               label={t("stats.total_transactions")}
               value={totalTxValue}
               loading={statsLoading && !blocks}
-              accent="var(--blue)"
+              accent="var(--gold-d)"
               spark={isChainIdle ? undefined : txCountSpark}
             />
             {/* Row 2 — chain state */}
-            <StatCard label={t("stats.active_validators")} value={stats ? String(stats.active_validators) : "—"} loading={statsLoading} accent="var(--purple)" />
-            <StatCard label={t("stats.tokens_deployed")} value={stats ? String(stats.deployed_tokens) : "—"} loading={statsLoading} accent="var(--lime)" />
+            <StatCard label={t("stats.active_validators")} value={stats ? String(stats.active_validators) : "—"} loading={statsLoading} accent="var(--gold)" />
+            <StatCard label={t("stats.tokens_deployed")} value={stats ? String(stats.deployed_tokens) : "—"} loading={statsLoading} accent="var(--gold-l)" />
             <StatCard
               label={t("stats.total_burned")}
               value={stats ? formatBurnedSrx(stats.total_burned_srx) : "—"}
@@ -221,7 +221,7 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               loading={statsLoading}
               accent="var(--red)"
             />
-            <StatCard label={t("stats.block_reward")} value={stats ? `${stats.next_block_reward_srx} SRX` : "—"} loading={statsLoading} accent="var(--pink)" />
+            <StatCard label={t("stats.block_reward")} value={stats ? `${stats.next_block_reward_srx} SRX` : "—"} loading={statsLoading} accent="var(--gold)" />
           </>
         )}
       </div>
