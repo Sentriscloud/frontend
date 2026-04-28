@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { FaucetMark } from './faucet-mark'
+import { useLatestBlock, useLatestFinalized, useValidatorSet } from '@/lib/ws'
 
-// Live chain status card — sibling of Solux's NetworkCard component.
-// Polls /chain/info on the configured REST URL every 12s and surfaces
-// block height + finalized lag + active validator count. Operator
-// trust signal: faucet visitors can see the chain is alive before they
-// hit "claim".
+// Live chain status card. WebSocket subscriptions drive the live values
+// (block height, finalized height, validator count); a slow REST poll
+// (60s) backstops the initial load and any WS reconnect window so the
+// user never sees stale dashes.
 
 interface ChainInfo {
   height?: number
@@ -32,8 +32,20 @@ interface Props {
   explorerUrl: string
 }
 
+function deriveWsUrl(restUrl: string): string {
+  // restUrl is e.g. https://api.sentrixchain.com → wss://rpc.sentrixchain.com/ws
+  // testnet-api.sentrixchain.com → wss://testnet-rpc.sentrixchain.com/ws
+  const u = new URL(restUrl)
+  const host = u.host.replace(/^api\./, 'rpc.').replace(/^testnet-api\./, 'testnet-rpc.')
+  return `wss://${host}/ws`
+}
+
 export function NetworkCard({ network, restUrl, explorerUrl }: Props) {
   const [stats, setStats] = useState<Stats>({ height: null, finalized: null, validators: null })
+  const wsUrl = deriveWsUrl(restUrl)
+  const wsHead = useLatestBlock(wsUrl)
+  const wsFinalized = useLatestFinalized(wsUrl)
+  const wsValidators = useValidatorSet(wsUrl)
 
   useEffect(() => {
     let cancelled = false
@@ -56,12 +68,16 @@ export function NetworkCard({ network, restUrl, explorerUrl }: Props) {
       } catch { /* keep dashes */ }
     }
     fetchStats()
-    const id = setInterval(fetchStats, 12_000)
+    const id = setInterval(fetchStats, 60_000)
     return () => { cancelled = true; clearInterval(id) }
   }, [restUrl])
 
-  const lag = stats.height !== null && stats.finalized !== null
-    ? Math.max(0, stats.height - stats.finalized)
+  // WS-fresh values win over REST when present.
+  const liveHeight = wsHead?.number ?? stats.height
+  const liveFinalized = wsFinalized ?? stats.finalized
+  const liveValidators = wsValidators ?? stats.validators
+  const lag = liveHeight !== null && liveFinalized !== null
+    ? Math.max(0, liveHeight - liveFinalized)
     : null
 
   const explorerLink = network === 'testnet'
@@ -93,7 +109,7 @@ export function NetworkCard({ network, restUrl, explorerUrl }: Props) {
         <div className="grid grid-cols-3 gap-3">
           <Stat
             label="Block"
-            value={stats.height !== null ? `#${stats.height.toLocaleString()}` : '—'}
+            value={liveHeight !== null ? `#${liveHeight.toLocaleString()}` : '—'}
           />
           <Stat
             label="Finalized"
@@ -102,7 +118,7 @@ export function NetworkCard({ network, restUrl, explorerUrl }: Props) {
           />
           <Stat
             label="Validators"
-            value={stats.validators !== null ? String(stats.validators) : '—'}
+            value={liveValidators !== null ? String(liveValidators) : '—'}
           />
         </div>
       </div>

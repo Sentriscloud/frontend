@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { SITE } from "@/data/content";
+import { useLatestBlock } from "@/lib/ws";
 
 interface ChainInfo {
   total_blocks: number;
@@ -24,6 +25,10 @@ function formatNum(n: number): string {
 export function LiveChain() {
   const [data, setData] = useState<ChainInfo | null>(null);
   const [tick, setTick] = useState(0);
+  // WS subscription drives live block height; new heads also trigger
+  // the REST refetch so the other stats (burned, mempool, validators)
+  // stay fresh without an additional poll cycle.
+  const wsHead = useLatestBlock("wss://rpc.sentrixchain.com/ws");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,17 +38,26 @@ export function LiveChain() {
       } catch { /* silent */ }
     };
     fetchData();
+    // 30s slow REST poll as a backstop for WS reconnect windows.
     const interval = setInterval(() => {
       fetchData();
       setTick((t) => t + 1);
-    }, 3000);
+    }, 30_000);
     return () => clearInterval(interval);
   }, []);
 
+  // When WS emits a new head, also pull fresh /chain/info so non-header
+  // stats (mempool, burned, validators) advance with the block.
+  useEffect(() => {
+    if (!wsHead) return;
+    fetch(`${SITE.api}/chain/info`).then((r) => r.ok ? r.json() : null).then((d) => d && setData(d)).catch(() => {});
+  }, [wsHead?.number]);
+
   if (!data) return null;
 
+  const liveHeight = Math.max(data.height, wsHead?.number ?? 0);
   const stats = [
-    { label: "Block Height", value: formatNum(data.height) },
+    { label: "Block Height", value: formatNum(liveHeight) },
     { label: "Total Minted", value: formatNum(data.total_minted_srx) + " SRX" },
     { label: "Total Burned", value: data.total_burned_srx.toFixed(4) + " SRX" },
     { label: "Validators", value: String(data.active_validators) },

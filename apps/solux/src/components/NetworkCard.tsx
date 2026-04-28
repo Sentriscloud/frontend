@@ -3,16 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useSettingsStore, NETWORKS } from '@/lib/store';
 import { getChainInfo, getFinalizedHeight } from '@/lib/api';
+import { useLatestBlock, useLatestFinalized, useValidatorSet } from '@/lib/ws';
 import { ExternalLink } from 'lucide-react';
 import SrxMark from './SrxMark';
 
-// Mini "Sentrix Chain status" card for the dashboard. Fills the empty
-// space below activity with a live readout of block height + active
-// validators + finalized lag — gives the dashboard "this wallet talks
-// to a real chain" presence instead of trailing into negative space.
-//
-// Polls every 12s. Failures render as "—" without crashing — the
-// dashboard is the home screen, it must not error out on a flaky RPC.
+// Mini "Sentrix Chain status" card. WS subscriptions drive the live
+// values (height / finalized / validators); a slow REST poll (60s)
+// backstops the initial load and any WS reconnect window so the user
+// never sees stale dashes.
 
 interface ChainStats {
   height: number | null;
@@ -21,12 +19,22 @@ interface ChainStats {
   chainId: number | null;
 }
 
+function deriveWsUrl(apiUrl: string): string {
+  const u = new URL(apiUrl);
+  const host = u.host.replace(/^api\./, 'rpc.').replace(/^testnet-api\./, 'testnet-rpc.');
+  return `wss://${host}/ws`;
+}
+
 export default function NetworkCard() {
   const { network } = useSettingsStore();
   const net = NETWORKS[network];
   const [stats, setStats] = useState<ChainStats>({
     height: null, finalized: null, activeValidators: null, chainId: null,
   });
+  const wsUrl = deriveWsUrl(net.apiUrl);
+  const wsHead = useLatestBlock(wsUrl);
+  const wsFinalized = useLatestFinalized(wsUrl);
+  const wsValidators = useValidatorSet(wsUrl);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,12 +57,15 @@ export default function NetworkCard() {
     };
 
     fetchStats();
-    const id = setInterval(fetchStats, 12_000);
+    const id = setInterval(fetchStats, 60_000);
     return () => { cancelled = true; clearInterval(id); };
   }, [network]);
 
-  const lag = stats.height !== null && stats.finalized !== null
-    ? Math.max(0, stats.height - stats.finalized)
+  const liveHeight = wsHead?.number ?? stats.height;
+  const liveFinalized = wsFinalized ?? stats.finalized;
+  const liveValidators = wsValidators ?? stats.activeValidators;
+  const lag = liveHeight !== null && liveFinalized !== null
+    ? Math.max(0, liveHeight - liveFinalized)
     : null;
 
   return (
@@ -86,7 +97,7 @@ export default function NetworkCard() {
           <div className="grid grid-cols-3 gap-3">
             <Stat
               label="Block"
-              value={stats.height !== null ? `#${stats.height.toLocaleString()}` : '—'}
+              value={liveHeight !== null ? `#${liveHeight.toLocaleString()}` : '—'}
             />
             <Stat
               label="Finalized"
@@ -95,7 +106,7 @@ export default function NetworkCard() {
             />
             <Stat
               label="Validators"
-              value={stats.activeValidators !== null ? String(stats.activeValidators) : '—'}
+              value={liveValidators !== null ? String(liveValidators) : '—'}
             />
           </div>
         </div>

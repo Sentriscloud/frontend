@@ -1,21 +1,10 @@
 // Minimal WebSocket client + React hooks for Sentrix RPC subscriptions.
-//
-// Wire format: JSON-RPC 2.0 over the network's /ws endpoint.
-// Subscribe via eth_subscribe / sentrix_subscribe; receive messages in
-// the eth_subscription envelope:
-//
-//   { "jsonrpc": "2.0", "method": "eth_subscription",
-//     "params": { "subscription": "0x01", "result": <payload> } }
-//
-// One singleton connection per WS URL is shared across all subscribers.
-// Reconnects with exponential backoff on close. After a few consecutive
-// failed connect attempts (with no successful open in between), gives
-// up so an unsupported endpoint doesn't spam the browser console.
+// Mirrors apps/scan/lib/ws.ts but takes WS URLs directly (no NetworkId
+// helper here). One singleton client per WS URL.
 
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getWsUrl, type NetworkId } from "./chain";
 
 type Json = Record<string, unknown> | unknown[] | string | number | boolean | null;
 type SubscribeMethod = "eth_subscribe" | "sentrix_subscribe";
@@ -44,9 +33,7 @@ class WsClient {
   private closed = false;
   private static MAX_FAILED_ATTEMPTS = 3;
 
-  constructor(url: string) {
-    this.url = url;
-  }
+  constructor(url: string) { this.url = url; }
 
   private connect() {
     if (this.connecting || (this.ws && this.ws.readyState <= 1)) return;
@@ -57,10 +44,7 @@ class WsClient {
       this.connecting = false;
       this.connectAttempts = 0;
       this.successfulConnects++;
-      for (const [, sub] of this.subs) {
-        sub.serverId = null;
-        this.sendSubscribe(sub);
-      }
+      for (const [, sub] of this.subs) { sub.serverId = null; this.sendSubscribe(sub); }
     };
     ws.onmessage = (ev) => this.handleMessage(ev.data);
     ws.onerror = () => { /* handled by onclose */ };
@@ -82,18 +66,13 @@ class WsClient {
     let msg: { id?: number; result?: Json; method?: string; params?: { subscription: string; result: Json } };
     try { msg = JSON.parse(raw); } catch { return; }
     if (typeof msg.id === "number" && msg.result !== undefined) {
-      const resolver = this.pending.get(msg.id);
-      if (resolver) {
-        this.pending.delete(msg.id);
-        resolver(msg.result as Json);
-      }
+      const r = this.pending.get(msg.id);
+      if (r) { this.pending.delete(msg.id); r(msg.result as Json); }
       return;
     }
     if (msg.method === "eth_subscription" && msg.params) {
       const { subscription, result } = msg.params;
-      for (const [, sub] of this.subs) {
-        if (sub.serverId === subscription) sub.cb(result);
-      }
+      for (const [, sub] of this.subs) if (sub.serverId === subscription) sub.cb(result);
     }
   }
 
@@ -135,37 +114,49 @@ function hexToNumber(hex: string | undefined): number {
   return parseInt(hex, 16);
 }
 
-export interface NewHeadEvent { number: number; hash: string; timestamp: number; txCount: number; }
+export interface NewHeadEvent { number: number; hash: string; timestamp: number; }
 
-// Hook: subscribe to newHeads on the given network. Re-renders only on
-// advancing height so consumers can use it safely as an effect dep.
-export function useLatestBlock(network: NetworkId): NewHeadEvent | null {
+export function useLatestBlock(wsUrl: string): NewHeadEvent | null {
   const [head, setHead] = useState<NewHeadEvent | null>(null);
   const lastHeight = useRef(0);
   useEffect(() => {
-    const client = getClient(getWsUrl(network));
+    const client = getClient(wsUrl);
     const unsub = client.subscribe("eth_subscribe", "newHeads", (msg) => {
       const m = msg as Record<string, string>;
       const number = hexToNumber(m.number);
       if (number <= lastHeight.current) return;
       lastHeight.current = number;
-      setHead({ number, hash: m.hash, timestamp: hexToNumber(m.timestamp), txCount: 0 });
+      setHead({ number, hash: m.hash, timestamp: hexToNumber(m.timestamp) });
     });
-    return () => { unsub(); lastHeight.current = 0; setHead(null); };
-  }, [network]);
+    return () => { unsub(); lastHeight.current = 0; };
+  }, [wsUrl]);
   return head;
 }
 
-export function useLatestFinalized(network: NetworkId): number | null {
+export function useLatestFinalized(wsUrl: string): number | null {
   const [height, setHeight] = useState<number | null>(null);
   useEffect(() => {
-    const client = getClient(getWsUrl(network));
+    const client = getClient(wsUrl);
     const unsub = client.subscribe("sentrix_subscribe", "sentrix_finalized", (msg) => {
       const m = msg as Record<string, unknown>;
       const h = typeof m.height === "number" ? m.height : 0;
       if (h > 0) setHeight(h);
     });
-    return () => { unsub(); setHeight(null); };
-  }, [network]);
+    return () => { unsub(); };
+  }, [wsUrl]);
   return height;
+}
+
+export function useValidatorSet(wsUrl: string): number | null {
+  const [count, setCount] = useState<number | null>(null);
+  useEffect(() => {
+    const client = getClient(wsUrl);
+    const unsub = client.subscribe("sentrix_subscribe", "sentrix_validatorSet", (msg) => {
+      const m = msg as Record<string, unknown>;
+      const validators = Array.isArray(m.validators) ? m.validators : null;
+      if (validators) setCount(validators.length);
+    });
+    return () => { unsub(); };
+  }, [wsUrl]);
+  return count;
 }
