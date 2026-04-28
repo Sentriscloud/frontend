@@ -391,7 +391,7 @@ export default function Settings({
           </p>
 
           <div>
-            <label className="eyebrow block mb-2">New password</label>
+            <label className="text-[13px] font-medium text-[var(--tx-2)] block mb-2">New password</label>
             <input
               type="password"
               value={ksPwd}
@@ -403,7 +403,7 @@ export default function Settings({
           </div>
 
           <div>
-            <label className="eyebrow block mb-2">Confirm password</label>
+            <label className="text-[13px] font-medium text-[var(--tx-2)] block mb-2">Confirm password</label>
             <input
               type="password"
               value={ksPwdConfirm}

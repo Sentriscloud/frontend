@@ -87,7 +87,7 @@ export default function NetworkHealth() {
             onClick={() => setShowDetail(false)}
           />
           <div className="absolute top-full mt-2 right-0 z-50 w-56 rounded-lg bg-[var(--sf)] border border-[var(--brd)] p-3 shadow-2xl animate-fade-up">
-            <div className="eyebrow mb-2">Sentrix Mainnet</div>
+            <div className="text-[12px] font-medium text-[var(--tx-m)] mb-2">Sentrix Mainnet</div>
             <div className="space-y-1.5 text-[11px] font-mono">
               <Stat label="Status"   value={label}                                 tone={state.health} />
               <Stat label="Tip"      value={state.height !== null ? `#${state.height.toLocaleString()}` : '—'} />

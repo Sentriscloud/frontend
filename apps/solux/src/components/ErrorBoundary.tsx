@@ -41,7 +41,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center bg-[var(--red-bg)] border border-[var(--red)]/30">
             <AlertTriangle className="w-6 h-6 text-[var(--red)]" />
           </div>
-          <div className="eyebrow mb-2">Something broke</div>
+          <div className="text-[12px] font-medium text-[var(--tx-m)] mb-2">Something broke</div>
           <h1 className="font-serif text-3xl text-[var(--tx)] mb-3">
             Wallet hit an error
           </h1>

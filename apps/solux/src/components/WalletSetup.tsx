@@ -248,7 +248,7 @@ export default function WalletSetup() {
       <div className="w-full max-w-sm">
         {/* Hero */}
         <div className="text-center mb-10 animate-fade-up">
-          <div className="eyebrow mb-3">Sentrix Chain · Self-custody</div>
+          <div className="text-[12px] font-medium text-[var(--tx-m)] mb-3 tracking-[0.18em] uppercase">Sentrix Chain · Self-custody</div>
           <h1 className="font-serif text-5xl text-[var(--tx)] tracking-tight mb-3">Solux</h1>
           <p className="text-sm text-[var(--tx-m)] leading-relaxed max-w-[280px] mx-auto">
             Choose a method to set up your wallet. All keys stay on this device.
@@ -324,7 +324,7 @@ export default function WalletSetup() {
           </div>
 
           <div className="rounded-lg p-3 bg-[var(--gold-bg)] border border-[var(--gold-bg-s)]">
-            <div className="eyebrow mb-1 text-[var(--gold-d)]">Your address</div>
+            <div className="text-[12px] font-medium text-[var(--gold)] mb-1.5">Your address</div>
             <p className="text-xs font-mono break-all text-[var(--gold-l)]">{genAddress}</p>
           </div>
 
@@ -403,7 +403,7 @@ export default function WalletSetup() {
 
           {keyPreviewAddr && (
             <div className="rounded-lg p-3 bg-[var(--gold-bg)] border border-[var(--gold-bg-s)]">
-              <div className="eyebrow mb-1 text-[var(--gold-d)]">Derived address</div>
+              <div className="text-[12px] font-medium text-[var(--gold)] mb-1.5">Derived address</div>
               <p className="text-xs font-mono break-all text-[var(--gold-l)]">{keyPreviewAddr}</p>
             </div>
           )}

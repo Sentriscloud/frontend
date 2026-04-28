@@ -389,13 +389,13 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70">
           <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up">
             <div className="px-5 pt-5 pb-2">
-              <div className="eyebrow mb-1">Confirm</div>
+              <div className="text-[12px] font-medium text-[var(--tx-m)] mb-1.5">Confirm</div>
               <h3 className="font-serif text-xl text-[var(--tx)]">Review &amp; sign</h3>
             </div>
             <div className="px-5 pb-5 space-y-3">
               <NetworkBadge network={network} chainId={CHAIN_ID} label={net.label} accent={net.accent} />
               <div>
-                <div className="eyebrow mb-1">To</div>
+                <div className="text-[12px] font-medium text-[var(--tx-m)] mb-1.5">To</div>
                 <p className="text-xs font-mono break-all text-[var(--tx)]">{toAddress}</p>
                 {recipientLabel && (
                   <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] mt-1">{recipientLabel}</p>
