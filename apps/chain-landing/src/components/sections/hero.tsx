@@ -39,13 +39,19 @@ export function Hero() {
           <span className="w-8 h-px bg-[var(--gold)]" />
         </div>
 
-        <h1 className="font-serif text-[clamp(42px,7vw,90px)] font-light leading-[.92] tracking-[.08em] text-[var(--gold)] mb-7 pr-[.08em] anim-hero-2 opacity-0">
+        <h1 className="font-serif text-[clamp(42px,7vw,90px)] font-light leading-[.92] tracking-[.08em] text-[var(--gold)] mb-5 pr-[.08em] anim-hero-2 opacity-0">
           SENTRI<span className="text-[var(--gold-l)] font-normal">X</span>
         </h1>
 
+        {/* Brand tagline — positioning lock-in 2026-04-26.
+            Reads as the wallet-mark's single-line promise. */}
+        <p className="font-serif italic text-[clamp(18px,2.4vw,28px)] font-light text-[var(--tx)] mb-7 anim-hero-3 opacity-0 max-w-[640px] leading-[1.3]">
+          Where real assets live.
+        </p>
+
         <TextGenerate
-          text="A Layer-1 blockchain engineered for fast, deterministic settlement. Built from scratch in Rust — 1-second blocks, instant BFT finality, single-token economy (SRX), Ethereum-compatible tooling."
-          className="text-base text-[var(--tx-m)] max-w-[520px] leading-[1.7] font-light mb-11"
+          text="Financial infrastructure for the real economy — Indonesia first, then the world. Layer-1 settlement built in Rust: 1-second blocks, instant BFT finality, deflationary SRX economy, Ethereum-compatible tooling."
+          className="text-base text-[var(--tx-m)] max-w-[560px] leading-[1.7] font-light mb-11"
         />
 
         <div className="flex gap-4 flex-wrap anim-hero-4 opacity-0">

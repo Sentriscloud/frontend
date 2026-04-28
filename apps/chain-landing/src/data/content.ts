@@ -1,6 +1,6 @@
 export const SITE = {
   name: "Sentrix",
-  tagline: "Layer-1 Blockchain",
+  tagline: "Where real assets live",
   chainId: 7119,
   testnetChainId: 7120,
   symbol: "SRX",

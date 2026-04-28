@@ -4,9 +4,9 @@ import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sentrix Chain — Layer-1 Blockchain | EVM Compatible",
-  description: "Sentrix Chain (SRX) — High-performance Layer-1 blockchain built in Rust. 1-second blocks, instant BFT finality, EVM compatible via revm, MetaMask ready. Chain ID 7119.",
-  keywords: ["sentrix", "sentrix chain", "blockchain", "layer-1", "L1", "EVM", "MetaMask", "SRX", "DPoS", "BFT", "rust blockchain", "chain id 7119", "indonesia blockchain"],
+  title: "Sentrix Chain — Where real assets live",
+  description: "Financial infrastructure for the real economy — Indonesia first, then the world. Layer-1 settlement built in Rust: 1-second blocks, instant BFT finality, EVM-compatible. Chain ID 7119.",
+  keywords: ["sentrix", "sentrix chain", "real world assets", "RWA", "financial infrastructure", "blockchain", "layer-1", "L1", "EVM", "SRX", "DPoS", "BFT", "rust blockchain", "chain id 7119"],
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -19,15 +19,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Sentrix Chain",
-    title: "Sentrix Chain — Layer-1 Blockchain | EVM Compatible",
-    description: "High-performance Layer-1 blockchain built from scratch in Rust. 1-second blocks, instant BFT finality, deflationary single-token economy, Ethereum-compatible.",
+    title: "Sentrix Chain — Where real assets live",
+    description: "Financial infrastructure for the real economy. Indonesia first, then the world. Layer-1 settlement built in Rust — 1-second blocks, instant BFT finality, EVM-compatible.",
     url: "https://sentrixchain.com",
-    images: [{ url: "/brand/og-image.png", width: 1200, height: 630, alt: "Sentrix Chain" }],
+    images: [{ url: "/brand/og-image.png", width: 1200, height: 630, alt: "Sentrix Chain — Where real assets live" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sentrix Chain — Layer-1 Blockchain",
-    description: "Built in Rust. 1s blocks, instant BFT finality. EVM compatible. Chain ID 7119.",
+    title: "Sentrix Chain — Where real assets live",
+    description: "Financial infrastructure for the real economy. Indonesia first, then the world. Built in Rust on Chain ID 7119.",
     images: ["/brand/og-image.png"],
   },
   metadataBase: new URL("https://sentrixchain.com"),
