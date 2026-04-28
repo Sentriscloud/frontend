@@ -387,36 +387,36 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
       {/* Confirm sheet */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70">
-          <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up">
-            <div className="px-5 pt-5 pb-2">
-              <div className="text-[12px] font-medium text-[var(--tx-m)] mb-1.5">Confirm</div>
-              <h3 className="font-serif text-xl text-[var(--tx)]">Review &amp; sign</h3>
+          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up">
+            <div className="px-6 pt-6 pb-3">
+              <p className="text-[12px] font-medium text-[var(--tx-m)] mb-1">Confirm</p>
+              <h3 className="text-[20px] font-bold text-[var(--tx)] tracking-tight">Review &amp; sign</h3>
             </div>
-            <div className="px-5 pb-5 space-y-3">
+            <div className="px-6 pb-5 space-y-4">
               <NetworkBadge network={network} chainId={CHAIN_ID} label={net.label} accent={net.accent} />
               <div>
-                <div className="text-[12px] font-medium text-[var(--tx-m)] mb-1.5">To</div>
-                <p className="text-xs font-mono break-all text-[var(--tx)]">{toAddress}</p>
+                <p className="text-[12px] font-medium text-[var(--tx-m)] mb-1.5">Sending to</p>
+                <p className="text-[13px] font-mono break-all text-[var(--tx)]">{toAddress}</p>
                 {recipientLabel && (
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] mt-1">{recipientLabel}</p>
+                  <p className="text-[12px] font-medium text-[var(--gold)] mt-1.5">↳ {recipientLabel}</p>
                 )}
               </div>
-              <div className="rounded-lg bg-[var(--bk-2)] border border-[var(--brd)] divide-y divide-[var(--brd)]">
+              <div className="rounded-xl bg-[var(--bk-2)] border border-[var(--brd)] divide-y divide-[var(--brd)]">
                 <Row label="Amount" value={`${amount} SRX`} />
                 <Row label="Network fee" value={`${feeDisplay} SRX`} />
                 <Row label="Total" value={`${totalDisplay} SRX`} bold />
               </div>
             </div>
-            <div className="flex gap-2 px-5 pb-5">
+            <div className="flex gap-2 px-6 pb-6">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 py-3 rounded-lg text-sm font-medium bg-[var(--bk-2)] border border-[var(--brd)] text-[var(--tx-2)] hover:bg-[var(--sf-2)] transition-colors active:scale-[0.99]"
+                className="flex-1 py-3.5 rounded-xl text-[14px] font-semibold bg-[var(--bk-2)] border border-[var(--brd)] text-[var(--tx-2)] hover:bg-[var(--sf-2)] transition-colors active:scale-[0.98]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmedSend}
-                className="flex-1 py-3 rounded-lg text-sm font-semibold bg-[var(--gold)] text-[var(--bk)] hover:bg-[var(--gold-l)] transition-colors active:scale-[0.99]"
+                className="flex-1 py-3.5 rounded-xl text-[14px] font-semibold bg-[var(--gold)] text-[#3a2a0e] hover:bg-[var(--gold-l)] transition-colors active:scale-[0.98]"
               >
                 Confirm &amp; sign
               </button>
@@ -428,13 +428,13 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
       {/* Address book picker */}
       {showBookPicker && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70">
-          <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[70vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-5 pt-5 pb-3">
-              <div>
-                <div className="text-[12px] font-medium text-[var(--tx-m)]">Address book</div>
-                <h2 className="font-serif text-lg text-[var(--tx)]">Pick recipient</h2>
-              </div>
-              <button onClick={() => setShowBookPicker(false)} className="text-[10px] font-mono uppercase tracking-wider text-[var(--tx-m)] hover:text-[var(--tx)]">
+          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[70vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 pt-6 pb-3">
+              <h2 className="text-[20px] font-bold text-[var(--tx)] tracking-tight">Pick recipient</h2>
+              <button
+                onClick={() => setShowBookPicker(false)}
+                className="text-[13px] font-medium text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors"
+              >
                 Close
               </button>
             </div>
@@ -443,10 +443,10 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
                 <button
                   key={e.address}
                   onClick={() => { setToAddress(e.address); setShowBookPicker(false); }}
-                  className="w-full text-left px-5 py-3 hover:bg-[var(--sf-2)] transition-colors"
+                  className="w-full text-left px-6 py-3.5 hover:bg-[rgba(255,255,255,0.03)] transition-colors"
                 >
-                  <p className="text-sm text-[var(--tx)]">{e.label}</p>
-                  <p className="text-[11px] font-mono text-[var(--tx-d)] mt-0.5 truncate">{e.address}</p>
+                  <p className="text-[14px] font-semibold text-[var(--tx)]">{e.label}</p>
+                  <p className="text-[12px] font-mono text-[var(--tx-m)] mt-0.5 truncate">{e.address}</p>
                 </button>
               ))}
             </div>
@@ -473,42 +473,42 @@ function PendingTracker({
   const error = expired || orphaned;
 
   const containerClass = error
-    ? 'rounded-lg p-4 bg-[var(--red-bg)] border border-[var(--red)]/30'
-    : 'rounded-lg p-4 bg-[var(--gold-bg)] border border-[var(--gold-bg-s)]';
+    ? 'rounded-2xl p-5 bg-[var(--red-bg)] border border-[var(--red)]/30'
+    : 'rounded-2xl p-5 bg-[var(--gold-bg)] border border-[var(--gold-bg-s)]';
   const accent = error ? 'text-[var(--red)]' : 'text-[var(--gold)]';
   const accentLight = error ? 'text-[var(--red)]' : 'text-[var(--gold-l)]';
 
   return (
     <div className={containerClass}>
-      <div className="flex items-center gap-2 mb-3">
-        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
           status === 'finalized' ? 'bg-[var(--gold)]' :
           error                  ? 'bg-[var(--red)]' :
                                     'bg-[var(--gold-bg-s)]'
         }`}>
           {status === 'finalized'
-            ? <Check className="w-3 h-3 text-[var(--bk)]" />
+            ? <Check className="w-3.5 h-3.5 text-[#3a2a0e]" strokeWidth={3} />
             : error
-              ? <span className="text-[10px] font-bold text-white">!</span>
+              ? <span className="text-[12px] font-bold text-white">!</span>
               : <span className="w-2 h-2 rounded-full bg-[var(--gold)] animate-pulse-live" />}
         </div>
-        <span className={`text-xs font-mono uppercase tracking-wider ${accent}`}>
-          {orphaned               ? 'Network changed — tx pinned to previous chain' :
-           expired                ? 'Expired — never landed in a block' :
+        <span className={`text-[13px] font-semibold ${accent}`}>
+          {orphaned               ? 'Network changed' :
+           expired                ? 'Expired — never landed' :
            status === 'pending'   ? 'Broadcast — awaiting block' :
-           status === 'in-block'  ? `In block #${blockHeight} — confirming` :
+           status === 'in-block'  ? `In block #${blockHeight}` :
                                     `Finalized at block #${blockHeight}`}
         </span>
       </div>
 
       {!error && (
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-4">
           {phases.map((p, i) => (
-            <div key={p.key} className="flex-1 flex flex-col gap-1">
-              <div className={`h-1 rounded-full ${
+            <div key={p.key} className="flex-1 flex flex-col gap-1.5">
+              <div className={`h-1.5 rounded-full transition-colors ${
                 i <= currentIdx ? 'bg-[var(--gold)]' : 'bg-[var(--sf-3)]'
               }`} />
-              <span className={`text-[9px] font-mono uppercase tracking-wider text-center ${
+              <span className={`text-[10px] font-medium text-center ${
                 i <= currentIdx ? 'text-[var(--gold-l)]' : 'text-[var(--tx-d)]'
               }`}>
                 {p.label}
@@ -519,20 +519,20 @@ function PendingTracker({
       )}
 
       {expired && (
-        <p className="text-[11px] text-[var(--tx-2)] mb-3 leading-relaxed">
+        <p className="text-[12px] text-[var(--tx-2)] mb-3 leading-relaxed">
           The chain dropped this transaction from the mempool after one hour. Submit a new transaction with the same details to retry — your nonce hasn&apos;t advanced.
         </p>
       )}
 
       {orphaned && (
-        <p className="text-[11px] text-[var(--tx-2)] mb-3 leading-relaxed">
+        <p className="text-[12px] text-[var(--tx-2)] mb-3 leading-relaxed">
           You switched network while this transaction was tracking. Switch back to the previous chain to verify its status.
         </p>
       )}
 
-      <button onClick={onCopy} className={`flex items-center gap-1.5 text-[11px] font-mono break-all hover:opacity-80 transition-opacity ${accentLight}`}>
-        <span className="break-all">{txid.slice(0, 22)}…{txid.slice(-10)}</span>
-        {copied ? <Check className="w-3 h-3 shrink-0" /> : <Copy className="w-3 h-3 shrink-0" />}
+      <button onClick={onCopy} className={`flex items-center gap-1.5 text-[12px] font-mono break-all hover:opacity-80 transition-opacity ${accentLight}`}>
+        <span className="break-all">{txid.slice(0, 16)}…{txid.slice(-8)}</span>
+        {copied ? <Check className="w-3.5 h-3.5 shrink-0" /> : <Copy className="w-3.5 h-3.5 shrink-0" />}
       </button>
     </div>
   );
