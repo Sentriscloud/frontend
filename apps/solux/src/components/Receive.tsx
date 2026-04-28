@@ -47,10 +47,12 @@ export default function Receive({ onBack }: { onBack: () => void }) {
                   level="H"
                   marginSize={0}
                   imageSettings={{
-                    // Embed the SRX rhombus as a center watermark — Phantom /
-                    // Trust pattern. Error correction "H" (~30%) is high enough
-                    // that the QR still scans cleanly with this 18% cutout.
-                    src: '/srx-mark.svg',
+                    // Embed the brand-kit coin stamp as a center watermark —
+                    // Phantom / Trust pattern. Error correction "H" (~30%) is
+                    // high enough that the QR still scans cleanly with this
+                    // 18% cutout. The solid-bronze-gold variant reads as a
+                    // complete coin face inside the white QR plate.
+                    src: '/brand/coin-solid-256.png',
                     width: 38,
                     height: 38,
                     excavate: true,

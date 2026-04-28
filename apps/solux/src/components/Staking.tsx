@@ -7,7 +7,7 @@ import {
   sendTransaction, getAddressInfo, getTransactionDetail, getFinalizedHeight,
 } from '@/lib/api';
 import { signTransaction } from '@/lib/crypto';
-import { parseSRXToSentri, sentriToSRX, SENTRI, MIN_FEE, AmountOverflowError } from '@/lib/amount';
+import { parseSRXToSentri, sentriToSRX, formatCompactSRX, SENTRI, MIN_FEE, AmountOverflowError } from '@/lib/amount';
 import { useEscape } from '@/lib/useEscape';
 import type { StakingValidator, Delegation, UnbondingEntry } from '@/types';
 import {
@@ -252,26 +252,33 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
           />
         )}
 
-        {/* Your delegations summary */}
+        {/* Your delegations summary. Compact-format the totals so they
+            never overflow the half-width column. Tooltip shows exact. */}
         <div className="luxe-card relative rounded-2xl p-6 mb-5 overflow-hidden animate-fade-up delay-2">
           <div aria-hidden className="gold-orb" style={{ top: '-120px', right: '-100px', width: '180px', height: '180px' }} />
           <div className="grid grid-cols-2 gap-6 relative">
-            <div>
+            <div className="min-w-0">
               <div className="text-[12px] text-[var(--tx-m)] font-medium mb-2">Delegated</div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-[28px] font-bold text-[var(--tx)] tab-num leading-none" style={{ letterSpacing: '-0.02em' }}>
-                  {mask(sentriToSRX(totalDelegated))}
+              <div
+                className="flex items-baseline gap-1.5 max-w-full overflow-hidden"
+                title={hideBalances ? undefined : `${sentriToSRX(totalDelegated)} SRX`}
+              >
+                <span className="text-[28px] font-bold text-[var(--tx)] tab-num leading-none truncate" style={{ letterSpacing: '-0.02em' }}>
+                  {hideBalances ? '••••' : formatCompactSRX(totalDelegated / SENTRI)}
                 </span>
-                <span className="text-[13px] font-bold text-[var(--gold)]">SRX</span>
+                <span className="text-[13px] font-bold text-[var(--gold)] shrink-0">SRX</span>
               </div>
             </div>
-            <div className="border-l border-[var(--brd)] pl-6">
+            <div className="border-l border-[var(--brd)] pl-6 min-w-0">
               <div className="text-[12px] text-[var(--tx-m)] font-medium mb-2">Unbonding</div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-[28px] font-bold text-[var(--tx)] tab-num leading-none" style={{ letterSpacing: '-0.02em' }}>
-                  {mask(sentriToSRX(totalUnbonding))}
+              <div
+                className="flex items-baseline gap-1.5 max-w-full overflow-hidden"
+                title={hideBalances ? undefined : `${sentriToSRX(totalUnbonding)} SRX`}
+              >
+                <span className="text-[28px] font-bold text-[var(--tx)] tab-num leading-none truncate" style={{ letterSpacing: '-0.02em' }}>
+                  {hideBalances ? '••••' : formatCompactSRX(totalUnbonding / SENTRI)}
                 </span>
-                <span className="text-[13px] font-bold text-[var(--tx-d)]">SRX</span>
+                <span className="text-[13px] font-bold text-[var(--tx-d)] shrink-0">SRX</span>
               </div>
             </div>
           </div>
@@ -392,9 +399,9 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
                             </span>
                           )}
                         </div>
-                        <div className="text-right shrink-0">
+                        <div className="text-right shrink-0" title={`${sentriToSRX(v.total_stake)} SRX`}>
                           <p className="text-[13px] font-mono font-semibold tab-num text-[var(--gold)]">
-                            {sentriToSRX(v.total_stake)}
+                            {formatCompactSRX(v.total_stake / SENTRI)}
                           </p>
                           <p className="text-[11px] text-[var(--tx-d)] mt-0.5">
                             SRX staked

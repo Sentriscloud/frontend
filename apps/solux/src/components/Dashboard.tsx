@@ -28,6 +28,7 @@ import {
   ArrowUpRight, ArrowDownLeft, Coins, Layers, Eye, EyeOff,
   ChevronDown, ArrowLeftRight,
 } from 'lucide-react';
+import { formatCompactSRX } from '@/lib/amount';
 import toast from 'react-hot-toast';
 
 const SENTRI = 100_000_000;
@@ -304,10 +305,13 @@ export default function Dashboard() {
                 <span className="skeleton h-[66px] w-56 block" />
               </div>
             ) : (
-              <div className="flex items-baseline gap-2.5 mb-6 flex-wrap">
+              <div
+                className="flex items-baseline gap-2.5 mb-6 max-w-full overflow-hidden"
+                title={hideBalances ? undefined : `${formatBalance(srxBalance)} SRX`}
+              >
                 {hideBalances ? (
                   <span
-                    className="text-[64px] tab-num leading-none text-[var(--tx)]"
+                    className="text-[64px] tab-num leading-none text-[var(--tx)] truncate"
                     style={{ fontWeight: 800, letterSpacing: '-0.04em' }}
                   >
                     ••••••
@@ -315,12 +319,15 @@ export default function Dashboard() {
                 ) : (
                   <AnimatedNumber
                     value={srxBalance / SENTRI}
-                    format={(n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                    className="text-[64px] tab-num leading-none text-[var(--tx)]"
+                    // Compact ≥10K (10K / 12.5M / 1.2B etc) so the hero
+                    // never overflows the card. Full localised number stays
+                    // accessible via the wrapper div's `title` tooltip.
+                    format={formatCompactSRX}
+                    className="text-[64px] tab-num leading-none text-[var(--tx)] truncate"
                     style={{ fontWeight: 800, letterSpacing: '-0.04em' }}
                   />
                 )}
-                <span className="text-[20px] font-bold text-[var(--gold)] tracking-tight">SRX</span>
+                <span className="text-[20px] font-bold text-[var(--gold)] tracking-tight shrink-0">SRX</span>
               </div>
             )}
 
@@ -395,10 +402,15 @@ export default function Dashboard() {
                   <p className="text-[12px] text-[var(--tx-m)]">Sentrix Chain</p>
                 </div>
               </div>
-              <p className="text-[15px] font-semibold tab-num text-[var(--tx)]">
+              <p
+                className="text-[15px] font-semibold tab-num text-[var(--tx)] shrink-0 pl-3"
+                title={loading || srxBalance === null || hideBalances
+                  ? undefined
+                  : `${formatBalance(srxBalance)} SRX`}
+              >
                 {loading || srxBalance === null
                   ? '—'
-                  : hideBalances ? '••••' : formatBalance(srxBalance)}
+                  : hideBalances ? '••••' : formatCompactSRX(srxBalance / SENTRI)}
               </p>
             </div>
 
@@ -412,19 +424,22 @@ export default function Dashboard() {
                   !watchOnly ? 'hover:bg-[rgba(255,255,255,0.03)]' : 'cursor-default'
                 }`}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <span className="token-mark text-[var(--gold)]">
                     <Layers className="w-5 h-5" />
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[15px] font-semibold text-[var(--tx)]">{t.info.symbol}</p>
                     <p className="text-[12px] text-[var(--tx-m)] truncate max-w-[140px]">
                       {t.info.name || 'SRC-20'}
                     </p>
                   </div>
                 </div>
-                <p className="text-[15px] font-semibold tab-num text-[var(--tx)]">
-                  {hideBalances ? '••••' : formatTokenBal(t.balance, t.info.decimals)}
+                <p
+                  className="text-[15px] font-semibold tab-num text-[var(--tx)] shrink-0 pl-3"
+                  title={hideBalances ? undefined : formatTokenBal(t.balance, t.info.decimals)}
+                >
+                  {hideBalances ? '••••' : formatCompactSRX(t.balance / Math.pow(10, t.info.decimals))}
                 </p>
               </button>
             ))}
