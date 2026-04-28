@@ -10,6 +10,7 @@ import SendSRX from './SendSRX';
 import SrxMark from './SrxMark';
 import GenerativeAvatar from './GenerativeAvatar';
 import AnimatedNumber from './AnimatedNumber';
+import NetworkCard from './NetworkCard';
 import SendToken from './SendToken';
 import TxHistory from './TxHistory';
 import TxDetail from './TxDetail';
@@ -249,7 +250,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen flex justify-center px-5 pt-5 pb-28">
+    <div className="min-h-screen flex justify-center px-5 pt-5 pb-32">
       <div className="w-full max-w-sm">
         {/* ── Account header ────────────────────────────── */}
         <header className="flex items-center justify-between mb-6 animate-fade-up">
@@ -514,6 +515,8 @@ export default function Dashboard() {
             </div>
           )}
         </section>
+
+        <NetworkCard />
       </div>
 
       {selectedTx && (
