@@ -8,6 +8,7 @@ import {
 import type { TxHistoryItem, TokenInfo } from '@/types';
 import SendSRX from './SendSRX';
 import SrxMark from './SrxMark';
+import GenerativeAvatar from './GenerativeAvatar';
 import SendToken from './SendToken';
 import TxHistory from './TxHistory';
 import TxDetail from './TxDetail';
@@ -202,8 +203,6 @@ export default function Dashboard() {
   const activeTab = view.tab;
 
   // Avatar initial — first non-0x char of address, or 'S'
-  const avatarChar = address ? address.slice(2, 3).toUpperCase() : 'S';
-
   // Reusable nav shared across tabs
   const navProps = {
     onTab: (t: NavTab) => setView({ kind: 'main', tab: t }),
@@ -259,8 +258,8 @@ export default function Dashboard() {
             className="flex items-center gap-3 group"
             aria-label="Switch account"
           >
-            <span className="grad-avatar w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold text-[#3a2a0e]">
-              {avatarChar}
+            <span className="rounded-full overflow-hidden ring-1 ring-[var(--brd)]" style={{ width: 40, height: 40 }}>
+              <GenerativeAvatar address={address} size={40} />
             </span>
             <div className="text-left flex items-center gap-1">
               <span className="text-[15px] font-medium text-[var(--tx)]">

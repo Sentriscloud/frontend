@@ -5,6 +5,7 @@ import { useWalletStore, useSettingsStore, NETWORKS, THEMES, type Network as Net
 import { useEscape } from '@/lib/useEscape';
 import { encryptKeystore } from '@/lib/keystore';
 import { QRCodeSVG } from 'qrcode.react';
+import GenerativeAvatar from './GenerativeAvatar';
 import {
   ArrowLeft, Lock, Eye, EyeOff, Globe, Network, Shield,
   Info, ExternalLink, Building2, AlertTriangle, ChevronRight, X, Check, FileLock2, Download,
@@ -54,7 +55,6 @@ export default function Settings({
   const [ksEncrypting, setKsEncrypting] = useState(false);
   const [addrCopied, setAddrCopied] = useState(false);
 
-  const avatarChar = address ? address.slice(2, 3).toUpperCase() : 'S';
   const truncateLong = (s: string) => s.slice(0, 8) + '…' + s.slice(-6);
 
   const copyAddress = async () => {
@@ -159,9 +159,9 @@ export default function Settings({
               onClick={() => mnemonic && onOpenAccounts?.()}
               disabled={!mnemonic}
               aria-label={mnemonic ? 'Switch account' : 'Wallet identity'}
-              className="grad-avatar relative w-20 h-20 rounded-full flex items-center justify-center font-bold text-2xl text-[#3a2a0e] group disabled:cursor-default transition-all active:scale-[0.98]"
+              className="relative w-20 h-20 rounded-full overflow-hidden ring-2 ring-[var(--brd-s)] group disabled:cursor-default transition-all active:scale-[0.98]"
             >
-              {avatarChar}
+              <GenerativeAvatar address={address} size={80} />
               {mnemonic && (
                 <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[var(--gold)] ring-[3px] ring-[var(--bk)] flex items-center justify-center text-[var(--bk)] group-hover:bg-[var(--gold-l)] transition-colors">
                   <Plus className="w-3.5 h-3.5" strokeWidth={3} />
