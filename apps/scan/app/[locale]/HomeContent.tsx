@@ -17,6 +17,7 @@ import { StatCard } from "@/components/common/StatCard";
 import { LiveTicker } from "@/components/home/LiveTicker";
 import { useNetwork } from "@/lib/network-context";
 import { useStats, useBlocks, useTransactions, useChainPerformance, useMempool, useCurrentEpoch, useChainStatus } from "@/lib/hooks";
+import { useLatestBlock } from "@/lib/ws";
 import { formatNumber, formatSRX, toMillis } from "@/lib/format";
 import { detectSearchType } from "@/lib/format";
 import type { ChainPerformance, HomeBundle } from "@/lib/api";
@@ -74,9 +75,20 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [perfRange, setPerfRange] = useState<"1m" | "5m" | "15m" | "1h" | "24h">("1h");
-  const { data: stats, loading: statsLoading } = useStats(network, initial.stats);
-  const { data: blocks, loading: blocksLoading } = useBlocks(network, 10, initial.blocks);
-  const { data: txs, loading: txsLoading } = useTransactions(network, 10, initial.txs);
+  const { data: stats, loading: statsLoading, refetch: refetchStats } = useStats(network, initial.stats);
+  const { data: blocks, loading: blocksLoading, refetch: refetchBlocks } = useBlocks(network, 10, initial.blocks);
+  const { data: txs, loading: txsLoading, refetch: refetchTxs } = useTransactions(network, 10, initial.txs);
+  // Live block height via WebSocket (newHeads). Each new head also
+  // nudges the REST hooks to refetch immediately so the list views
+  // stay fresh without waiting for the 5s poll cycle.
+  const wsHead = useLatestBlock(network);
+  useEffect(() => {
+    if (!wsHead) return;
+    refetchStats();
+    refetchBlocks();
+    refetchTxs();
+  }, [wsHead?.number, refetchStats, refetchBlocks, refetchTxs]);
+  const liveHeight = Math.max(stats?.height ?? 0, wsHead?.number ?? 0);
   const { data: performance, loading: perfLoading } = useChainPerformance(network, perfRange, initial.performance);
   const { data: mempool } = useMempool(network, initial.mempool);
   const { data: epoch } = useCurrentEpoch(network, initial.epoch);
@@ -195,7 +207,7 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               spark={isChainIdle ? undefined : tpsSpark}
               title={isChainIdle && latestBlockAgeSec !== null ? `Chain paused — last block ${latestBlockAgeSec < 3600 ? `${Math.round(latestBlockAgeSec / 60)}m` : `${(latestBlockAgeSec / 3600).toFixed(1)}h`} ago` : undefined}
             />
-            <StatCard label={t("stats.block_height")} value={stats ? stats.height.toLocaleString() : "—"} loading={statsLoading} accent="var(--gold)" />
+            <StatCard label={t("stats.block_height")} value={liveHeight > 0 ? liveHeight.toLocaleString() : "—"} loading={statsLoading && liveHeight === 0} accent="var(--gold)" />
             <StatCard
               label={t("stats.block_time")}
               value={isChainIdle ? "—" : blockTime}

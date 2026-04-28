@@ -41,6 +41,12 @@ export function getApiUrl(network: NetworkId) {
     : (process.env.NEXT_PUBLIC_MAINNET_API || "https://api.sentrixchain.com");
 }
 
+export function getWsUrl(network: NetworkId) {
+  return network === "testnet"
+    ? (process.env.NEXT_PUBLIC_TESTNET_WS || "wss://testnet-rpc.sentrixchain.com/ws")
+    : (process.env.NEXT_PUBLIC_MAINNET_WS || "wss://rpc.sentrixchain.com/ws");
+}
+
 export function createClient(network: NetworkId) {
   const chain = getChain(network);
   return createPublicClient({
