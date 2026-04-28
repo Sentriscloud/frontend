@@ -59,13 +59,15 @@ export function Navbar() {
           ? "border-b border-[var(--brd)] bg-[var(--bk)]/90 shadow-[0_1px_20px_rgba(0,0,0,.3)]"
           : "border-b border-transparent bg-transparent shadow-none"
       }`}>
-        {/* Logo — canonical lockup: pearl-dots mark + SENTRIX bold sans
-            wordmark (matching brand-kit/social/og-image-1200x630.png). The
-            sans-serif heavy-weight wordmark is what the brand-kit ships
-            as the lockup; the earlier serif treatment was off-brand. */}
-        <a href="#" className="flex items-center gap-3 text-[var(--gold)] shrink-0">
+        {/* Logo — pearl-dots mark + SENTRIX wordmark, visually balanced.
+            Mark slightly larger than wordmark cap-height (32 vs ~16) so
+            pearl dots stay legible and the mark holds visual weight
+            against the serif wordmark. items-center aligns visual mass
+            centers — both diamond and "SENTRIX" caps are vertically
+            symmetric, so visual center alignment reads as "in line". */}
+        <a href="#" className="flex items-center gap-2.5 text-[var(--gold)] shrink-0">
           <SentrixLogo size={32} />
-          <span className="font-sans text-[22px] font-extrabold tracking-[.02em] text-[var(--gold)] leading-none">
+          <span className="font-serif text-[22px] font-light tracking-[.04em] uppercase text-[var(--gold)] leading-none">
             SENTRIX
           </span>
         </a>
