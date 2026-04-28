@@ -244,7 +244,7 @@ export function FaucetForm({
   const dripAmount = stats?.amount ?? defaultAmountSrx
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-16">
+    <div className="relative min-h-screen flex flex-col items-center px-4 pt-16 pb-12 sm:pt-20 sm:pb-16">
       <div aria-hidden className="gold-orb fixed top-[-120px] right-[-100px] z-0" />
 
       <div className="relative z-10 w-full max-w-[480px] animate-fade-up">

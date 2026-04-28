@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function FaucetLanding() {
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-16">
+    <div className="relative min-h-screen flex flex-col items-center px-4 pt-20 pb-16 sm:pt-24 sm:pb-20">
       <div aria-hidden className="gold-orb fixed top-[-120px] right-[-100px] z-0" />
 
       <div className="relative z-10 w-full max-w-[640px] animate-fade-up">
@@ -50,7 +50,7 @@ export default function FaucetLanding() {
             <p className="text-[13px] text-[var(--tx-m)] leading-relaxed mb-5">
               Generous drips for builders. Deploy contracts, run scripts, hammer the chain. No real value.
             </p>
-            <div className="flex items-center gap-3 text-[12px] text-[var(--tx-m)]">
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-[11px] text-[var(--tx-m)]">
               <span className="text-[var(--gold)] font-semibold">10 SRX</span>
               <span className="opacity-40">·</span>
               <span>24h cooldown</span>
@@ -77,7 +77,7 @@ export default function FaucetLanding() {
             <p className="text-[13px] text-[var(--tx-m)] leading-relaxed mb-5">
               Gas-only drip for new wallets. Enough to make your first transaction — not for testing or speculation.
             </p>
-            <div className="flex items-center gap-3 text-[12px] text-[var(--tx-m)]">
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-[11px] text-[var(--tx-m)]">
               <span className="text-[var(--gold)] font-semibold">0.01 SRX</span>
               <span className="opacity-40">·</span>
               <span>24h cooldown</span>
