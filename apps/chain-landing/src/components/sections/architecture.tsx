@@ -39,7 +39,7 @@ export function Architecture() {
         `}<span className="text-[var(--green)]">core/blockchain.rs</span>{` — The Engine
    ┌─────────┬─────────┼─────────┬──────────┐
    │         │         │         │          │
-`}<span className="text-[var(--gold)]">AccountDB</span>{`  `}<span className="text-[var(--gold)]">Authority</span>{`  `}<span className="text-[var(--gold)]">Mempool</span>{`  `}<span className="text-[var(--gold)]">SRX-20 VM</span>{`  `}<span className="text-[var(--gold)]">Merkle</span>{`
+`}<span className="text-[var(--gold)]">AccountDB</span>{`  `}<span className="text-[var(--gold)]">Authority</span>{`  `}<span className="text-[var(--gold)]">Mempool</span>{`  `}<span className="text-[var(--gold)]">SRC-20 VM</span>{`  `}<span className="text-[var(--gold)]">Merkle</span>{`
  balances    PoA     priority   tokens    SHA-256
  + nonces  round-     fee      ERC-20     tree
            robin    sorting   compat.

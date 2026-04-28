@@ -148,14 +148,14 @@ html { scroll-behavior: smooth; }
 /* ===== ACCENT SECTION BACKGROUNDS ===== */
 .about-section,
 .tknm-section,
-.srx20-section {
+.src20-section {
   background: linear-gradient(160deg, var(--sf) 0%, #0f0e16 50%, var(--sf) 100%);
 }
 
 /* ===== LIGHT THEME OVERRIDES ===== */
 [data-theme="light"] .about-section,
 [data-theme="light"] .tknm-section,
-[data-theme="light"] .srx20-section {
+[data-theme="light"] .src20-section {
   background: linear-gradient(160deg, #F8F7F4 0%, #fff 50%, #F8F7F4 100%);
 }
 [data-theme="light"] nav {

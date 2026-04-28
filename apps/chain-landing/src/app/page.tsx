@@ -11,7 +11,7 @@ import { Features } from "@/components/sections/features";
 import { Tokens } from "@/components/sections/tokens";
 import { Tokenomics } from "@/components/sections/tokenomics";
 import { Ecosystem } from "@/components/sections/ecosystem";
-import { SRX20 } from "@/components/sections/srx20";
+import { SRC20 } from "@/components/sections/src20";
 import { Architecture } from "@/components/sections/architecture";
 import { Api } from "@/components/sections/api";
 import { Security } from "@/components/sections/security";
@@ -38,7 +38,7 @@ export default function Home() {
       <Tokenomics />
       <Ecosystem />
       <Divider />
-      <SRX20 />
+      <SRC20 />
       <Architecture />
       <Divider />
       <Api />
