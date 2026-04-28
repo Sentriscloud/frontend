@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { href: "#ecosystem", label: "Ecosystem" },
   { href: "#roadmap", label: "Roadmap" },
   { href: "#validators", label: "Validators" },
-  { href: "#developers", label: "Developers" },
+  { href: "https://docs.sentrixchain.com", label: "Docs" },
   { href: "https://t.me/SentrixCommunity", label: "Community" },
 ];
 

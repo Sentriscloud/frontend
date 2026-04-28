@@ -4,14 +4,30 @@ export const SITE = {
   chainId: 7119,
   testnetChainId: 7120,
   symbol: "SRX",
-  explorer: "https://scan.sentrixchain.com",
-  api: "https://api.sentrixchain.com",
-  rpc: "https://rpc.sentrixchain.com",
-  testnetRpc: "https://testnet-rpc.sentrixchain.com",
-  github: "https://github.com/sentrix-labs/sentrix",
-  email: "security@sentrixchain.com",
-  faucet: "https://faucet.sentrixchain.com",
-  docs: "https://sentrixchain.com/docs/faucet",
+
+  // Chain infrastructure (sentrixchain.com)
+  explorer:    "https://scan.sentrixchain.com",
+  api:         "https://api.sentrixchain.com",
+  rpc:         "https://rpc.sentrixchain.com",
+  testnetRpc:  "https://testnet-rpc.sentrixchain.com",
+  testnetApi:  "https://testnet-api.sentrixchain.com",
+  faucet:      "https://faucet.sentrixchain.com",
+  docs:        "https://docs.sentrixchain.com",
+  whitepaper:  "https://whitepaper.sentrixchain.com",
+  brandKit:    "https://cdn.sentrixchain.com",
+
+  // Canonical addresses + repos
+  github:    "https://github.com/sentrix-labs/sentrix",
+  releases:  "https://github.com/sentrix-labs/sentrix/releases",
+  email:     "security@sentrixchain.com",
+
+  // Products on sentriscloud.com
+  solux:     "https://solux.sentriscloud.com",
+  coinblast: "https://coinblast.sentriscloud.com",
+
+  // Community
+  telegram: "https://t.me/SentrixCommunity",
+  twitter:  "https://x.com/SentrixChain",
 };
 
 export const STATS = [
