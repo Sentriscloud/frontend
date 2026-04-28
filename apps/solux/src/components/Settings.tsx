@@ -363,8 +363,8 @@ export default function Settings({
       {/* ── Auto-lock sheet ───────────────────────── */}
       {sheet === 'auto-lock' && (
         <Sheet onClose={() => setSheet('none')} eyebrow="Security" title="Auto-lock timer">
-          <p className="text-xs text-[var(--tx-m)] leading-relaxed">
-            After this much idle time, your private key is removed from memory. You&apos;ll need to import it again to send transactions.
+          <p className="text-[13px] text-[var(--tx-m)] leading-relaxed">
+            After this much idle time, your key is removed from memory. The encrypted vault stays on this device — you&apos;ll just need to enter your password again.
           </p>
           <div className="rounded-xl bg-[var(--bk-2)] border border-[var(--brd)] divide-y divide-[var(--brd)]">
             {LOCK_OPTIONS.map((opt) => (
@@ -461,7 +461,7 @@ export default function Settings({
             <>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="eyebrow">Private key</span>
+                  <span className="text-[12px] font-medium text-[var(--tx-m)]">Private key</span>
                   <button
                     onClick={() => setKeyVisible((v) => !v)}
                     className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1 text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors"
@@ -516,7 +516,7 @@ export default function Settings({
             <>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="eyebrow">Recovery phrase</span>
+                  <span className="text-[12px] font-medium text-[var(--tx-m)]">Recovery phrase</span>
                   <button
                     onClick={() => setSeedVisible((v) => !v)}
                     className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1 text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors"
@@ -819,21 +819,21 @@ function Sheet({
   useEscape(true, onClose);
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[92vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-5 pt-5 pb-2 sticky top-0 bg-[var(--sf)] z-10">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[92vh] overflow-y-auto">
+        <div className="flex items-start justify-between px-6 pt-6 pb-3 sticky top-0 bg-[var(--sf)] z-10">
           <div>
-            <div className="eyebrow">{eyebrow}</div>
-            <h2 className="font-serif text-lg text-[var(--tx)] leading-tight">{title}</h2>
+            <p className="text-[12px] font-medium text-[var(--tx-m)] mb-0.5">{eyebrow}</p>
+            <h2 className="text-[20px] font-bold text-[var(--tx)] leading-tight tracking-tight">{title}</h2>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--sf-2)] transition-colors -mr-1"
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--sf-2)] transition-colors -mr-1.5"
           >
             <X className="w-4 h-4 text-[var(--tx-m)]" />
           </button>
         </div>
-        <div className="px-5 pb-6 pt-3 space-y-3">{children}</div>
+        <div className="px-6 pb-6 pt-3 space-y-3">{children}</div>
       </div>
     </div>
   );

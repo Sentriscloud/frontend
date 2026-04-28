@@ -66,57 +66,59 @@ export default function TxDetail({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70">
-      <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[92vh] overflow-y-auto">
+      <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[92vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 sticky top-0 bg-[var(--sf)] z-10">
+        <div className="flex items-center justify-between px-6 pt-6 pb-3 sticky top-0 bg-[var(--sf)] z-10">
           <div className="flex items-center gap-3 min-w-0">
-            <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+            <span className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${
               tone === 'gold'  ? 'bg-[var(--gold-bg)]' :
               tone === 'red'   ? 'bg-[var(--red-bg)]'  :
                                   'bg-[var(--green-bg)]'
             }`}>
-              <Icon className={`w-4 h-4 ${
+              <Icon className={`w-5 h-5 ${
                 tone === 'gold'  ? 'text-[var(--gold)]' :
                 tone === 'red'   ? 'text-[var(--red)]'  :
                                     'text-[var(--green)]'
               }`} />
             </span>
             <div className="min-w-0">
-              <div className="eyebrow">Transaction</div>
-              <h2 className="font-serif text-lg text-[var(--tx)] leading-tight">{label}</h2>
+              <h2 className="text-[18px] font-bold text-[var(--tx)] leading-tight tracking-tight">{label}</h2>
               {opLabel && (
-                <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] mt-0.5 capitalize">
+                <p className="text-[12px] font-medium text-[var(--gold)] mt-0.5 capitalize">
                   {opLabel}
                 </p>
               )}
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--sf-2)] transition-colors -mr-1 shrink-0">
+          <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--sf-2)] transition-colors -mr-1.5 shrink-0">
             <X className="w-4 h-4 text-[var(--tx-m)]" />
           </button>
         </div>
 
         {/* Amount hero */}
-        <div className="px-5 pb-4">
-          <div className={`text-3xl font-serif tab-num ${
-            tone === 'gold'  ? 'text-[var(--gold)]' :
-            tone === 'red'   ? 'text-[var(--red)]'  :
-                                'text-[var(--green)]'
-          }`}>
+        <div className="px-6 pb-5">
+          <div
+            className={`text-[40px] tab-num leading-none ${
+              tone === 'gold'  ? 'text-[var(--gold)]' :
+              tone === 'red'   ? 'text-[var(--red)]'  :
+                                  'text-[var(--green)]'
+            }`}
+            style={{ fontWeight: 800, letterSpacing: '-0.025em' }}
+          >
             {hideBalances ? '••••' : `${isOut || isTokenOp ? '−' : '+'}${fmt(isTokenOp ? tx.fee : tx.amount)}`}
           </div>
-          <div className="text-xs font-mono text-[var(--tx-d)] mt-1">SRX</div>
+          <div className="text-[13px] font-semibold text-[var(--tx-m)] mt-1.5">SRX</div>
         </div>
 
         {/* Status pill */}
         {blockHeight !== undefined && (
-          <div className="px-5 pb-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-[var(--bk-2)] border border-[var(--brd)]">
+          <div className="px-6 pb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[rgba(255,255,255,0.06)]">
               <span className={`w-1.5 h-1.5 rounded-full ${isFinalized ? 'bg-[var(--green)]' : 'bg-[var(--gold)] animate-pulse-live'}`} />
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--tx-2)]">
-                {isFinalized ? 'Finalized' : 'In block — confirming'}
+              <span className="text-[12px] font-medium text-[var(--tx)]">
+                {isFinalized ? 'Finalized' : 'Confirming'}
               </span>
-              <span className="text-[10px] font-mono text-[var(--tx-d)]">
+              <span className="text-[12px] text-[var(--tx-m)] tab-num">
                 #{blockHeight.toLocaleString()}
               </span>
             </div>
@@ -137,8 +139,8 @@ export default function TxDetail({
               <Field label="Txid"      value={tx.txid}                       fullValue={tx.txid} copy={copy} copied={copied === 'txid'} copyKey="txid" />
               {full.data && full.data.length > 0 && (
                 <div>
-                  <div className="eyebrow mb-1.5">Data</div>
-                  <pre className="text-[10px] font-mono break-all whitespace-pre-wrap bg-[var(--bk-2)] border border-[var(--brd)] rounded-lg p-3 text-[var(--tx-2)] max-h-32 overflow-y-auto">
+                  <div className="text-[12px] font-medium text-[var(--tx-m)] mb-1.5">Data</div>
+                  <pre className="text-[11px] font-mono break-all whitespace-pre-wrap bg-[var(--bk-2)] border border-[var(--brd)] rounded-xl p-3 text-[var(--tx-2)] max-h-32 overflow-y-auto">
                     {(() => { try { return JSON.stringify(JSON.parse(full.data), null, 2); } catch { return full.data; } })()}
                   </pre>
                 </div>
@@ -148,14 +150,14 @@ export default function TxDetail({
         </div>
 
         {/* Footer link */}
-        <div className="px-5 pb-5">
+        <div className="px-6 pb-6">
           <a
             href={`https://scan.sentrixchain.com/tx/${tx.txid}?network=${useSettingsStore.getState().network}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-mono uppercase tracking-wider bg-[var(--bk-2)] border border-[var(--brd)] text-[var(--tx-m)] hover:text-[var(--gold)] hover:border-[var(--gold-bg-s)] transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl text-[13px] font-semibold bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.08)] text-[var(--tx-2)] hover:text-[var(--gold)] transition-colors"
           >
-            View on SentrixScan <ExternalLink className="w-3 h-3" />
+            View on SentrixScan <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
       </div>
@@ -178,19 +180,19 @@ function Field({
   const isYou = youAre && fullValue && fullValue.toLowerCase() === youAre.toLowerCase();
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <div className="eyebrow">{label}</div>
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="text-[12px] font-medium text-[var(--tx-m)]">{label}</div>
         {copy && fullValue && copyKey && (
-          <button onClick={() => copy(fullValue, copyKey)} className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1 text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors">
-            {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+          <button onClick={() => copy(fullValue, copyKey)} className="text-[12px] font-medium flex items-center gap-1 text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors">
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? 'Copied' : 'Copy'}
           </button>
         )}
       </div>
-      <p className={`text-xs break-all ${mono === false ? '' : 'font-mono'} text-[var(--tx)]`}>
+      <p className={`text-[13px] break-all ${mono === false ? '' : 'font-mono'} text-[var(--tx)]`}>
         {value}
         {isYou && (
-          <span className="ml-1.5 text-[9px] font-mono uppercase tracking-wider text-[var(--gold)] align-middle">
+          <span className="ml-1.5 text-[11px] font-semibold text-[var(--gold)] align-middle">
             (you)
           </span>
         )}

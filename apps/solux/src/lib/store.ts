@@ -107,7 +107,10 @@ export const useWalletStore = create<WalletState>()((set, get) => ({
 
 export type Locale = 'en' | 'id';
 export type Network = 'mainnet' | 'testnet';
-export type Theme = 'default' | 'colorful' | 'light' | 'ocean' | 'sentris';
+// Theme set pruned to two — the gold/black brand doesn't reasonably
+// extend to oxblood, indigo, or emerald palettes; carrying them was
+// a leftover from an earlier exploration.
+export type Theme = 'default' | 'light';
 
 export interface ThemeMeta {
   id: Theme;
@@ -120,32 +123,14 @@ export const THEMES: Record<Theme, ThemeMeta> = {
   default: {
     id: 'default',
     label: 'Onyx',
-    description: 'Polished onyx and antique brass',
-    preview: { bg: '#0a0a0d', surface: '#1c1c22', accent: '#c49a4e', text: '#f4f0e0' },
-  },
-  colorful: {
-    id: 'colorful',
-    label: 'Bordeaux',
-    description: 'Oxblood wine and cordovan leather',
-    preview: { bg: '#150709', surface: '#2a1218', accent: '#c4564a', text: '#f4e8d4' },
+    description: 'Deep black with satin gold',
+    preview: { bg: '#0a0a0b', surface: '#18181c', accent: '#f4c75e', text: '#fafafa' },
   },
   light: {
     id: 'light',
     label: 'Newsprint',
-    description: 'Salmon paper and terracotta ink',
+    description: 'FT salmon paper, terracotta ink',
     preview: { bg: '#fff1e5', surface: '#fff8ee', accent: '#8f4132', text: '#2a2520' },
-  },
-  ocean: {
-    id: 'ocean',
-    label: 'Midnight',
-    description: 'Indigo dial and chronograph amber',
-    preview: { bg: '#0a1228', surface: '#182547', accent: '#e0a050', text: '#f0ecde' },
-  },
-  sentris: {
-    id: 'sentris',
-    label: 'Sentris',
-    description: 'SentrisCloud brand emerald',
-    preview: { bg: '#0a0a0c', surface: '#16161a', accent: '#10b981', text: '#f5f5f4' },
   },
 };
 

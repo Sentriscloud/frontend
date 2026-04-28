@@ -469,7 +469,7 @@ function DelegateSheet({
       <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div>
-            <div className="eyebrow">Delegate</div>
+            <div className="text-[12px] font-medium text-[var(--tx-m)]">Delegate</div>
             <h2 className="font-serif text-lg text-[var(--tx)] truncate">
               {validator.address.slice(0, 10)}…
             </h2>
@@ -487,7 +487,7 @@ function DelegateSheet({
 
           <div>
             <div className="flex items-baseline justify-between mb-2">
-              <label className="eyebrow">Amount</label>
+              <label className="text-[13px] font-medium text-[var(--tx-2)]">Amount</label>
               <span className="text-[10px] font-mono text-[var(--tx-d)]">
                 Available <span className="text-[var(--gold)]">{balance !== null ? sentriToSRX(balance) : '—'}</span> SRX
               </span>
@@ -553,7 +553,7 @@ function UndelegateSheet({
       <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up">
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div>
-            <div className="eyebrow">Undelegate</div>
+            <div className="text-[12px] font-medium text-[var(--tx-m)]">Undelegate</div>
             <h2 className="font-serif text-lg text-[var(--tx)] truncate">
               {validator.address.slice(0, 10)}…
             </h2>
@@ -571,7 +571,7 @@ function UndelegateSheet({
 
           <div>
             <div className="flex items-baseline justify-between mb-2">
-              <label className="eyebrow">Amount to unstake</label>
+              <label className="text-[13px] font-medium text-[var(--tx-2)]">Amount to unstake</label>
               <span className="text-[10px] font-mono text-[var(--tx-d)]">
                 Currently <span className="text-[var(--gold)]">{sentriToSRX(current)}</span> SRX
               </span>

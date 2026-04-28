@@ -44,33 +44,6 @@
   color-scheme: dark;
 }
 
-/* ── Theme: Bordeaux — oxblood wine + cordovan leather ───────── */
-/* References: Patek Philippe maroon dial; cordovan boot leather;
-   aged Bordeaux wine. Masculine, warm, library-of-wealth. */
-:root[data-theme="colorful"] {
-  --bk:            #150709;
-  --bk-2:          #1d0a10;
-  --sf:            #2a1218;
-  --sf-2:          #381820;
-  --sf-3:          #4a1f2c;
-  --brd:           rgba(244, 232, 214, 0.10);
-  --brd-s:         rgba(196, 86, 74, 0.34);
-  --tx:            #f4e8d4;
-  --tx-2:          #c8b59a;
-  --tx-m:          #98856e;
-  --tx-d:          #645548;
-  --gold:          #c4564a;
-  --gold-l:        #dc6f5e;
-  --gold-d:        #983c33;
-  --gold-bg:       rgba(196, 86, 74, 0.14);
-  --gold-bg-s:     rgba(196, 86, 74, 0.28);
-  --gold-glow:     rgba(196, 86, 74, 0.32);
-  --green:         #8ba872;
-  --green-bg:      rgba(139, 168, 114, 0.14);
-  --red:           #d63a30;
-  --red-bg:        rgba(214, 58, 48, 0.14);
-}
-
 /* ── Theme: Newsprint — Financial Times salmon paper ─────────── */
 /* References: Financial Times salmon-pink paper #FFF1E5 (exact),
    warm ink, terracotta editorial accent. The unmistakable look of
@@ -98,63 +71,6 @@
   --red:           #a82e1c;
   --red-bg:        rgba(168, 46, 28, 0.10);
   color-scheme: light;
-}
-
-/* ── Theme: Sentris — SentrisCloud brand emerald ──────────────── */
-/* Mirrors sentriscloud.com landing palette exactly: canvas
-   #0a0a0c, ink #f5f5f4, emerald-500 accent. Cohesive across the
-   SentrisCloud product line — same visual language as the marketing
-   site, scan, faucet, etc. */
-:root[data-theme="sentris"] {
-  --bk:            #0a0a0c;
-  --bk-2:          #111114;
-  --sf:            #16161a;
-  --sf-2:          #1c1c1f;
-  --sf-3:          #27272a;
-  --brd:           rgba(245, 245, 244, 0.08);
-  --brd-s:         rgba(16, 185, 129, 0.32);
-  --tx:            #f5f5f4;
-  --tx-2:          #d6d3d1;
-  --tx-m:          #a8a29e;
-  --tx-d:          #78716c;
-  --gold:          #10b981;
-  --gold-l:        #34d399;
-  --gold-d:        #047857;
-  --gold-bg:       rgba(16, 185, 129, 0.12);
-  --gold-bg-s:     rgba(16, 185, 129, 0.26);
-  --gold-glow:     rgba(16, 185, 129, 0.30);
-  --green:         #6ee7b7;
-  --green-bg:      rgba(110, 231, 183, 0.14);
-  --red:           #ef4444;
-  --red-bg:        rgba(239, 68, 68, 0.14);
-}
-
-/* ── Theme: Midnight — Patek dial + chronograph amber ────────── */
-/* References: Patek Philippe Nautilus 5712 deep blue dial; warm
-   amber chronograph hands and lume; Vacheron Overseas blue.
-   Watchmaker sophistication, not crypto neon. */
-:root[data-theme="ocean"] {
-  --bk:            #0a1228;
-  --bk-2:          #101a3a;
-  --sf:            #182547;
-  --sf-2:          #1f3060;
-  --sf-3:          #2a4080;
-  --brd:           rgba(232, 220, 200, 0.10);
-  --brd-s:         rgba(224, 160, 80, 0.32);
-  --tx:            #f0ecde;
-  --tx-2:          #b5b0a0;
-  --tx-m:          #807c70;
-  --tx-d:          #555048;
-  --gold:          #e0a050;
-  --gold-l:        #f0bc6a;
-  --gold-d:        #b07c34;
-  --gold-bg:       rgba(224, 160, 80, 0.14);
-  --gold-bg-s:     rgba(224, 160, 80, 0.28);
-  --gold-glow:     rgba(224, 160, 80, 0.30);
-  --green:         #6cc09a;
-  --green-bg:      rgba(108, 192, 154, 0.14);
-  --red:           #ec6a5c;
-  --red-bg:        rgba(236, 106, 92, 0.14);
 }
 
 html, body { background: var(--bk); color: var(--tx); }

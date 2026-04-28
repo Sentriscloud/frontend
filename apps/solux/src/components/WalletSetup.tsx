@@ -314,7 +314,7 @@ export default function WalletSetup() {
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="eyebrow">Recovery phrase</span>
+              <span className="text-[12px] font-medium text-[var(--tx-m)]">Recovery phrase</span>
               <button onClick={copyMnemonic} className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1 text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors">
                 {copiedMnemonic ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                 {copiedMnemonic ? 'Copied' : 'Copy'}
@@ -354,7 +354,7 @@ export default function WalletSetup() {
       {modal === 'import-seed' && (
         <Sheet onClose={closeModal} eyebrow="Restore" title="Import seed phrase">
           <div>
-            <label className="eyebrow block mb-2">12 or 24 words</label>
+            <label className="text-[13px] font-medium text-[var(--tx-2)] block mb-2">12 or 24 words</label>
             <textarea
               value={seedInput}
               onChange={(e) => setSeedInput(e.target.value)}
@@ -383,7 +383,7 @@ export default function WalletSetup() {
         <Sheet onClose={closeModal} eyebrow="Restore" title="Import private key">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="eyebrow">Private key</span>
+              <span className="text-[12px] font-medium text-[var(--tx-m)]">Private key</span>
               <button
                 onClick={generateRandomKey}
                 className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors"
@@ -433,7 +433,7 @@ export default function WalletSetup() {
           </p>
 
           <div>
-            <label className="eyebrow block mb-2">Keystore file</label>
+            <label className="text-[13px] font-medium text-[var(--tx-2)] block mb-2">Keystore file</label>
             <label
               htmlFor="keystore-file-input"
               className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bk-2)] border border-dashed border-[var(--brd-s)] cursor-pointer hover:bg-[var(--sf-2)] hover:border-[var(--gold-d)] transition-colors"
@@ -472,7 +472,7 @@ export default function WalletSetup() {
           </div>
 
           <div>
-            <label className="eyebrow block mb-2">Password</label>
+            <label className="text-[13px] font-medium text-[var(--tx-2)] block mb-2">Password</label>
             <input
               type="password"
               value={keystorePassword}
@@ -509,7 +509,7 @@ export default function WalletSetup() {
           </div>
 
           <div>
-            <label className="eyebrow block mb-2">Password</label>
+            <label className="text-[13px] font-medium text-[var(--tx-2)] block mb-2">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -531,7 +531,7 @@ export default function WalletSetup() {
           </div>
 
           <div>
-            <label className="eyebrow block mb-2">Confirm password</label>
+            <label className="text-[13px] font-medium text-[var(--tx-2)] block mb-2">Confirm password</label>
             <input
               type={showPassword ? 'text' : 'password'}
               value={passwordConfirm}
@@ -563,7 +563,7 @@ export default function WalletSetup() {
             Monitor any address without a private key. You&apos;ll see balance, history, and staking, but cannot send transactions. Useful for cold-storage tracking.
           </p>
           <div>
-            <label className="eyebrow block mb-2">Address</label>
+            <label className="text-[13px] font-medium text-[var(--tx-2)] block mb-2">Address</label>
             <textarea
               value={watchInput}
               onChange={(e) => setWatchInput(e.target.value)}
@@ -631,28 +631,28 @@ function Sheet({
   useEscape(true, onClose);
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[92vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-5 pt-5 pb-2 sticky top-0 bg-[var(--sf)] z-10">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[92vh] overflow-y-auto">
+        <div className="flex items-start justify-between px-6 pt-6 pb-3 sticky top-0 bg-[var(--sf)] z-10">
           <button
             onClick={onClose}
             aria-label="Back"
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--sf-2)] transition-colors -ml-1"
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--sf-2)] transition-colors -ml-1.5"
           >
             <ArrowLeft className="w-4 h-4 text-[var(--tx-m)]" />
           </button>
           <div className="flex-1 text-center">
-            <div className="eyebrow">{eyebrow}</div>
-            <h2 className="font-serif text-lg text-[var(--tx)] leading-tight">{title}</h2>
+            <p className="text-[12px] font-medium text-[var(--tx-m)] mb-0.5">{eyebrow}</p>
+            <h2 className="text-[20px] font-bold text-[var(--tx)] leading-tight tracking-tight">{title}</h2>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--sf-2)] transition-colors -mr-1"
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--sf-2)] transition-colors -mr-1.5"
           >
             <X className="w-4 h-4 text-[var(--tx-m)]" />
           </button>
         </div>
-        <div className="px-5 pb-6 pt-3 space-y-4">{children}</div>
+        <div className="px-6 pb-6 pt-3 space-y-4">{children}</div>
       </div>
     </div>
   );

@@ -219,7 +219,7 @@ export default function SendToken({
         </button>
 
         <div className="mb-6 animate-fade-up delay-1">
-          <div className="eyebrow">SRC-20 transfer</div>
+          <div className="text-[12px] font-medium text-[var(--tx-m)]">SRC-20 transfer</div>
           <h1 className="font-serif text-3xl text-[var(--tx)] mt-1">
             Send <span className="text-[var(--gold)]">{token.symbol}</span>
           </h1>
@@ -231,7 +231,7 @@ export default function SendToken({
         <div className="space-y-4 animate-fade-up delay-2">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="eyebrow">Recipient</label>
+              <label className="text-[13px] font-medium text-[var(--tx-2)]">Recipient</label>
               {addressBook.length > 0 && (
                 <button onClick={() => setShowBookPicker(true)} className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] hover:text-[var(--gold-l)] flex items-center gap-1">
                   <BookOpen className="w-3 h-3" /> Book
@@ -256,7 +256,7 @@ export default function SendToken({
 
           <div>
             <div className="flex items-baseline justify-between mb-2">
-              <label className="eyebrow">Amount</label>
+              <label className="text-[13px] font-medium text-[var(--tx-2)]">Amount</label>
               <span className="text-[10px] font-mono text-[var(--tx-d)]">
                 Balance <span className="text-[var(--gold)]">{balanceDisplay}</span> {token.symbol}
               </span>
@@ -394,7 +394,7 @@ export default function SendToken({
           <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[70vh] overflow-y-auto">
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
               <div>
-                <div className="eyebrow">Address book</div>
+                <div className="text-[12px] font-medium text-[var(--tx-m)]">Address book</div>
                 <h2 className="font-serif text-lg text-[var(--tx)]">Pick recipient</h2>
               </div>
               <button onClick={() => setShowBookPicker(false)} className="text-[10px] font-mono uppercase tracking-wider text-[var(--tx-m)]">Close</button>

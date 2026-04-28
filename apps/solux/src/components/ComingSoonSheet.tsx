@@ -21,7 +21,7 @@ export default function ComingSoonSheet({ open, onClose, feature, description, e
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up">
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
           <div>
-            <div className="eyebrow">Roadmap</div>
+            <div className="text-[12px] font-medium text-[var(--tx-m)]">Roadmap</div>
             <h2 className="font-serif text-lg text-[var(--tx)]">{feature}</h2>
           </div>
           <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--sf-2)] transition-colors -mr-1">

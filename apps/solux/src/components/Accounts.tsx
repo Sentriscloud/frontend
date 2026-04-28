@@ -104,21 +104,18 @@ export default function Accounts({ onBack }: { onBack: () => void }) {
         <div className="w-full max-w-sm">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 mb-6 text-xs font-mono uppercase tracking-wider text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors"
+            className="flex items-center gap-1.5 mb-6 text-[13px] text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back
+            <ArrowLeft className="w-4 h-4" /> Back
           </button>
-          <div className="mb-6">
-            <div className="eyebrow">Multi-account</div>
-            <h1 className="font-serif text-3xl text-[var(--tx)] mt-1">Accounts</h1>
-          </div>
-          <div className="rounded-xl bg-[var(--sf)] border border-[var(--brd)] p-6 text-center">
-            <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center bg-[var(--bk-2)] border border-[var(--brd)]">
-              <Wallet className="w-5 h-5 text-[var(--tx-d)]" />
+          <h1 className="text-[22px] font-bold text-[var(--tx)] mb-6">Accounts</h1>
+          <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] p-6 text-center">
+            <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center bg-[var(--gold-bg)]">
+              <Wallet className="w-5 h-5 text-[var(--gold)]" />
             </div>
-            <p className="text-sm text-[var(--tx-2)]">No seed phrase loaded</p>
-            <p className="text-[11px] text-[var(--tx-d)] mt-2 leading-relaxed max-w-[260px] mx-auto">
-              Multi-account derivation requires a wallet imported via seed phrase or created with one. Wallets imported via raw private key or keystore JSON have no derivation tree.
+            <p className="text-[14px] font-semibold text-[var(--tx)]">No seed phrase loaded</p>
+            <p className="text-[12px] text-[var(--tx-m)] mt-2 leading-relaxed max-w-[260px] mx-auto">
+              Multi-account derivation requires a wallet imported via seed phrase. Wallets imported via raw key or keystore have no derivation tree.
             </p>
             <button
               onClick={() => {
@@ -127,7 +124,7 @@ export default function Accounts({ onBack }: { onBack: () => void }) {
                   toast.success('Wallet locked');
                 }
               }}
-              className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[var(--gold)] text-[var(--bk)] hover:bg-[var(--gold-l)] transition-colors text-xs font-mono uppercase tracking-wider"
+              className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--gold)] text-[#3a2a0e] hover:bg-[var(--gold-l)] transition-colors text-[13px] font-semibold"
             >
               <Lock className="w-3.5 h-3.5" /> Lock &amp; import new
             </button>
@@ -142,30 +139,27 @@ export default function Accounts({ onBack }: { onBack: () => void }) {
       <div className="w-full max-w-sm">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 mb-6 text-xs font-mono uppercase tracking-wider text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
+          className="flex items-center gap-1.5 mb-6 text-[13px] text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors animate-fade-up"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back
+          <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="flex items-end justify-between mb-6 animate-fade-up delay-1">
-          <div>
-            <div className="eyebrow">Multi-account</div>
-            <h1 className="font-serif text-3xl text-[var(--tx)] mt-1">Accounts</h1>
-          </div>
+        <div className="flex items-end justify-between mb-3 animate-fade-up delay-1">
+          <h1 className="text-[22px] font-bold text-[var(--tx)]">Accounts</h1>
           <button
             onClick={addAccount}
             disabled={busy}
-            className="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--gold)] text-[var(--bk)] hover:bg-[var(--gold-l)] transition-colors active:scale-[0.99] disabled:opacity-50"
+            className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--gold)] text-[#3a2a0e] hover:bg-[var(--gold-l)] transition-colors active:scale-[0.99] disabled:opacity-50"
           >
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" strokeWidth={2.5} />}
           </button>
         </div>
 
-        <p className="text-xs text-[var(--tx-m)] mb-4 leading-relaxed animate-fade-up delay-2">
-          Each account is derived from the same seed phrase. Path: <span className="font-mono text-[var(--tx-2)]">m/44&apos;/60&apos;/0&apos;/0/N</span>
+        <p className="text-[12px] text-[var(--tx-m)] mb-4 leading-relaxed animate-fade-up delay-2">
+          All accounts share one seed phrase · path <span className="font-mono text-[var(--tx-2)]">m/44&apos;/60&apos;/0&apos;/0/N</span>
         </p>
 
-        <div className="rounded-xl bg-[var(--sf)] border border-[var(--brd)] divide-y divide-[var(--brd)] overflow-hidden animate-fade-up delay-2">
+        <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] divide-y divide-[var(--brd)] overflow-hidden animate-fade-up delay-2">
           {accounts.map((acc) => {
             const isActive = acc.index === activeIndex;
             return (
@@ -173,26 +167,26 @@ export default function Accounts({ onBack }: { onBack: () => void }) {
                 key={acc.index}
                 onClick={() => switchTo(acc)}
                 disabled={busy || isActive}
-                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${
-                  isActive ? 'bg-[var(--gold-bg)]' : 'hover:bg-[var(--sf-2)]'
+                className={`w-full flex items-center gap-3 px-4 py-3.5 transition-colors text-left ${
+                  isActive ? 'bg-[var(--gold-bg)]' : 'hover:bg-[rgba(255,255,255,0.03)]'
                 }`}
               >
-                <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                <span className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                   isActive
-                    ? 'bg-[var(--gold)] text-[var(--bk)]'
-                    : 'bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)]'
+                    ? 'bg-[var(--gold)] text-[#3a2a0e]'
+                    : 'bg-[var(--gold-bg)] text-[var(--gold)]'
                 }`}>
-                  <span className="text-xs font-mono font-bold tab-num">#{acc.index}</span>
+                  <span className="text-[12px] font-bold font-mono tab-num">#{acc.index}</span>
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[var(--tx)] font-mono">{truncate(acc.address)}</p>
-                  <p className="text-[10px] font-mono text-[var(--tx-d)] mt-0.5">
+                  <p className="text-[14px] font-semibold text-[var(--tx)] font-mono">{truncate(acc.address)}</p>
+                  <p className="text-[12px] text-[var(--tx-m)] mt-0.5 tab-num">
                     {acc.balance !== null ? `${formatBal(acc.balance)} SRX` : '—'}
                   </p>
                 </div>
                 {isActive && (
-                  <span className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-[var(--gold-d)] shrink-0">
-                    <Check className="w-3 h-3" /> Active
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-[var(--gold)] shrink-0">
+                    <Check className="w-3.5 h-3.5" /> Active
                   </span>
                 )}
               </button>
@@ -200,8 +194,8 @@ export default function Accounts({ onBack }: { onBack: () => void }) {
           })}
         </div>
 
-        <p className="text-center text-[10px] mt-5 text-[var(--tx-d)] font-mono uppercase tracking-wider animate-fade-up delay-3">
-          {accounts.length} account{accounts.length !== 1 ? 's' : ''} · Same seed phrase
+        <p className="text-center text-[12px] mt-5 text-[var(--tx-m)] animate-fade-up delay-3">
+          {accounts.length} {accounts.length === 1 ? 'account' : 'accounts'}
         </p>
       </div>
     </div>

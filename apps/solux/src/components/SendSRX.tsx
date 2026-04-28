@@ -431,7 +431,7 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
           <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[70vh] overflow-y-auto">
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
               <div>
-                <div className="eyebrow">Address book</div>
+                <div className="text-[12px] font-medium text-[var(--tx-m)]">Address book</div>
                 <h2 className="font-serif text-lg text-[var(--tx)]">Pick recipient</h2>
               </div>
               <button onClick={() => setShowBookPicker(false)} className="text-[10px] font-mono uppercase tracking-wider text-[var(--tx-m)] hover:text-[var(--tx)]">

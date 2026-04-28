@@ -45,20 +45,17 @@ export default function NotificationBell() {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70" onClick={() => setOpen(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[var(--brd)] sticky top-0 bg-[var(--sf)]">
-              <div>
-                <div className="eyebrow">Inbox</div>
-                <h2 className="font-serif text-lg text-[var(--tx)]">Notifications</h2>
-              </div>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden bg-[var(--sf)] border border-[var(--brd)] animate-fade-up max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[var(--brd)] sticky top-0 bg-[var(--sf)]">
+              <h2 className="text-[20px] font-bold text-[var(--tx)] tracking-tight">Notifications</h2>
               <div className="flex items-center gap-1">
                 {list.length > 0 && address && (
                   <button
                     onClick={() => clear(address)}
                     aria-label="Clear all"
-                    className="text-[10px] font-mono uppercase tracking-wider px-2 py-1.5 rounded-md hover:bg-[var(--sf-2)] transition-colors text-[var(--tx-m)] flex items-center gap-1"
+                    className="text-[12px] font-medium px-2.5 py-1.5 rounded-lg hover:bg-[var(--sf-2)] transition-colors text-[var(--tx-m)] flex items-center gap-1"
                   >
-                    <Trash2 className="w-3 h-3" /> Clear
+                    <Trash2 className="w-3.5 h-3.5" /> Clear
                   </button>
                 )}
                 <button onClick={() => setOpen(false)} aria-label="Close" className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--sf-2)] transition-colors">
@@ -69,13 +66,13 @@ export default function NotificationBell() {
 
             <div className="flex-1 overflow-y-auto">
               {list.length === 0 ? (
-                <div className="px-5 py-10 text-center">
-                  <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center bg-[var(--bk-2)] border border-[var(--brd)]">
-                    <Bell className="w-5 h-5 text-[var(--tx-d)]" />
+                <div className="px-5 py-14 text-center">
+                  <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center bg-[var(--gold-bg)]">
+                    <Bell className="w-5 h-5 text-[var(--gold)]" />
                   </div>
-                  <p className="text-sm text-[var(--tx-2)]">No notifications</p>
-                  <p className="text-[11px] text-[var(--tx-d)] mt-1">
-                    Activity from your transactions and the network shows up here
+                  <p className="text-[14px] font-semibold text-[var(--tx)]">No notifications</p>
+                  <p className="text-[12px] text-[var(--tx-m)] mt-1.5">
+                    Tx confirmations and block rewards appear here
                   </p>
                 </div>
               ) : (
