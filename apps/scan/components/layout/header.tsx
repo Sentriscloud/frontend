@@ -168,12 +168,12 @@ export function Header() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 lg:px-6 h-16 flex items-center gap-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 text-[var(--gold)] shrink-0">
-          <SentrixLogo size={32} />
-          <span className="hidden sm:inline font-serif text-[17px] font-light tracking-[.22em] uppercase pr-[.22em]">
-            SENTRI<span className="text-[var(--gold-l)] font-normal">X</span>
-            <span className="ml-1.5 text-[10px] tracking-[.15em] text-[var(--tx-d)] font-sans uppercase">Scan</span>
+        {/* Logo — header variant: solid mark + sans-serif wordmark, balanced cap-height. */}
+        <Link href="/" className="flex items-center gap-2 text-[var(--gold)] shrink-0">
+          <SentrixLogo size={24} />
+          <span className="hidden sm:inline text-[16px] font-semibold tracking-[-0.01em] text-[var(--gold)]">
+            Sentrix
+            <span className="ml-1.5 text-[11px] font-medium tracking-[0.02em] text-[var(--tx-d)]">Scan</span>
           </span>
         </Link>
 

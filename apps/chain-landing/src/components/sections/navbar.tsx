@@ -59,11 +59,11 @@ export function Navbar() {
           ? "border-b border-[var(--brd)] bg-[var(--bk)]/90 shadow-[0_1px_20px_rgba(0,0,0,.3)]"
           : "border-b border-transparent bg-transparent shadow-none"
       }`}>
-        {/* Logo */}
-        <a href="#" className="flex items-center gap-3 text-[var(--gold)] shrink-0">
-          <SentrixLogo size={50} />
-          <span className="font-serif text-[20px] font-light tracking-[.25em] uppercase pr-[.25em]">
-            SENTRI<span className="text-[var(--gold-l)] font-normal">X</span>
+        {/* Logo — header variant: solid mark + sans-serif wordmark, balanced cap-height. */}
+        <a href="#" className="flex items-center gap-2.5 text-[var(--gold)] shrink-0">
+          <SentrixLogo size={26} />
+          <span className="text-[18px] font-semibold tracking-[-0.01em] text-[var(--gold)]">
+            Sentrix
           </span>
         </a>
 

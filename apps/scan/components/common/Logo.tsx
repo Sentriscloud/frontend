@@ -1,14 +1,25 @@
 import Image from "next/image";
 
-// DECISION: official Sentrix Chain mark from the brand-kit
-// (github.com/sentrix-labs/brand-kit). Using the transparent variant — bronze outline + gold
-// nodes read cleanly on the dark UI without the all-purpose black-circle container fighting
-// the editorial header. Mono-black variant is also shipped (sentrix-logo-mono.svg) for any
-// future light-on-dark inversion need.
-export function SentrixLogo({ size = 32 }: { size?: number }) {
+type Variant = "header" | "ceremonial";
+
+// Sentrix Chain mark from the brand-kit (github.com/sentrix-labs/brand-kit).
+// "header" (default) = solid dual-diamond, no decorative ring or pearl dots
+// — reads cleanly at navbar sizes (24-32px). "ceremonial" = full ring +
+// pearl dots composition for hero/display contexts. See brand-kit/USAGE.md.
+export function SentrixLogo({
+  size = 24,
+  variant = "header",
+}: {
+  size?: number;
+  variant?: Variant;
+}) {
+  const src =
+    variant === "ceremonial"
+      ? "/sentrix-logo.svg"
+      : "/sentrix-mark-header.svg";
   return (
     <Image
-      src="/sentrix-logo.svg"
+      src={src}
       alt="Sentrix"
       width={size}
       height={size}
