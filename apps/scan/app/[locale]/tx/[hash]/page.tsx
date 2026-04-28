@@ -1,6 +1,7 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { ArrowUpDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,8 +19,29 @@ import { useTransaction } from "@/lib/hooks";
 
 export default function TxDetailPage({ params }: { params: Promise<{ hash: string }> }) {
   const { hash } = use(params);
-  const { network } = useNetwork();
+  const { network, setNetwork } = useNetwork();
+  const searchParams = useSearchParams();
+
+  // Honour `?network=mainnet|testnet` if present — deeplinks from Solux + the
+  // chain-landing site pass this so the lookup hits the right chain even if the
+  // viewer's cookie is set to the other network. Without this, a testnet tx
+  // link from Solux on a fresh browser would 404 because cookie defaults to
+  // mainnet (live-discovered 2026-04-28: faucet drip on testnet rendered
+  // "Transaction not found" when clicked from Solux).
+  useEffect(() => {
+    const param = searchParams.get("network");
+    if ((param === "mainnet" || param === "testnet") && param !== network) {
+      setNetwork(param);
+    }
+  }, [searchParams, network, setNetwork]);
+
+  // Try the currently-selected network first; the parallel cross-network
+  // probe below catches the case where the user's cookie is on the wrong
+  // chain for this tx — instead of a silent 404 we render a "tx is on
+  // <other> network" prompt with a one-click switch.
   const { data: tx, loading } = useTransaction(network, hash);
+  const otherNetwork = network === "mainnet" ? "testnet" : "mainnet";
+  const { data: txOther } = useTransaction(otherNetwork, hash);
 
   if (loading) {
     return (
@@ -31,6 +53,33 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
   }
 
   if (!tx) {
+    if (txOther) {
+      // Found on the other network — keep the user oriented and offer a one-
+      // click switch instead of a dead "not found" wall.
+      return (
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="p-8 text-center space-y-3">
+              <p className="text-muted-foreground">
+                This transaction lives on{" "}
+                <strong className="text-primary">
+                  {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"}
+                </strong>
+                , but you&apos;re viewing{" "}
+                {network === "mainnet" ? "Mainnet" : "Testnet"}.
+              </p>
+              <p className="text-xs font-mono text-muted-foreground break-all">{hash}</p>
+              <button
+                onClick={() => setNetwork(otherNetwork)}
+                className="text-primary hover:underline text-sm inline-block"
+              >
+                Switch to {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"} →
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Card>

@@ -150,7 +150,7 @@ export default function TxDetail({
         {/* Footer link */}
         <div className="px-5 pb-5">
           <a
-            href={`https://scan.sentrixchain.com/tx/${tx.txid}`}
+            href={`https://scan.sentrixchain.com/tx/${tx.txid}?network=${useSettingsStore.getState().network}`}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-mono uppercase tracking-wider bg-[var(--bk-2)] border border-[var(--brd)] text-[var(--tx-m)] hover:text-[var(--gold)] hover:border-[var(--gold-bg-s)] transition-colors"

@@ -94,7 +94,17 @@ export async function getTransactionHistory(address: string, limit = 20): Promis
 export async function getTransactionDetail(txid: string): Promise<FullTransaction | null> {
   try {
     const res = await api.get(`/transactions/${txid}`);
-    return res.data;
+    // The /transactions/<txid> REST endpoint returns the wrapped shape:
+    //   { block_hash, block_index, block_timestamp, transaction: {...inner...} }
+    // FullTransaction declares fields at the top level (txid, nonce, chain_id, …)
+    // so flatten the inner `transaction` object onto the outer response. Without
+    // this, TxDetail's `Field value={String(full.nonce)}` rendered the literal
+    // string "undefined" because nonce + chain_id only existed under `transaction`.
+    const data = res.data;
+    if (data && typeof data === 'object' && 'transaction' in data && data.transaction) {
+      return { ...data, ...data.transaction };
+    }
+    return data;
   } catch (err) {
     if (err instanceof AxiosError && err.response?.status === 404) return null;
     throw err;
