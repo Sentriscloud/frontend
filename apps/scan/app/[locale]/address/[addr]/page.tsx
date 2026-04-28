@@ -20,6 +20,7 @@ import { formatSRX, formatNumber } from "@/lib/format";
 import { Link } from "@/i18n/navigation";
 import { useAddressLabel, toneForKind } from "@/lib/labels";
 import { AddressNote } from "@/components/common/AddressNote";
+import { SourcifyBadge } from "@/components/common/SourcifyBadge";
 import { downloadCsv } from "@/lib/csv";
 import { toMillis } from "@/lib/format";
 
@@ -48,14 +49,20 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
         icon={Wallet}
         eyebrow="Address"
         title={label?.name ?? "Account"}
-        actions={label ? (() => {
-          const tone = toneForKind(label.kind);
-          return (
-            <span className={`inline-flex items-center text-[10px] font-mono uppercase tracking-[.12em] rounded-md px-2 py-1 border ${tone.bg} ${tone.fg} ${tone.border}`}>
-              {label.kind}
-            </span>
-          );
-        })() : undefined}
+        actions={
+          <div className="flex items-center gap-2">
+            {label && (() => {
+              const tone = toneForKind(label.kind);
+              return (
+                <span className={`inline-flex items-center text-[10px] font-mono uppercase tracking-[.12em] rounded-md px-2 py-1 border ${tone.bg} ${tone.fg} ${tone.border}`}>
+                  {label.kind}
+                </span>
+              );
+            })()}
+            {/* Sourcify verification badge — only meaningful for contract addresses, but harmless on EOAs (returns "unverified" badge) */}
+            <SourcifyBadge network={network} address={addr} />
+          </div>
+        }
       />
 
       {/* Address bar */}
