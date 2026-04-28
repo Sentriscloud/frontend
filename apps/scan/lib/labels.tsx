@@ -24,8 +24,34 @@ type LabelMap = Map<string, LabelEntry>;
 
 const LabelContext = createContext<LabelMap>(new Map());
 
+// Premine + governance addresses are always known at compile time and rarely
+// surface in /accounts/top (they hold large balances and don't move often, so
+// the dynamic top-N feed misses them on quiet chains). Hard-code so they
+// always render with the right tag — Solscan-style "Foundation"/"Treasury".
+//
+// chain-id agnostic: same addresses are seeded in genesis for both 7119 and
+// 7120, so these labels apply on either network.
+const STATIC_LABELS: ReadonlyArray<[string, LabelEntry]> = [
+  // Premine wallets
+  ["0x5b5b06688dcdbe532353ac610aaff41af825279d", { name: "Founder (Vesting 1y+4y)", kind: "treasury" }],
+  ["0xeb70fdefd00fdb768dec06c478f450c351499f14", { name: "Sentrix Ecosystem Fund", kind: "treasury" }],
+  ["0x328d56b8174697ef6c9e40e19b7663797e16fa47", { name: "Validator Incentive Pool", kind: "treasury" }],
+  ["0x2578cad17e3e56c2970a5b5eab45952439f5ba97", { name: "Strategic Reserve", kind: "treasury" }],
+
+  // Governance
+  ["0xa25236925bc10954e0519731cc7ba97f4bb5714b", { name: "Authority Wallet", kind: "treasury" }],
+  ["0x6272dc0c842f05542f9ff7b5443e93c0642a3b26", { name: "SentrixSafe (Mainnet)", kind: "treasury" }],
+  ["0xc9d7a61d7c2f428f6a055916488041fd00532110", { name: "SentrixSafe (Testnet)", kind: "treasury" }],
+];
+
 function buildMap(entries: Array<[string, LabelEntry]>): LabelMap {
   const m = new Map<string, LabelEntry>();
+  // Seed static premine + governance labels first so the dynamic feed can
+  // overwrite them if the backend ever wants to send a more specific name
+  // (e.g., "Founder Vesting Contract" once the on-chain contract deploys).
+  for (const [addr, entry] of STATIC_LABELS) {
+    m.set(addr.toLowerCase(), entry);
+  }
   for (const [addr, entry] of entries) {
     if (!addr) continue;
     m.set(addr.toLowerCase(), entry);
@@ -34,13 +60,16 @@ function buildMap(entries: Array<[string, LabelEntry]>): LabelMap {
 }
 
 export function LabelProvider({ network, children }: { network: NetworkId; children: ReactNode }) {
-  const [map, setMap] = useState<LabelMap>(() => new Map());
+  // Seed with static premine + governance labels so they render immediately
+  // on mount, before the dynamic /accounts/top fetch returns. Same addresses
+  // exist in both genesis files, so this is network-agnostic.
+  const [map, setMap] = useState<LabelMap>(() => buildMap([]));
 
   useEffect(() => {
     let cancelled = false;
-    // When network flips, clear the existing map immediately so stale mainnet labels don't
-    // render on testnet pages (and vice versa) during the brief refetch window.
-    setMap(new Map());
+    // When network flips, drop dynamic labels but keep statics — premine
+    // addresses are identical across mainnet + testnet genesis.
+    setMap(buildMap([]));
 
     async function load() {
       // DECISION: parallel — backend rate-limit flood was fixed server-side, so the old
