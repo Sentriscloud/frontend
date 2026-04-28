@@ -4,38 +4,42 @@
    Editorial luxury × technical precision.
    Charcoal black background, bronze-gold accent, Playfair Display for hero
    moments, Geist Mono for hashes / addresses / amounts. */
-/* ── Theme: Onyx — polished onyx stone + antique brass ───────── */
+/* ── Theme: Onyx — warm obsidian + champagne gold ────────────── */
+/* Refined palette: shifted off cool-blue onyx into warm obsidian
+   (slight amber undertone), and traded antique-brass for champagne
+   gold (cleaner, more saturated, less muddy). Watchmaker references:
+   Patek 5236 ivory dial, AP Royal Oak yellow gold case. */
 :root {
-  /* Backgrounds — onyx stone, not pure black */
-  --bk:            #0a0a0d;
-  --bk-2:          #131317;
-  --sf:            #1c1c22;
-  --sf-2:          #25252d;
-  --sf-3:          #30303a;
+  /* Backgrounds — warm obsidian, not blue-cold */
+  --bk:            #0c0a08;
+  --bk-2:          #14110d;
+  --sf:            #1a1611;
+  --sf-2:          #221d17;
+  --sf-3:          #2c251d;
 
-  /* Borders — visible but restrained */
-  --brd:           rgba(244, 240, 224, 0.10);
-  --brd-s:         rgba(196, 154, 78, 0.32);
+  /* Borders — gold-tinted hairlines */
+  --brd:           rgba(212, 184, 132, 0.08);
+  --brd-s:         rgba(212, 184, 132, 0.26);
 
-  /* Text — warm cream, not stark white */
-  --tx:            #f4f0e0;
-  --tx-2:          #b5b0a0;
-  --tx-m:          #888578;
-  --tx-d:          #5a584f;
+  /* Text — warm parchment, careful contrast steps */
+  --tx:            #f1ead6;
+  --tx-2:          #c8bda1;
+  --tx-m:          #8a7e66;
+  --tx-d:          #5a4f3d;
 
-  /* Brand accent — antique brass (not yellow gold) */
-  --gold:          #c49a4e;
-  --gold-l:        #dbb46c;
-  --gold-d:        #9a7a3a;
-  --gold-bg:       rgba(196, 154, 78, 0.14);
-  --gold-bg-s:     rgba(196, 154, 78, 0.28);
-  --gold-glow:     rgba(196, 154, 78, 0.30);
+  /* Brand accent — champagne gold (cleaner than antique brass) */
+  --gold:          #d4b884;
+  --gold-l:        #e6cea0;
+  --gold-d:        #a89465;
+  --gold-bg:       rgba(212, 184, 132, 0.12);
+  --gold-bg-s:     rgba(212, 184, 132, 0.26);
+  --gold-glow:     rgba(212, 184, 132, 0.30);
 
-  /* Status — muted, editorial */
-  --green:         #6ba56f;
-  --green-bg:      rgba(107, 165, 111, 0.14);
-  --red:           #d46659;
-  --red-bg:        rgba(212, 102, 89, 0.14);
+  /* Status — muted, harmonized with warm bg */
+  --green:         #7ba879;
+  --green-bg:      rgba(123, 168, 121, 0.12);
+  --red:           #c87060;
+  --red-bg:        rgba(200, 112, 96, 0.12);
 
   color-scheme: dark;
 }
@@ -159,19 +163,6 @@ body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Subtle ambient glow (per-theme accent) + fine noise grid */
-  background-image:
-    radial-gradient(ellipse 70% 50% at 50% -8%, var(--gold-bg) 0%, transparent 60%),
-    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.018) 1px, transparent 0);
-  background-size: auto, 22px 22px;
-  background-attachment: fixed;
-}
-
-/* Light theme: invert noise dots from white→ink so they remain visible */
-:root[data-theme="light"] body {
-  background-image:
-    radial-gradient(ellipse 70% 50% at 50% -8%, var(--gold-bg) 0%, transparent 60%),
-    radial-gradient(circle at 1px 1px, rgba(20,15,8,0.025) 1px, transparent 0);
 }
 
 /* ── Typography ────────────────────────────────────────── */
@@ -259,12 +250,10 @@ body {
 .luxe-card {
   position: relative;
   background:
-    radial-gradient(110% 70% at 8% 0%, var(--gold-bg) 0%, transparent 55%),
-    linear-gradient(180deg, var(--sf-2) 0%, var(--sf) 100%);
+    radial-gradient(80% 50% at 50% -10%, var(--gold-bg) 0%, transparent 70%),
+    var(--sf);
   border: 1px solid var(--brd);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 0 0 1px rgba(196, 154, 78, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 /* Light theme: invert highlight to ink */
@@ -284,83 +273,48 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-/* Hero shimmer — slow horizontal sheen across balance card.
-   Decorative only; prefers-reduced-motion disables. */
-@keyframes sheen {
-  0%   { transform: translateX(-100%); opacity: 0; }
-  20%  { opacity: 0.5; }
-  60%  { opacity: 0.5; }
-  100% { transform: translateX(220%); opacity: 0; }
-}
-.sheen-line {
-  position: absolute;
-  top: 0; left: 0;
-  width: 28%; height: 100%;
-  background: linear-gradient(110deg,
-    transparent 0%,
-    var(--gold-glow) 45%,
-    transparent 100%);
-  pointer-events: none;
-  animation: sheen 8s ease-in-out infinite;
-  animation-delay: 1.5s;
-  mix-blend-mode: screen;
-  opacity: 0;
-}
-@media (prefers-reduced-motion: reduce) {
-  .sheen-line { animation: none; display: none; }
-}
-
-/* Action tile — refined action button base (Send/Receive/etc).
-   Larger circular icon disc, subtle gold gradient on hover,
-   small lift via translateY. */
+/* Action tile — refined action button base (Send/Receive/Stake).
+   Bigger touch target, single hover lift, no decorative halo. */
 .action-tile {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 6px 10px;
-  border-radius: 16px;
-  background: var(--sf);
-  border: 1px solid var(--brd);
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  gap: 10px;
+  padding: 14px 8px 12px;
+  border-radius: 14px;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 .action-tile:not(:disabled):hover {
-  transform: translateY(-2px);
-  border-color: var(--gold-bg-s);
   background: var(--sf-2);
 }
-.action-tile:not(:disabled):active { transform: translateY(0); }
-.action-tile:disabled { opacity: 0.55; cursor: not-allowed; }
+.action-tile:not(:disabled):active .action-disc { transform: scale(0.96); }
+.action-tile:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .action-disc {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 30% 25%, var(--gold-bg-s) 0%, var(--gold-bg) 60%, transparent 100%),
-    var(--bk-2);
-  border: 1px solid var(--gold-bg-s);
+  background: var(--gold-bg);
   color: var(--gold);
-  transition: box-shadow 0.18s ease;
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 .action-tile:not(:disabled):hover .action-disc {
-  box-shadow: 0 0 0 4px var(--gold-bg);
+  background: var(--gold-bg-s);
 }
 .action-disc.muted {
   background: var(--bk-2);
-  border-color: var(--brd);
   color: var(--tx-m);
 }
 
 /* Soft semantic disc tint for activity icons */
-.action-disc.tint-green { background: var(--green-bg); border-color: rgba(107,165,111,0.28); color: var(--green); }
-.action-disc.tint-red   { background: var(--red-bg);   border-color: rgba(212,102,89,0.28);  color: var(--red); }
+.action-disc.tint-green { background: var(--green-bg); color: var(--green); }
+.action-disc.tint-red   { background: var(--red-bg);   color: var(--red); }
 
 /* Bottom nav — translucent floating bar with active gold pill on top */
 .nav-floating {

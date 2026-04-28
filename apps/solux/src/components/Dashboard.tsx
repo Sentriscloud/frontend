@@ -22,7 +22,7 @@ import {
   Copy, Check,
   Send, Download, TrendingUp,
   ArrowUpRight, ArrowDownLeft, Coins, Layers, Eye, EyeOff,
-  ChevronDown, Zap, ArrowLeftRight, Plus,
+  ChevronDown, ArrowLeftRight,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -45,7 +45,7 @@ interface TokenHolding {
 }
 
 export default function Dashboard() {
-  const { address, watchOnly, mnemonic, activeIndex, clearWallet } = useWalletStore();
+  const { address, watchOnly, mnemonic, activeIndex, lock } = useWalletStore();
   const { hideBalances, autoLockMinutes, network, setHideBalances } = useSettingsStore();
   const { push: pushNotif } = useNotificationStore();
   const net = NETWORKS[network];
@@ -59,14 +59,15 @@ export default function Dashboard() {
   const [selectedTx, setSelectedTx] = useState<TxHistoryItem | null>(null);
   const [comingSoon, setComingSoon] = useState<{ feature: string; description: string; eta?: string } | null>(null);
 
-  // Auto-lock idle timer
+  // Auto-lock idle timer. Watch-only wallets skip — there's no key to
+  // protect, locking would just kick the user back to setup for no reason.
   const lockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (autoLockMinutes <= 0) return;
+    if (autoLockMinutes <= 0 || watchOnly) return;
     const reset = () => {
       if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
       lockTimerRef.current = setTimeout(() => {
-        clearWallet();
+        lock();
         toast.success('Wallet auto-locked');
       }, autoLockMinutes * 60_000);
     };
@@ -77,7 +78,7 @@ export default function Dashboard() {
       events.forEach((e) => document.removeEventListener(e, reset));
       if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
     };
-  }, [autoLockMinutes, clearWallet]);
+  }, [autoLockMinutes, lock, watchOnly]);
 
   const fetchAll = useCallback(async () => {
     if (!address) return;
@@ -247,129 +248,82 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen flex justify-center px-5 pt-6 pb-28">
+    <div className="min-h-screen flex justify-center px-5 pt-5 pb-28">
       <div className="w-full max-w-sm">
         {/* ── Account header ────────────────────────────── */}
-        <header className="flex items-center justify-between mb-5 animate-fade-up">
+        <header className="flex items-center justify-between mb-7 animate-fade-up">
           <button
             onClick={() => mnemonic && setView({ kind: 'accounts' })}
             disabled={!mnemonic}
-            className="flex items-center gap-2.5 group"
+            className="flex items-center gap-3 group"
             aria-label="Switch account"
           >
-            <span
-              className="w-10 h-10 rounded-full flex items-center justify-center font-mono font-bold text-sm text-[var(--gold)]"
-              style={{
-                background:
-                  'radial-gradient(circle at 30% 25%, var(--gold-bg-s) 0%, var(--gold-bg) 60%, var(--bk-2) 100%)',
-                boxShadow:
-                  'inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px var(--gold-bg-s)',
-              }}
-            >
+            <span className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--gold-bg)] text-[var(--gold)] font-mono text-sm">
               {avatarChar}
             </span>
-            <div className="text-left">
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-[var(--tx)]">
-                  Account {activeIndex + 1}
-                </span>
-                {mnemonic && (
-                  <ChevronDown className="w-3 h-3 text-[var(--tx-d)] group-hover:text-[var(--gold)] transition-colors" />
-                )}
-              </div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--tx-d)]">
-                {watchOnly ? 'Watching' : 'Self-custody'}
+            <div className="text-left flex items-center gap-1">
+              <span className="text-[15px] text-[var(--tx)]">
+                Account {activeIndex + 1}
               </span>
+              {mnemonic && (
+                <ChevronDown className="w-3.5 h-3.5 text-[var(--tx-d)] group-hover:text-[var(--gold)] transition-colors" />
+              )}
             </div>
           </button>
-          <div className="flex items-center gap-1.5">
-            <NotificationBell />
-          </div>
+          <NotificationBell />
         </header>
 
         {/* ── Balance hero ──────────────────────────────── */}
-        <div className="luxe-card corner-lines relative mb-5 rounded-2xl overflow-hidden animate-fade-up delay-1">
-          {/* Decorative slow sheen */}
-          <div aria-hidden className="sheen-line" />
-
-          <div className="relative px-6 pt-5 pb-5">
-            {/* Top row: brand mark · network · eye */}
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-2.5">
-                <span
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{
-                    background:
-                      'radial-gradient(circle at 30% 25%, var(--gold-bg-s) 0%, var(--gold-bg) 70%, transparent 100%)',
-                    border: '1px solid var(--gold-bg-s)',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-                  }}
-                >
-                  <img src="/srx-mark.svg" alt="" className="w-5 h-5" />
-                </span>
-                <div>
-                  <div className="font-serif text-base text-[var(--tx)] leading-tight">Solux</div>
-                  <span
-                    className="inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider"
-                    style={{
-                      background: 'var(--bk-2)',
-                      border: '1px solid var(--brd)',
-                      color: 'var(--tx-2)',
-                    }}
-                  >
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full animate-pulse-live ${
-                        net.accent === 'teal' ? 'bg-[#2dd4bf]' : 'bg-[var(--green)]'
-                      }`}
-                    />
-                    SRX · {net.label}
-                  </span>
-                </div>
-              </div>
+        <div className="luxe-card relative mb-7 rounded-2xl overflow-hidden animate-fade-up delay-1">
+          <div className="relative px-6 pt-7 pb-6">
+            {/* Total balance */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[13px] text-[var(--tx-m)]">Total balance</span>
               <button
                 onClick={() => setHideBalances(!hideBalances)}
                 aria-label={hideBalances ? 'Show balances' : 'Hide balances'}
-                className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--bk-2)] border border-[var(--brd)] hover:bg-[var(--sf-2)] hover:border-[var(--gold-bg-s)] transition-colors"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--tx-m)] hover:text-[var(--tx)] hover:bg-[var(--sf-2)] transition-colors"
               >
                 {hideBalances
-                  ? <EyeOff className="w-4 h-4 text-[var(--tx-m)]" />
-                  : <Eye className="w-4 h-4 text-[var(--tx-m)]" />}
+                  ? <EyeOff className="w-4 h-4" />
+                  : <Eye className="w-4 h-4" />}
               </button>
             </div>
 
-            {/* Total balance */}
-            <div className="eyebrow mb-2">Total balance</div>
-            <div className="flex items-baseline gap-2 mb-5">
-              {loading || srxBalance === null ? (
-                <span className="skeleton h-12 w-44" />
-              ) : (
-                <span className="font-serif text-[44px] text-[var(--tx)] tab-num leading-none tracking-tight">
+            {loading || srxBalance === null ? (
+              <span className="skeleton h-[52px] w-48 mb-6 block" />
+            ) : (
+              <div className="flex items-baseline gap-2 mb-6">
+                <span className="font-serif text-[52px] text-[var(--tx)] tab-num leading-none tracking-[-0.02em]">
                   {hideBalances ? '••••••' : formatBalance(srxBalance)}
                 </span>
-              )}
-              <span className="font-mono text-sm text-[var(--gold)] tracking-wider">SRX</span>
-            </div>
+                <span className="text-[15px] text-[var(--gold)]">SRX</span>
+              </div>
+            )}
 
-            {/* Address pill */}
-            <button
-              onClick={copyAddress}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[var(--bk-2)] border border-[var(--brd)] hover:border-[var(--gold-bg-s)] transition-colors group"
-            >
-              <span className="flex items-center gap-2 text-xs font-mono text-[var(--tx-2)]">
+            {/* Address + network row */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={copyAddress}
+                className="flex items-center gap-2 text-[13px] font-mono text-[var(--tx-2)] hover:text-[var(--gold)] transition-colors"
+              >
                 {copied
                   ? <Check className="w-3.5 h-3.5 text-[var(--gold)]" />
-                  : <Copy className="w-3.5 h-3.5 text-[var(--tx-d)] group-hover:text-[var(--gold)] transition-colors" />}
+                  : <Copy className="w-3.5 h-3.5" />}
                 {address ? truncate(address) : '—'}
+              </button>
+              <span className="flex items-center gap-1.5 text-[12px] text-[var(--tx-m)]">
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  net.accent === 'teal' ? 'bg-[#2dd4bf]' : 'bg-[var(--green)]'
+                }`} />
+                {net.label}
               </span>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)]">
-                {copied ? 'Copied' : 'Copy'}
-              </span>
-            </button>
+            </div>
           </div>
         </div>
 
-        {/* ── Action grid ─ 5 buttons ─────────────────── */}
-        <div className="grid grid-cols-5 gap-2 mb-6 animate-fade-up delay-2">
+        {/* ── Action row ─ 4 buttons ─────────────────── */}
+        <div className="grid grid-cols-4 gap-1 mb-8 animate-fade-up delay-2">
           <ActionBtn
             icon={<Send className="w-[18px] h-[18px]" />}
             label="Send"
@@ -382,6 +336,11 @@ export default function Dashboard() {
             onClick={() => setView({ kind: 'receive' })}
           />
           <ActionBtn
+            icon={<TrendingUp className="w-[18px] h-[18px]" />}
+            label="Stake"
+            onClick={() => setView({ kind: 'staking' })}
+          />
+          <ActionBtn
             icon={<ArrowLeftRight className="w-[18px] h-[18px]" />}
             label="Swap"
             onClick={() => setComingSoon({
@@ -391,63 +350,33 @@ export default function Dashboard() {
             })}
             soon
           />
-          <ActionBtn
-            icon={<TrendingUp className="w-[18px] h-[18px]" />}
-            label="Stake"
-            onClick={() => setView({ kind: 'staking' })}
-          />
-          <ActionBtn
-            icon={<Plus className="w-[18px] h-[18px]" />}
-            label="Buy"
-            onClick={() => setComingSoon({
-              feature: 'Buy SRX with fiat',
-              description: 'Fiat onramp via MoonPay or Ramp. We are evaluating partners and KYC requirements for Indonesian users.',
-              eta: 'Q3 2026',
-            })}
-            soon
-          />
         </div>
 
-        {/* ── My assets ─────────────────────────────────── */}
-        <section className="mb-6 animate-fade-up delay-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="eyebrow">My assets</div>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--tx-d)]">
-              {1 + tokens.length} total
+        {/* ── Assets ─────────────────────────────────── */}
+        <section className="mb-7 animate-fade-up delay-3">
+          <div className="flex items-baseline justify-between mb-3 px-1">
+            <h2 className="text-[15px] text-[var(--tx)]">Assets</h2>
+            <span className="text-[12px] text-[var(--tx-d)]">
+              {1 + tokens.length}
             </span>
           </div>
-          <div className="flat-card rounded-2xl divide-y divide-[var(--brd)] overflow-hidden">
+          <div className="space-y-1">
             {/* SRX (always shown) */}
-            <div className="flex items-center justify-between px-4 py-4 group">
+            <div className="flex items-center justify-between px-1 py-2.5">
               <div className="flex items-center gap-3">
-                <span
-                  className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
-                  style={{
-                    background:
-                      'radial-gradient(circle at 30% 25%, var(--gold-bg-s) 0%, var(--gold-bg) 65%, var(--bk-2) 100%)',
-                    border: '1px solid var(--gold-bg-s)',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
-                  }}
-                >
-                  <img src="/srx-mark.svg" alt="" className="w-6 h-6" />
+                <span className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--gold-bg)] shrink-0">
+                  <img src="/srx-mark.svg" alt="" className="w-5 h-5" />
                 </span>
                 <div>
-                  <p className="text-sm font-medium text-[var(--tx)]">SRX</p>
-                  <p className="text-[10px] font-mono text-[var(--tx-d)] mt-0.5 uppercase tracking-wider">
-                    Sentrix native
-                  </p>
+                  <p className="text-[14px] text-[var(--tx)]">SRX</p>
+                  <p className="text-[12px] text-[var(--tx-m)]">Sentrix</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-mono tab-num text-[var(--tx)]">
-                  {loading || srxBalance === null
-                    ? '—'
-                    : hideBalances ? '••••' : formatBalance(srxBalance)}
-                </p>
-                <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] mt-0.5">
-                  SRX
-                </p>
-              </div>
+              <p className="text-[14px] font-mono tab-num text-[var(--tx)]">
+                {loading || srxBalance === null
+                  ? '—'
+                  : hideBalances ? '••••' : formatBalance(srxBalance)}
+              </p>
             </div>
 
             {/* SRC-20 tokens */}
@@ -456,69 +385,55 @@ export default function Dashboard() {
                 key={t.info.contract_address}
                 onClick={() => !watchOnly && setView({ kind: 'send-token', token: t.info })}
                 disabled={watchOnly}
-                className={`w-full flex items-center justify-between px-4 py-4 transition-colors text-left ${
+                className={`w-full flex items-center justify-between px-1 py-2.5 rounded-lg transition-colors text-left ${
                   !watchOnly ? 'hover:bg-[var(--sf-2)]' : 'cursor-default'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-11 h-11 rounded-full flex items-center justify-center bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)] shrink-0">
+                  <span className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--gold-bg)] text-[var(--gold)] shrink-0">
                     <Layers className="w-[18px] h-[18px]" />
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-[var(--tx)]">{t.info.symbol}</p>
-                    <p className="text-[10px] font-mono text-[var(--tx-d)] mt-0.5 truncate max-w-[120px] uppercase tracking-wider">
+                    <p className="text-[14px] text-[var(--tx)]">{t.info.symbol}</p>
+                    <p className="text-[12px] text-[var(--tx-m)] truncate max-w-[140px]">
                       {t.info.name || 'SRC-20'}
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-mono tab-num text-[var(--tx)]">
-                    {hideBalances ? '••••' : formatTokenBal(t.balance, t.info.decimals)}
-                  </p>
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--tx-d)] mt-0.5">
-                    {t.info.symbol}
-                  </p>
-                </div>
+                <p className="text-[14px] font-mono tab-num text-[var(--tx)]">
+                  {hideBalances ? '••••' : formatTokenBal(t.balance, t.info.decimals)}
+                </p>
               </button>
             ))}
           </div>
         </section>
 
-        {/* ── Recent activity ──────────────────────────── */}
+        {/* ── Activity ──────────────────────────── */}
         <section className="animate-fade-up delay-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="eyebrow">Recent activity</div>
+          <div className="flex items-baseline justify-between mb-3 px-1">
+            <h2 className="text-[15px] text-[var(--tx)]">Activity</h2>
             {recent.length > 0 && (
               <button
                 onClick={() => setView({ kind: 'main', tab: 'activity' })}
-                className="text-[10px] font-mono uppercase tracking-wider text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors flex items-center gap-1"
+                className="text-[12px] text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors"
               >
-                See all <ArrowUpRight className="w-3 h-3" />
+                See all
               </button>
             )}
           </div>
 
-          <div className="flat-card rounded-2xl overflow-hidden">
-            {loading ? (
-              <div className="p-8 text-center text-xs text-[var(--tx-d)] font-mono">Loading…</div>
-            ) : recent.length === 0 ? (
-              <div className="p-8 text-center">
-                <div
-                  className="w-10 h-10 mx-auto mb-3 rounded-full flex items-center justify-center"
-                  style={{
-                    background: 'var(--bk-2)',
-                    border: '1px dashed var(--brd)',
-                  }}
-                >
-                  <ArrowDownLeft className="w-4 h-4 text-[var(--tx-d)]" />
-                </div>
-                <p className="text-sm text-[var(--tx-m)]">No activity yet</p>
-                <p className="text-[11px] text-[var(--tx-d)] mt-1">
-                  {watchOnly ? 'Watching for incoming transactions' : 'Send or receive SRX to begin'}
-                </p>
-              </div>
-            ) : (
-              recent.map((tx, i) => {
+          {loading ? (
+            <p className="px-1 py-8 text-center text-[12px] text-[var(--tx-d)]">Loading</p>
+          ) : recent.length === 0 ? (
+            <div className="px-1 py-10 text-center">
+              <p className="text-[14px] text-[var(--tx-m)]">No transactions yet</p>
+              <p className="text-[12px] text-[var(--tx-d)] mt-1">
+                {watchOnly ? 'Watching for incoming activity' : 'Send or receive to get started'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {recent.map((tx) => {
                 const isTokenOp = tx.to === TOKEN_OP_ADDRESS && tx.direction === 'out';
                 const isStaking = tx.to.toLowerCase() === STAKING_ADDRESS;
                 const isReward = tx.direction === 'reward';
@@ -530,12 +445,15 @@ export default function Dashboard() {
                 const discTint =
                   tone === 'gold' ? '' :
                   tone === 'red'  ? 'tint-red' : 'tint-green';
+                const label = isStaking ? 'Staking' :
+                              isTokenOp ? 'Token op' :
+                              isReward ? 'Reward' :
+                              isOut ? 'Sent' : 'Received';
                 return (
                   <button
                     key={tx.txid}
                     onClick={() => setSelectedTx(tx)}
-                    className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[var(--sf-2)] transition-colors text-left"
-                    style={{ borderTop: i === 0 ? 'none' : '1px solid var(--brd)' }}
+                    className="w-full flex items-center justify-between px-1 py-2.5 rounded-lg hover:bg-[var(--sf-2)] transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`action-disc ${discTint}`} style={{ width: 40, height: 40 }}>
@@ -546,31 +464,24 @@ export default function Dashboard() {
                                      <ArrowDownLeft className="w-[18px] h-[18px]" />}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-[var(--tx)]">
-                          {isStaking ? 'Staking' : isTokenOp ? 'Token op' : isReward ? 'Block reward' : isOut ? 'Sent SRX' : 'Received SRX'}
-                        </p>
-                        <p className="text-[10px] font-mono text-[var(--tx-d)] mt-0.5">
-                          {isOut ? `To ${truncate(tx.to)}` : `From ${truncate(tx.from)}`} · {timeAgo(tx.block_timestamp)}
+                        <p className="text-[14px] text-[var(--tx)]">{label}</p>
+                        <p className="text-[12px] text-[var(--tx-m)]">
+                          {timeAgo(tx.block_timestamp)} · {truncate(isOut ? tx.to : tx.from)}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className={`text-sm font-mono tab-num ${
-                        tone === 'gold' ? 'text-[var(--gold)]' :
-                        tone === 'red'  ? 'text-[var(--red)]'  :
-                                          'text-[var(--green)]'
-                      }`}>
-                        {hideBalances ? '••••' : `${isOut || isTokenOp ? '−' : '+'}${(amt / SENTRI).toLocaleString(undefined, { maximumFractionDigits: 4 })}`}
-                      </p>
-                      <p className="text-[9px] text-[var(--tx-d)] font-mono uppercase tracking-wider mt-0.5">
-                        {isTokenOp ? 'fee · srx' : 'srx'}
-                      </p>
-                    </div>
+                    <p className={`text-[14px] font-mono tab-num ${
+                      tone === 'gold' ? 'text-[var(--gold)]' :
+                      tone === 'red'  ? 'text-[var(--red)]'  :
+                                        'text-[var(--green)]'
+                    }`}>
+                      {hideBalances ? '••••' : `${isOut || isTokenOp ? '−' : '+'}${(amt / SENTRI).toLocaleString(undefined, { maximumFractionDigits: 4 })}`}
+                    </p>
                   </button>
                 );
-              })
-            )}
-          </div>
+              })}
+            </div>
+          )}
         </section>
       </div>
 
@@ -599,27 +510,15 @@ function ActionBtn({
       disabled={disabled}
       className="action-tile"
     >
-      {soon && (
-        <span
-          className="absolute top-1.5 right-1.5 text-[8px] font-mono uppercase tracking-wider px-1 py-0.5 rounded leading-none"
-          style={{
-            background: 'var(--bk-2)',
-            color: 'var(--tx-m)',
-            border: '1px solid var(--brd)',
-          }}
-        >
-          Soon
-        </span>
-      )}
       <span className={`action-disc ${soon ? 'muted' : ''}`}>
         {icon}
       </span>
-      <span
-        className="text-[10px] font-mono uppercase tracking-wider"
-        style={{ color: soon ? 'var(--tx-d)' : 'var(--tx-2)' }}
-      >
-        {label}
-      </span>
+      <span className="text-[12px] text-[var(--tx-2)]">{label}</span>
+      {soon && (
+        <span className="absolute top-1.5 right-2.5 text-[9px] text-[var(--tx-d)]">
+          soon
+        </span>
+      )}
     </button>
   );
 }

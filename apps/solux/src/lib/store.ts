@@ -1,37 +1,106 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { loadVault, type Vault } from './vault';
 
+// Wallet has three lifecycle states surfaced to the UI:
+//   no-vault   → no localStorage entry → show WalletSetup
+//   locked     → encrypted vault on disk, key not in memory → show UnlockScreen
+//   unlocked   → key in memory → show Dashboard
+// Watch-only is a fourth, simpler path: vault is plain (no key to protect),
+// hydrates straight to "unlocked" with `watchOnly: true`.
 interface WalletState {
   privateKey: string | null;
   address: string | null;
-  watchOnly: boolean;            // true = no privkey, address loaded for monitoring only
-  // mnemonic kept session-only (never persisted) so Settings → Add account
-  // can derive more without re-prompting. Cleared on lock or browser close.
+  watchOnly: boolean;
+  // mnemonic kept session-only (never persisted in plain form). When the
+  // wallet is locked, it lives encrypted inside the vault blob and only
+  // gets decrypted back into memory on unlock.
   mnemonic: string | null;
-  activeIndex: number;            // active HD path index for the loaded mnemonic
-  setWallet: (privateKey: string, address: string) => void;
-  setWatchOnly: (address: string) => void;
-  setMnemonicWallet: (mnemonic: string, privateKey: string, address: string, index: number) => void;
+  activeIndex: number;
+
+  // Vault metadata mirror — populated from localStorage on app boot so the
+  // UI can render the correct screen (locked / no-vault) before the user
+  // does anything. `null` until hydrated, then concrete or null.
+  vault: Vault | null;
+  hydrated: boolean;
+
+  // In-memory unlock — populates privateKey/mnemonic/address from a
+  // decrypted vault. Does NOT touch localStorage; used after user enters
+  // password, or after watch-vault hydration, or after fresh setup.
+  unlock: (args: {
+    privateKey: string | null;
+    address: string;
+    mnemonic?: string | null;
+    activeIndex?: number;
+    watchOnly?: boolean;
+  }) => void;
+
+  // Auto-lock / manual lock — wipes in-memory key but keeps vault on disk.
+  // User re-enters password to unlock again.
+  lock: () => void;
+
+  // Switch HD account index without touching the vault — vault still holds
+  // the mnemonic, store just points at a different derived key.
   switchAccount: (privateKey: string, address: string, index: number) => void;
+
+  // Full reset for "Remove wallet" — clears memory AND vault. After this,
+  // the user lands back on WalletSetup.
   clearWallet: () => void;
+
+  // Hydration from localStorage on app mount. Called once at boot.
+  hydrate: () => void;
+
+  // After encrypting a fresh vault, push the metadata into the store so
+  // the locked-screen path is populated when the user locks/refreshes.
+  setVault: (vault: Vault | null) => void;
 }
 
-export const useWalletStore = create<WalletState>()((set) => ({
+export const useWalletStore = create<WalletState>()((set, get) => ({
   privateKey: null,
   address: null,
   watchOnly: false,
   mnemonic: null,
   activeIndex: 0,
-  setWallet: (privateKey, address) =>
-    set({ privateKey, address, watchOnly: false, mnemonic: null, activeIndex: 0 }),
-  setWatchOnly: (address) =>
-    set({ privateKey: null, address, watchOnly: true, mnemonic: null, activeIndex: 0 }),
-  setMnemonicWallet: (mnemonic, privateKey, address, index) =>
-    set({ privateKey, address, watchOnly: false, mnemonic, activeIndex: index }),
+  vault: null,
+  hydrated: false,
+
+  unlock: ({ privateKey, address, mnemonic = null, activeIndex = 0, watchOnly = false }) =>
+    set({ privateKey, address, mnemonic, activeIndex, watchOnly }),
+
+  lock: () =>
+    // Keep vault metadata; wipe everything else.
+    set({ privateKey: null, mnemonic: null, address: null, watchOnly: false, activeIndex: 0 }),
+
   switchAccount: (privateKey, address, index) =>
     set({ privateKey, address, activeIndex: index }),
-  clearWallet: () =>
-    set({ privateKey: null, address: null, watchOnly: false, mnemonic: null, activeIndex: 0 }),
+
+  clearWallet: () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('solux-vault');
+    }
+    set({
+      privateKey: null,
+      address: null,
+      watchOnly: false,
+      mnemonic: null,
+      activeIndex: 0,
+      vault: null,
+    });
+  },
+
+  hydrate: () => {
+    if (get().hydrated) return;
+    const vault = loadVault();
+    // Watch vaults can hydrate immediately into "unlocked" state — no key
+    // to protect, no password to prompt.
+    if (vault?.kind === 'watch') {
+      set({ vault, hydrated: true, address: vault.address, watchOnly: true });
+    } else {
+      set({ vault, hydrated: true });
+    }
+  },
+
+  setVault: (vault) => set({ vault }),
 }));
 
 // ── Settings (persisted) ───────────────────────────────────────────────

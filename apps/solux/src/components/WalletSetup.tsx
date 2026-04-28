@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useWalletStore } from '@/lib/store';
+import { encryptVault, saveVault, saveWatchVault } from '@/lib/vault';
 import {
   generatePrivateKey, privateKeyToAddress, isValidPrivateKey,
   generateMnemonic, isValidMnemonic, mnemonicToPrivateKey,
@@ -10,14 +11,26 @@ import { decryptKeystore, isValidKeystoreJson } from '@/lib/keystore';
 import { isValidAddress } from '@/lib/crypto';
 import { useEscape } from '@/lib/useEscape';
 import {
-  Plus, FileText, KeyRound, FileLock2, Eye, Cpu, AlertTriangle, Copy, Check, X, ChevronRight, ArrowLeft, Upload,
+  Plus, FileText, KeyRound, FileLock2, Eye, EyeOff, Cpu, AlertTriangle, Copy, Check, X, ChevronRight, ArrowLeft, Upload, Lock,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-type Modal = 'none' | 'create' | 'import-seed' | 'import-key' | 'import-keystore' | 'watch';
+type Modal = 'none' | 'create' | 'import-seed' | 'import-key' | 'import-keystore' | 'watch' | 'set-password';
+
+interface PendingWallet {
+  privateKey: string;
+  address: string;
+  mnemonic?: string;
+  activeIndex?: number;
+}
 
 export default function WalletSetup() {
   const [modal, setModal] = useState<Modal>('none');
+  const [pending, setPending] = useState<PendingWallet | null>(null);
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [encrypting, setEncrypting] = useState(false);
 
   // Create-wallet flow state (mnemonic-based)
   const [genMnemonic, setGenMnemonic] = useState('');
@@ -42,7 +55,19 @@ export default function WalletSetup() {
   // Watch-only address
   const [watchInput, setWatchInput] = useState('');
 
-  const { setWallet, setWatchOnly, setMnemonicWallet } = useWalletStore();
+  const { unlock, setVault } = useWalletStore();
+
+  // After any successful key derivation (create / seed-import / pk-import /
+  // keystore), we route to the password-set modal instead of unlocking
+  // directly. The user picks a vault password, we encrypt+persist, and only
+  // then put the key into in-memory store. This is what makes "refresh
+  // doesn't lose the wallet" work.
+  const beginPasswordSetup = (p: PendingWallet) => {
+    setPending(p);
+    setPassword('');
+    setPasswordConfirm('');
+    setModal('set-password');
+  };
 
   const openCreate = async () => {
     const mnemonic = generateMnemonic();
@@ -57,10 +82,12 @@ export default function WalletSetup() {
   const handleCreateConfirm = async () => {
     if (!genMnemonic || !savedConfirm) return;
     const privKey = await mnemonicToPrivateKey(genMnemonic);
-    // Retain mnemonic in session-memory so Settings → Accounts can derive
-    // additional indices without re-prompting the user.
-    setMnemonicWallet(genMnemonic, privKey, privateKeyToAddress(privKey), 0);
-    toast.success('Wallet created');
+    beginPasswordSetup({
+      privateKey: privKey,
+      address: privateKeyToAddress(privKey),
+      mnemonic: genMnemonic,
+      activeIndex: 0,
+    });
   };
 
   const handleSeedImport = async () => {
@@ -72,8 +99,12 @@ export default function WalletSetup() {
     setSeedDeriving(true);
     try {
       const privKey = await mnemonicToPrivateKey(phrase);
-      setMnemonicWallet(phrase, privKey, privateKeyToAddress(privKey), 0);
-      toast.success('Wallet imported from seed');
+      beginPasswordSetup({
+        privateKey: privKey,
+        address: privateKeyToAddress(privKey),
+        mnemonic: phrase,
+        activeIndex: 0,
+      });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Derivation failed');
     } finally {
@@ -87,8 +118,10 @@ export default function WalletSetup() {
       toast.error('Invalid private key');
       return;
     }
-    setWallet(key, privateKeyToAddress(key));
-    toast.success('Wallet imported');
+    beginPasswordSetup({
+      privateKey: key,
+      address: privateKeyToAddress(key),
+    });
   };
 
   const handleKeyPreview = () => {
@@ -115,8 +148,10 @@ export default function WalletSetup() {
     setKeystoreDecrypting(true);
     try {
       const privKey = await decryptKeystore(keystoreJson, keystorePassword);
-      setWallet(privKey, privateKeyToAddress(privKey));
-      toast.success('Keystore decrypted');
+      beginPasswordSetup({
+        privateKey: privKey,
+        address: privateKeyToAddress(privKey),
+      });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Decryption failed');
     } finally {
@@ -138,8 +173,49 @@ export default function WalletSetup() {
       toast.error('Invalid address');
       return;
     }
-    setWatchOnly(addr);
+    // Watch-only persists straight to localStorage as plain JSON — no key
+    // to protect, so no password gate. Survives refresh out of the box.
+    const vault = saveWatchVault(addr);
+    setVault(vault);
+    unlock({ privateKey: null, address: addr, watchOnly: true });
     toast.success('Watching address');
+  };
+
+  const handleSetPassword = async () => {
+    if (!pending) return;
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    if (password !== passwordConfirm) {
+      toast.error('Passwords don’t match');
+      return;
+    }
+    setEncrypting(true);
+    try {
+      const vault = await encryptVault(
+        {
+          privateKey: pending.privateKey,
+          mnemonic: pending.mnemonic,
+          activeIndex: pending.activeIndex,
+        },
+        password,
+        pending.address,
+      );
+      saveVault(vault);
+      setVault(vault);
+      unlock({
+        privateKey: pending.privateKey,
+        address: pending.address,
+        mnemonic: pending.mnemonic ?? null,
+        activeIndex: pending.activeIndex ?? 0,
+      });
+      toast.success('Wallet encrypted and saved');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Encryption failed');
+    } finally {
+      setEncrypting(false);
+    }
   };
 
   const closeModal = () => {
@@ -155,6 +231,10 @@ export default function WalletSetup() {
     setKeystorePassword('');
     setKeystoreFileName('');
     setWatchInput('');
+    setPending(null);
+    setPassword('');
+    setPasswordConfirm('');
+    setShowPassword(false);
   };
 
   const generateRandomKey = () => {
@@ -413,6 +493,65 @@ export default function WalletSetup() {
           </button>
           <p className="text-[10px] text-[var(--tx-d)] text-center font-mono">
             Scrypt KDF takes 1-2 seconds on most phones
+          </p>
+        </Sheet>
+      )}
+
+      {/* ── Set password modal ───────────────────────────── */}
+      {modal === 'set-password' && pending && (
+        <Sheet onClose={() => { /* prevent accidental close mid-encrypt */ if (!encrypting) closeModal(); }} eyebrow="Encrypt vault" title="Set unlock password">
+          <div className="rounded-lg p-4 flex gap-3 bg-[var(--gold-bg)] border border-[var(--gold-bg-s)]">
+            <Lock className="w-4 h-4 shrink-0 mt-0.5 text-[var(--gold)]" />
+            <div className="text-xs leading-relaxed text-[var(--tx-2)]">
+              <p className="font-medium text-[var(--tx)] mb-1">Protects your key on this device.</p>
+              <p>You&apos;ll enter this every time you open Solux. We can&apos;t reset it — if you forget, restore from your seed phrase.</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="eyebrow block mb-2">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                className="w-full rounded-lg p-3 pr-10 text-sm bg-[var(--bk-2)] border border-[var(--brd)] text-[var(--tx)] placeholder:text-[var(--tx-d)] focus:outline-none focus:border-[var(--gold-d)] transition-colors"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-md flex items-center justify-center text-[var(--tx-m)] hover:text-[var(--tx)] transition-colors"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="eyebrow block mb-2">Confirm password</label>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+              placeholder="Re-enter password"
+              className="w-full rounded-lg p-3 text-sm bg-[var(--bk-2)] border border-[var(--brd)] text-[var(--tx)] placeholder:text-[var(--tx-d)] focus:outline-none focus:border-[var(--gold-d)] transition-colors"
+              autoComplete="new-password"
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSetPassword(); }}
+            />
+          </div>
+
+          <button
+            onClick={handleSetPassword}
+            disabled={encrypting || password.length < 8 || password !== passwordConfirm}
+            className="w-full py-3 rounded-lg text-sm font-semibold bg-[var(--gold)] text-[var(--bk)] hover:bg-[var(--gold-l)] transition-colors active:scale-[0.99] disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            {encrypting ? 'Encrypting…' : 'Encrypt and continue'}
+          </button>
+          <p className="text-[10px] text-[var(--tx-d)] text-center font-mono">
+            PBKDF2 600k iter · AES-256-GCM
           </p>
         </Sheet>
       )}
