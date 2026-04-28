@@ -1,13 +1,10 @@
 import Image from "next/image";
 
-// Sentrix Chain header mark — diamond + 4 gold pearl dots, no ring,
-// no outer disc. Single canonical asset for nav, footer, breadcrumb
-// chrome. Sourced from brand-kit/svg/sentrix-mark-header.svg.
-// See brand-kit/USAGE.md for sizing + alignment guidance.
+// Sentrix Chain mark — canonical brand-kit asset.
 export function SentrixLogo({ size = 32 }: { size?: number }) {
   return (
     <Image
-      src="/sentrix-mark-header.svg"
+      src="/sentrix-logo.svg"
       alt="Sentrix"
       width={size}
       height={size}
