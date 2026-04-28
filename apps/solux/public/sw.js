@@ -13,7 +13,7 @@
 // the Next.js BUILD_ID (a content hash). Keeping the placeholder string
 // here means a build that forgets to run the script still produces a
 // distinct cache namespace per SW file content via byte-diff.
-const VERSION = 'solux-sw-0YJxLYqPDEs98fDQAIBcw';
+const VERSION = 'solux-sw-KvCyMV15LH8ZB1Z0x2wXo';
 const STATIC_CACHE = `${VERSION}-static`;
 const HTML_CACHE = `${VERSION}-html`;
 

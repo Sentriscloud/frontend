@@ -5,7 +5,8 @@ import { useWalletStore, useSettingsStore } from '@/lib/store';
 import { getTransactionHistory } from '@/lib/api';
 import type { TxHistoryItem } from '@/types';
 import TxDetail from './TxDetail';
-import { ArrowLeft, ArrowUpRight, ArrowDownLeft, Coins, Layers, Inbox } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, ArrowDownLeft, Coins, Layers } from 'lucide-react';
+import SrxMark from './SrxMark';
 
 const TOKEN_OP_ADDRESS = '0x0000000000000000000000000000000000000000';
 const STAKING_ADDRESS = '0x0000000000000000000000000000000000000100';
@@ -65,12 +66,15 @@ export default function TxHistory({ onBack, inline = false }: { onBack?: () => v
               <p className="text-[12px] text-[var(--tx-d)]">Loading…</p>
             </div>
           ) : txs.length === 0 ? (
-            <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] py-16 text-center">
-              <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center bg-[var(--gold-bg)]">
-                <Inbox className="w-6 h-6 text-[var(--gold)]" />
+            <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] py-16 text-center relative overflow-hidden">
+              <div aria-hidden className="absolute -top-10 -right-12 w-48 h-48 text-[var(--gold)] opacity-[0.06] pointer-events-none">
+                <SrxMark className="w-full h-full" />
               </div>
-              <p className="text-[15px] font-semibold text-[var(--tx)]">No transactions yet</p>
-              <p className="text-[13px] text-[var(--tx-m)] mt-1.5 px-8 leading-relaxed">
+              <div className="relative w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center bg-[var(--gold-bg)] text-[var(--gold)]">
+                <SrxMark className="w-7 h-7" />
+              </div>
+              <p className="relative text-[15px] font-semibold text-[var(--tx)]">No transactions yet</p>
+              <p className="relative text-[13px] text-[var(--tx-m)] mt-1.5 px-8 leading-relaxed">
                 Your sends, receives, and rewards will appear here.
               </p>
             </div>

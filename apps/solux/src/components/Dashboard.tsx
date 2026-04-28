@@ -9,6 +9,7 @@ import type { TxHistoryItem, TokenInfo } from '@/types';
 import SendSRX from './SendSRX';
 import SrxMark from './SrxMark';
 import GenerativeAvatar from './GenerativeAvatar';
+import AnimatedNumber from './AnimatedNumber';
 import SendToken from './SendToken';
 import TxHistory from './TxHistory';
 import TxDetail from './TxDetail';
@@ -292,20 +293,32 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* Hero amount — bigger, dramatic, with SRX unit inline. No USD
-                placeholder ("≈ — USD" reads as broken until prices wire up). */}
+            {/* Hero amount — bigger, dramatic, with SRX unit inline. The
+                value tweens (cubic-out 900ms) on every change so refresh
+                / unlock / network-switch reveals roll in instead of
+                snapping. No USD placeholder; "≈ — USD" reads as broken
+                until prices wire up. */}
             {loading || srxBalance === null ? (
               <div className="mb-6">
                 <span className="skeleton h-[66px] w-56 block" />
               </div>
             ) : (
               <div className="flex items-baseline gap-2.5 mb-6 flex-wrap">
-                <span
-                  className="text-[64px] tab-num leading-none text-[var(--tx)]"
-                  style={{ fontWeight: 800, letterSpacing: '-0.04em' }}
-                >
-                  {hideBalances ? '••••••' : formatBalance(srxBalance)}
-                </span>
+                {hideBalances ? (
+                  <span
+                    className="text-[64px] tab-num leading-none text-[var(--tx)]"
+                    style={{ fontWeight: 800, letterSpacing: '-0.04em' }}
+                  >
+                    ••••••
+                  </span>
+                ) : (
+                  <AnimatedNumber
+                    value={srxBalance / SENTRI}
+                    format={(n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                    className="text-[64px] tab-num leading-none text-[var(--tx)]"
+                    style={{ fontWeight: 800, letterSpacing: '-0.04em' }}
+                  />
+                )}
                 <span className="text-[20px] font-bold text-[var(--gold)] tracking-tight">SRX</span>
               </div>
             )}
@@ -434,12 +447,18 @@ export default function Dashboard() {
           {loading ? (
             <p className="px-1 py-8 text-center text-[12px] text-[var(--tx-d)]">Loading…</p>
           ) : recent.length === 0 ? (
-            <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] py-10 text-center">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center bg-[var(--gold-bg)]">
-                <ArrowDownLeft className="w-5 h-5 text-[var(--gold)]" />
+            <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] py-10 text-center relative overflow-hidden">
+              {/* Soft brand watermark — large translucent rhombus floating
+                  in the background to keep the empty state from feeling
+                  blank. Pointer-events disabled so it doesn't intercept clicks. */}
+              <div aria-hidden className="absolute -top-6 -right-8 w-32 h-32 text-[var(--gold)] opacity-[0.06] pointer-events-none">
+                <SrxMark className="w-full h-full" />
               </div>
-              <p className="text-[14px] text-[var(--tx)] font-semibold">No activity yet</p>
-              <p className="text-[12px] text-[var(--tx-m)] mt-1">
+              <div className="relative w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center bg-[var(--gold-bg)] text-[var(--gold)]">
+                <SrxMark className="w-6 h-6" />
+              </div>
+              <p className="relative text-[14px] text-[var(--tx)] font-semibold">No activity yet</p>
+              <p className="relative text-[12px] text-[var(--tx-m)] mt-1">
                 {watchOnly ? 'Watching for incoming transactions' : 'Send or receive to get started'}
               </p>
             </div>

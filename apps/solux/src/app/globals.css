@@ -250,6 +250,10 @@ body {
   background:
     radial-gradient(circle at 30% 25%, rgba(255, 217, 122, 0.32) 0%, rgba(244, 199, 94, 0.16) 60%, transparent 100%),
     var(--sf-2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 4px rgba(244, 199, 94, 0.10),
+    0 0 18px rgba(244, 199, 94, 0.18);
 }
 .action-disc.muted {
   background: var(--bk-2);
