@@ -13,17 +13,15 @@ export default function FaucetLanding() {
       <div aria-hidden className="gold-orb fixed top-[-120px] right-[-100px] z-0" />
 
       <div className="relative z-10 w-full max-w-[640px] animate-fade-up">
-        {/* Hero — gradient halo + brand mark + Playfair wordmark */}
+        {/* Hero — brand-kit coin avatar standalone with gold halo behind. */}
         <div className="flex flex-col items-center text-center mb-12">
           <div className="relative mb-6">
             <div
               aria-hidden
-              className="absolute inset-0 -m-6 rounded-full opacity-50 blur-3xl"
-              style={{ background: 'radial-gradient(circle, rgba(244,199,94,0.35) 0%, transparent 65%)' }}
+              className="absolute inset-0 -m-8 rounded-full opacity-60 blur-3xl"
+              style={{ background: 'radial-gradient(circle, rgba(244,199,94,0.40) 0%, transparent 65%)' }}
             />
-            <div className="relative w-20 h-20 rounded-2xl flex items-center justify-center bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)]">
-              <FaucetMark className="w-12 h-12" />
-            </div>
+            <FaucetMark className="relative w-24 h-24 drop-shadow-[0_0_28px_rgba(244,199,94,0.22)]" />
           </div>
           <h1 className="font-serif text-[44px] tracking-tight text-[var(--tx)] mb-3 leading-none">
             Sentrix <span className="text-[var(--gold)]">Faucet</span>

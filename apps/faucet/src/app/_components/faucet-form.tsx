@@ -66,6 +66,19 @@ function formatNum(n: number) {
   return n.toLocaleString('en-US', { maximumFractionDigits: 4 })
 }
 
+// Compact stat formatter for the balance / total-distributed cards.
+// Long numbers like 10,000,078.9999 overflow narrow stat cards; collapse
+// to "10.00M" / "1.00B" once we cross 10k. Tooltip shows the exact figure
+// for users who need the precise value.
+function formatCompact(n: number): string {
+  if (!isFinite(n)) return '—'
+  const abs = Math.abs(n)
+  if (abs >= 1e9) return (n / 1e9).toFixed(2).replace(/\.?0+$/, '') + 'B'
+  if (abs >= 1e6) return (n / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M'
+  if (abs >= 1e4) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K'
+  return n.toLocaleString('en-US', { maximumFractionDigits: 2 })
+}
+
 function formatHHMMSS(seconds: number) {
   const h = Math.floor(seconds / 3600).toString().padStart(2, '0')
   const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0')
@@ -235,17 +248,18 @@ export function FaucetForm({
       <div aria-hidden className="gold-orb fixed top-[-120px] right-[-100px] z-0" />
 
       <div className="relative z-10 w-full max-w-[480px] animate-fade-up">
-        {/* Hero — same brand mark + Playfair wordmark as the landing */}
+        {/* Hero — same brand mark + Playfair wordmark as the landing.
+            The brand-kit coin avatar already has its own ring + diamond,
+            so we let it stand alone on the dark surface (no extra
+            gold-bg disc wrapper) with a soft halo behind it. */}
         <div className="flex flex-col items-center text-center mb-7">
           <div className="relative mb-5">
             <div
               aria-hidden
-              className="absolute inset-0 -m-5 rounded-full opacity-50 blur-3xl"
+              className="absolute inset-0 -m-6 rounded-full opacity-60 blur-3xl"
               style={{ background: 'radial-gradient(circle, rgba(244,199,94,0.35) 0%, transparent 65%)' }}
             />
-            <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)]">
-              <FaucetMark className="w-9 h-9" />
-            </div>
+            <FaucetMark className="relative w-20 h-20 drop-shadow-[0_0_24px_rgba(244,199,94,0.20)]" />
           </div>
           <h1 className="font-serif text-[34px] tracking-tight text-[var(--tx)] leading-none">
             Sentrix <span className="text-[var(--gold)]">Faucet</span>
@@ -369,28 +383,35 @@ export function FaucetForm({
           )}
         </div>
 
-        {/* Live stats: faucet balance + total distributed. Numbers tween in
-            on each refresh via AnimatedNumber so the values feel alive
-            instead of snapping. */}
+        {/* Live stats: faucet balance + total distributed. Numbers tween
+            via AnimatedNumber + use compact notation (10M / 1B) so they
+            never overflow the narrow stat card. The full unrounded
+            figure is preserved on hover via the title attribute. */}
         <div className="grid grid-cols-2 gap-3 mt-3">
-          <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4">
+          <div
+            className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4 overflow-hidden"
+            title={stats ? `${formatNum(stats.balance)} SRX` : undefined}
+          >
             <p className="text-[12px] text-[var(--tx-m)] mb-1">Faucet balance</p>
-            <p className="text-[18px] font-bold text-[var(--gold)] tabular-nums">
+            <p className="text-[18px] font-bold text-[var(--gold)] tabular-nums whitespace-nowrap">
               {stats ? (
                 <>
-                  <AnimatedNumber value={stats.balance} format={formatNum} />
-                  <span className="text-[var(--gold-d)] ml-1">SRX</span>
+                  <AnimatedNumber value={stats.balance} format={formatCompact} />
+                  <span className="text-[var(--gold-d)] ml-1.5 text-[12px] font-semibold">SRX</span>
                 </>
               ) : '—'}
             </p>
           </div>
-          <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4">
+          <div
+            className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4 overflow-hidden"
+            title={stats ? `${formatNum(stats.totalDistributed)} SRX` : undefined}
+          >
             <p className="text-[12px] text-[var(--tx-m)] mb-1">Total distributed</p>
-            <p className="text-[18px] font-bold text-[var(--tx)] tabular-nums">
+            <p className="text-[18px] font-bold text-[var(--tx)] tabular-nums whitespace-nowrap">
               {stats ? (
                 <>
-                  <AnimatedNumber value={stats.totalDistributed} format={formatNum} />
-                  <span className="text-[var(--tx-m)] ml-1">SRX</span>
+                  <AnimatedNumber value={stats.totalDistributed} format={formatCompact} />
+                  <span className="text-[var(--tx-m)] ml-1.5 text-[12px] font-semibold">SRX</span>
                 </>
               ) : '—'}
             </p>

@@ -1,40 +1,23 @@
-// Inline SRX brand mark — rhombus + 4 corner dots, polished gold gradient
-// inner fill. Same component shipped in Solux (apps/solux/src/components/
-// SrxMark.tsx) so the two products share one visual identity. Strokes
-// inherit `currentColor` from the parent so the mark tints with whatever
-// surface it's placed on.
+// Sentrix coin avatar — sourced from the canonical brand-kit at
+// github.com/sentrix-labs/brand-kit (avatars/single-ring-transparent/
+// avatar-single-ring-transparent-256.png). Bronze ring + bronze diamond
+// + 4 gold cardinal nodes on a transparent background, so the mark
+// composites cleanly over any backdrop. We bundle it locally to avoid a
+// runtime dependency on the brand-kit repo.
+//
+// Use the 512px variant by default for retina-crisp display sizes
+// (40-128px range). If you ever need to render larger, reach for
+// /brand/coin-512.png (or coin-256.png for smaller fixed slots).
 export function FaucetMark({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 100 100"
-      fill="none"
-      stroke="currentColor"
-      shapeRendering="geometricPrecision"
+    <img
+      src="/brand/coin-512.png"
+      alt="Sentrix"
       className={className}
-      aria-label="Sentrix"
+      aria-label="Sentrix Faucet"
       role="img"
-    >
-      <defs>
-        <linearGradient id="faucet-mark-fill" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ffd97a" />
-          <stop offset="55%" stopColor="#f4c75e" />
-          <stop offset="100%" stopColor="#c89730" />
-        </linearGradient>
-      </defs>
-      <polygon
-        points="50,8 92,50 50,92 8,50"
-        strokeWidth="5"
-        strokeLinejoin="round"
-      />
-      <polygon
-        points="50,28 72,50 50,72 28,50"
-        fill="url(#faucet-mark-fill)"
-        stroke="none"
-      />
-      <circle cx="50" cy="8"  r="3" fill="currentColor" stroke="none" />
-      <circle cx="92" cy="50" r="3" fill="currentColor" stroke="none" />
-      <circle cx="50" cy="92" r="3" fill="currentColor" stroke="none" />
-      <circle cx="8"  cy="50" r="3" fill="currentColor" stroke="none" />
-    </svg>
+      width={512}
+      height={512}
+    />
   )
 }
