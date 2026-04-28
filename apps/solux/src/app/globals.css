@@ -250,14 +250,35 @@ body {
 .luxe-card {
   position: relative;
   background:
-    radial-gradient(140% 90% at 0% 0%, rgba(244, 199, 94, 0.16) 0%, transparent 55%),
-    radial-gradient(120% 80% at 100% 100%, rgba(212, 169, 55, 0.10) 0%, transparent 60%),
-    linear-gradient(180deg, #1c1c20 0%, #15151a 100%);
-  border: 1px solid rgba(244, 199, 94, 0.18);
+    radial-gradient(circle at 0% 0%, rgba(244, 199, 94, 0.18) 0%, transparent 50%),
+    linear-gradient(180deg, #1d1d22 0%, #16161a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 12px 40px rgba(0, 0, 0, 0.4),
-    0 1px 0 rgba(0, 0, 0, 0.5);
+    0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* Decorative gold orb accent for hero — abstract premium element */
+.gold-orb {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(244, 199, 94, 0.22) 0%, rgba(244, 199, 94, 0.08) 30%, transparent 65%);
+  filter: blur(20px);
+  pointer-events: none;
+  top: -100px;
+  right: -80px;
+}
+
+/* Gradient avatar — replaces letter-block with colorful disc */
+.grad-avatar {
+  background:
+    radial-gradient(circle at 30% 30%, #ffe69b 0%, #f4c75e 35%, #c9933d 70%, #8a6225 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(244, 199, 94, 0.25);
 }
 
 /* Light theme: invert highlight to ink */
@@ -320,16 +341,61 @@ body {
   box-shadow: none;
 }
 
-/* Soft semantic disc tint for activity icons */
+/* Per-tile semantic tints — Phantom-style: each action gets its own color */
 .action-disc.tint-green {
-  background: rgba(34, 197, 94, 0.10);
+  background:
+    radial-gradient(circle at 30% 25%, rgba(74, 222, 128, 0.22) 0%, rgba(34, 197, 94, 0.10) 60%, transparent 100%),
+    var(--sf);
   border-color: rgba(34, 197, 94, 0.28);
   color: var(--green);
 }
 .action-disc.tint-red {
-  background: rgba(248, 113, 113, 0.10);
+  background:
+    radial-gradient(circle at 30% 25%, rgba(252, 165, 165, 0.22) 0%, rgba(248, 113, 113, 0.10) 60%, transparent 100%),
+    var(--sf);
   border-color: rgba(248, 113, 113, 0.28);
   color: var(--red);
+}
+.action-disc.tint-violet {
+  background:
+    radial-gradient(circle at 30% 25%, rgba(196, 181, 253, 0.22) 0%, rgba(167, 139, 250, 0.10) 60%, transparent 100%),
+    var(--sf);
+  border-color: rgba(167, 139, 250, 0.28);
+  color: #a78bfa;
+}
+
+/* Asset row token mark — gold ring around the brand mark */
+.token-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 217, 122, 0.20) 0%, rgba(244, 199, 94, 0.08) 60%, var(--sf) 100%);
+  border: 1px solid rgba(244, 199, 94, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+/* Status pill for activity rows — confirmed/pending/finalized */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--tx-m);
+}
+.status-pill .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--green);
 }
 
 /* Bottom nav — translucent floating bar with active gold pill on top */

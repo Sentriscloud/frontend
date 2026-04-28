@@ -251,22 +251,22 @@ export default function Dashboard() {
     <div className="min-h-screen flex justify-center px-5 pt-5 pb-28">
       <div className="w-full max-w-sm">
         {/* ── Account header ────────────────────────────── */}
-        <header className="flex items-center justify-between mb-7 animate-fade-up">
+        <header className="flex items-center justify-between mb-6 animate-fade-up">
           <button
             onClick={() => mnemonic && setView({ kind: 'accounts' })}
             disabled={!mnemonic}
             className="flex items-center gap-3 group"
             aria-label="Switch account"
           >
-            <span className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--gold-bg)] text-[var(--gold)] font-mono text-sm">
+            <span className="grad-avatar w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold text-[#3a2a0e]">
               {avatarChar}
             </span>
             <div className="text-left flex items-center gap-1">
-              <span className="text-[15px] text-[var(--tx)]">
+              <span className="text-[15px] font-medium text-[var(--tx)]">
                 Account {activeIndex + 1}
               </span>
               {mnemonic && (
-                <ChevronDown className="w-3.5 h-3.5 text-[var(--tx-d)] group-hover:text-[var(--gold)] transition-colors" />
+                <ChevronDown className="w-4 h-4 text-[var(--tx-m)] group-hover:text-[var(--gold)] transition-colors" />
               )}
             </div>
           </button>
@@ -274,83 +274,91 @@ export default function Dashboard() {
         </header>
 
         {/* ── Balance hero ──────────────────────────────── */}
-        <div className="luxe-card relative mb-7 rounded-[20px] overflow-hidden animate-fade-up delay-1">
-          <div className="relative px-6 pt-6 pb-6">
+        <div className="luxe-card relative mb-6 rounded-[24px] overflow-hidden animate-fade-up delay-1">
+          <div aria-hidden className="gold-orb" />
+
+          <div className="relative px-6 pt-6 pb-7">
             {/* Top label row */}
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[13px] text-[var(--tx-m)] font-medium">Total balance</span>
-              <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-medium bg-[rgba(255,255,255,0.06)] text-[var(--tx-2)]">
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    net.accent === 'teal' ? 'bg-[#2dd4bf]' : 'bg-[var(--green)]'
-                  }`} />
-                  {net.label}
-                </span>
-                <button
-                  onClick={() => setHideBalances(!hideBalances)}
-                  aria-label={hideBalances ? 'Show balances' : 'Hide balances'}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--tx-m)] hover:text-[var(--tx)] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
-                >
-                  {hideBalances
-                    ? <EyeOff className="w-4 h-4" />
-                    : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[12px] uppercase tracking-[0.12em] text-[var(--tx-m)] font-medium">Total balance</span>
+              <button
+                onClick={() => setHideBalances(!hideBalances)}
+                aria-label={hideBalances ? 'Show balances' : 'Hide balances'}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--tx-m)] hover:text-[var(--tx)] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
+              >
+                {hideBalances
+                  ? <EyeOff className="w-3.5 h-3.5" />
+                  : <Eye className="w-3.5 h-3.5" />}
+              </button>
             </div>
 
-            {/* Hero amount — Playfair, gold-tinted for confident pop */}
+            {/* Hero amount — Inter ExtraBold, large, confident, single solid gold */}
             {loading || srxBalance === null ? (
-              <span className="skeleton h-[64px] w-56 mb-5 block" />
+              <div className="mb-1">
+                <span className="skeleton h-[58px] w-52 block" />
+              </div>
             ) : (
-              <div className="flex items-baseline gap-2.5 mb-5">
+              <div className="flex items-baseline gap-2 mb-1">
                 <span
-                  className="font-serif text-[60px] tab-num leading-none tracking-[-0.025em]"
-                  style={{
-                    background: 'linear-gradient(180deg, #ffd97a 0%, #f4c75e 50%, #d4a937 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  }}
+                  className="text-[56px] tab-num leading-none text-[var(--tx)]"
+                  style={{ fontWeight: 800, letterSpacing: '-0.035em' }}
                 >
                   {hideBalances ? '••••••' : formatBalance(srxBalance)}
                 </span>
-                <span className="text-[14px] font-medium text-[var(--gold-d)] tracking-wide">SRX</span>
+                <span className="text-[18px] font-semibold text-[var(--gold)] tracking-wide">SRX</span>
               </div>
             )}
 
-            {/* Address row */}
-            <button
-              onClick={copyAddress}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] font-mono bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.08)] text-[var(--tx-2)] hover:text-[var(--gold-l)] transition-colors"
-            >
-              {copied
-                ? <Check className="w-3 h-3 text-[var(--gold)]" />
-                : <Copy className="w-3 h-3" />}
-              {address ? truncate(address) : '—'}
-            </button>
+            {/* Secondary fiat / unit line (placeholder for future price oracle) */}
+            <p className="text-[13px] text-[var(--tx-m)] mb-5">
+              ≈ {hideBalances ? '••••' : '—'} USD
+            </p>
+
+            {/* Address + network in a single quiet row */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={copyAddress}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] font-mono bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.10)] text-[var(--tx-2)] hover:text-[var(--gold-l)] transition-colors"
+              >
+                {copied
+                  ? <Check className="w-3 h-3 text-[var(--gold)]" />
+                  : <Copy className="w-3 h-3" />}
+                {address ? truncate(address) : '—'}
+              </button>
+              <span className="status-pill">
+                <span className={`dot ${
+                  net.accent === 'teal' ? 'bg-[#2dd4bf]' : ''
+                }`} />
+                {net.label}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* ── Action row ─ 4 buttons ─────────────────── */}
+        {/* ── Action row ─ 4 buttons w/ semantic tints ───── */}
         <div className="grid grid-cols-4 gap-2 mb-7 animate-fade-up delay-2">
           <ActionBtn
-            icon={<Send className="w-[18px] h-[18px]" />}
+            tint="red"
+            icon={<Send className="w-5 h-5" />}
             label="Send"
             onClick={() => setView({ kind: 'send' })}
             disabled={watchOnly}
           />
           <ActionBtn
-            icon={<Download className="w-[18px] h-[18px]" />}
+            tint="green"
+            icon={<Download className="w-5 h-5" />}
             label="Receive"
             onClick={() => setView({ kind: 'receive' })}
           />
           <ActionBtn
-            icon={<TrendingUp className="w-[18px] h-[18px]" />}
+            tint="gold"
+            icon={<TrendingUp className="w-5 h-5" />}
             label="Stake"
             onClick={() => setView({ kind: 'staking' })}
           />
           <ActionBtn
-            icon={<ArrowLeftRight className="w-[18px] h-[18px]" />}
+            tint="violet"
+            icon={<ArrowLeftRight className="w-5 h-5" />}
             label="Swap"
             onClick={() => setComingSoon({
               feature: 'Token swaps',
@@ -364,28 +372,33 @@ export default function Dashboard() {
         {/* ── Assets ─────────────────────────────────── */}
         <section className="mb-7 animate-fade-up delay-3">
           <div className="flex items-baseline justify-between mb-3 px-1">
-            <h2 className="text-[15px] text-[var(--tx)]">Assets</h2>
-            <span className="text-[12px] text-[var(--tx-d)]">
-              {1 + tokens.length}
+            <h2 className="text-[16px] font-semibold text-[var(--tx)]">Assets</h2>
+            <span className="text-[12px] text-[var(--tx-m)]">
+              {1 + tokens.length} {1 + tokens.length === 1 ? 'token' : 'tokens'}
             </span>
           </div>
           <div className="space-y-1">
             {/* SRX (always shown) */}
-            <div className="flex items-center justify-between px-1 py-2.5">
+            <div className="flex items-center justify-between px-2 py-3 rounded-xl">
               <div className="flex items-center gap-3">
-                <span className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--gold-bg)] shrink-0">
-                  <img src="/srx-mark.svg" alt="" className="w-5 h-5" />
+                <span className="token-mark">
+                  <img src="/srx-mark.svg" alt="" className="w-6 h-6" />
                 </span>
                 <div>
-                  <p className="text-[14px] text-[var(--tx)]">SRX</p>
-                  <p className="text-[12px] text-[var(--tx-m)]">Sentrix</p>
+                  <p className="text-[15px] font-semibold text-[var(--tx)]">SRX</p>
+                  <p className="text-[12px] text-[var(--tx-m)]">Sentrix Chain</p>
                 </div>
               </div>
-              <p className="text-[14px] font-mono tab-num text-[var(--tx)]">
-                {loading || srxBalance === null
-                  ? '—'
-                  : hideBalances ? '••••' : formatBalance(srxBalance)}
-              </p>
+              <div className="text-right">
+                <p className="text-[15px] font-semibold tab-num text-[var(--tx)]">
+                  {loading || srxBalance === null
+                    ? '—'
+                    : hideBalances ? '••••' : formatBalance(srxBalance)}
+                </p>
+                <p className="text-[12px] text-[var(--tx-m)] tab-num">
+                  ≈ {hideBalances ? '••••' : '—'} USD
+                </p>
+              </div>
             </div>
 
             {/* SRC-20 tokens */}
@@ -394,24 +407,29 @@ export default function Dashboard() {
                 key={t.info.contract_address}
                 onClick={() => !watchOnly && setView({ kind: 'send-token', token: t.info })}
                 disabled={watchOnly}
-                className={`w-full flex items-center justify-between px-1 py-2.5 rounded-lg transition-colors text-left ${
-                  !watchOnly ? 'hover:bg-[var(--sf-2)]' : 'cursor-default'
+                className={`w-full flex items-center justify-between px-2 py-3 rounded-xl transition-colors text-left ${
+                  !watchOnly ? 'hover:bg-[rgba(255,255,255,0.04)]' : 'cursor-default'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--gold-bg)] text-[var(--gold)] shrink-0">
-                    <Layers className="w-[18px] h-[18px]" />
+                  <span className="token-mark text-[var(--gold)]">
+                    <Layers className="w-5 h-5" />
                   </span>
                   <div>
-                    <p className="text-[14px] text-[var(--tx)]">{t.info.symbol}</p>
+                    <p className="text-[15px] font-semibold text-[var(--tx)]">{t.info.symbol}</p>
                     <p className="text-[12px] text-[var(--tx-m)] truncate max-w-[140px]">
                       {t.info.name || 'SRC-20'}
                     </p>
                   </div>
                 </div>
-                <p className="text-[14px] font-mono tab-num text-[var(--tx)]">
-                  {hideBalances ? '••••' : formatTokenBal(t.balance, t.info.decimals)}
-                </p>
+                <div className="text-right">
+                  <p className="text-[15px] font-semibold tab-num text-[var(--tx)]">
+                    {hideBalances ? '••••' : formatTokenBal(t.balance, t.info.decimals)}
+                  </p>
+                  <p className="text-[12px] text-[var(--tx-m)] tab-num">
+                    ≈ {hideBalances ? '••••' : '—'} USD
+                  </p>
+                </div>
               </button>
             ))}
           </div>
@@ -420,11 +438,11 @@ export default function Dashboard() {
         {/* ── Activity ──────────────────────────── */}
         <section className="animate-fade-up delay-4">
           <div className="flex items-baseline justify-between mb-3 px-1">
-            <h2 className="text-[15px] text-[var(--tx)]">Activity</h2>
+            <h2 className="text-[16px] font-semibold text-[var(--tx)]">Activity</h2>
             {recent.length > 0 && (
               <button
                 onClick={() => setView({ kind: 'main', tab: 'activity' })}
-                className="text-[12px] text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors"
+                className="text-[12px] font-medium text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors"
               >
                 See all
               </button>
@@ -432,11 +450,11 @@ export default function Dashboard() {
           </div>
 
           {loading ? (
-            <p className="px-1 py-8 text-center text-[12px] text-[var(--tx-d)]">Loading</p>
+            <p className="px-1 py-8 text-center text-[12px] text-[var(--tx-d)]">Loading…</p>
           ) : recent.length === 0 ? (
-            <div className="px-1 py-10 text-center">
-              <p className="text-[14px] text-[var(--tx-m)]">No transactions yet</p>
-              <p className="text-[12px] text-[var(--tx-d)] mt-1">
+            <div className="px-1 py-12 text-center">
+              <p className="text-[14px] text-[var(--tx-m)] font-medium">No transactions yet</p>
+              <p className="text-[12px] text-[var(--tx-d)] mt-1.5">
                 {watchOnly ? 'Watching for incoming activity' : 'Send or receive to get started'}
               </p>
             </div>
@@ -462,7 +480,7 @@ export default function Dashboard() {
                   <button
                     key={tx.txid}
                     onClick={() => setSelectedTx(tx)}
-                    className="w-full flex items-center justify-between px-1 py-2.5 rounded-lg hover:bg-[var(--sf-2)] transition-colors text-left"
+                    className="w-full flex items-center justify-between px-2 py-3 rounded-xl hover:bg-[rgba(255,255,255,0.04)] transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`action-disc ${discTint}`} style={{ width: 40, height: 40 }}>
@@ -473,13 +491,13 @@ export default function Dashboard() {
                                      <ArrowDownLeft className="w-[18px] h-[18px]" />}
                       </div>
                       <div>
-                        <p className="text-[14px] text-[var(--tx)]">{label}</p>
-                        <p className="text-[12px] text-[var(--tx-m)]">
+                        <p className="text-[14px] font-semibold text-[var(--tx)]">{label}</p>
+                        <p className="text-[12px] text-[var(--tx-m)] mt-0.5">
                           {timeAgo(tx.block_timestamp)} · {truncate(isOut ? tx.to : tx.from)}
                         </p>
                       </div>
                     </div>
-                    <p className={`text-[14px] font-mono tab-num ${
+                    <p className={`text-[14px] font-semibold tab-num ${
                       tone === 'gold' ? 'text-[var(--gold)]' :
                       tone === 'red'  ? 'text-[var(--red)]'  :
                                         'text-[var(--green)]'
@@ -505,28 +523,35 @@ export default function Dashboard() {
 }
 
 function ActionBtn({
-  icon, label, onClick, disabled, soon,
+  icon, label, onClick, disabled, soon, tint = 'gold',
 }: {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
   disabled?: boolean;
   soon?: boolean;
+  tint?: 'gold' | 'green' | 'red' | 'violet';
 }) {
+  // Map tint → action-disc class. "gold" uses default disc styling; the
+  // others use the per-color tint variants defined in globals.css.
+  const tintClass =
+    tint === 'green'  ? 'tint-green'  :
+    tint === 'red'    ? 'tint-red'    :
+    tint === 'violet' ? 'tint-violet' : '';
   return (
     <button
       onClick={disabled || soon ? undefined : onClick}
       disabled={disabled}
       className="action-tile"
     >
-      <span className={`action-disc ${soon ? 'muted' : ''}`}>
+      <span className={`action-disc ${soon ? 'muted' : tintClass}`}>
         {icon}
       </span>
-      <span className={`text-[12px] font-medium ${soon ? 'text-[var(--tx-d)]' : 'text-[var(--tx-2)]'}`}>
+      <span className={`text-[12px] font-semibold ${soon ? 'text-[var(--tx-d)]' : 'text-[var(--tx)]'}`}>
         {label}
       </span>
       {soon && (
-        <span className="absolute top-0 right-2 text-[9px] font-mono uppercase tracking-wider text-[var(--tx-d)]">
+        <span className="absolute -top-1 right-1 text-[9px] font-medium uppercase tracking-wider text-[var(--tx-d)]">
           Soon
         </span>
       )}
