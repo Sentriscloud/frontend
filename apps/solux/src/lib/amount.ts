@@ -65,7 +65,8 @@ export function formatAmount(units: number, decimals: number): string {
  * Compact display formatter for the hero / stat / asset-row numbers.
  * Long balances like 21,000,000.00 SRX overflow narrow cards; collapse
  * 10K+ to "K", 1M+ to "M", 1B+ to "B" with trimmed trailing zeros.
- * Below 10K the full localised number with up to 2 decimals is returned.
+ * Below 10K the full localised number with 2 decimals (always present —
+ * "0.00" reads as a real account balance, "0" reads like a placeholder).
  *
  * Pair with the original full format in a `title` attribute so users
  * who need the precise figure still get it on hover.
@@ -76,5 +77,5 @@ export function formatCompactSRX(srx: number): string {
   if (abs >= 1e9) return (srx / 1e9).toFixed(2).replace(/\.?0+$/, '') + 'B';
   if (abs >= 1e6) return (srx / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
   if (abs >= 1e4) return (srx / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
-  return srx.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  return srx.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }

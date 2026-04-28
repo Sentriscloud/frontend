@@ -1,17 +1,16 @@
-// Sentrix coin avatar — sourced from the canonical brand-kit at
-// github.com/sentrix-labs/brand-kit (avatars/single-ring-transparent/
-// avatar-single-ring-transparent-256.png). Bronze ring + bronze diamond
-// + 4 gold cardinal nodes on a transparent background, so the mark
-// composites cleanly over any backdrop. We bundle it locally to avoid a
-// runtime dependency on the brand-kit repo.
+// Sentrix coin stamp — sourced from the canonical brand-kit at
+// github.com/sentrix-labs/brand-kit (avatars/solid-bronze-gold/
+// avatar-solid-bronze-gold-512.png). Gold diamond on a bronze disc —
+// the "complete coin face" variant. Same asset Solux's SrxMark uses,
+// so the two products read as one brand family.
 //
-// Use the 512px variant by default for retina-crisp display sizes
-// (40-128px range). If you ever need to render larger, reach for
-// /brand/coin-512.png (or coin-256.png for smaller fixed slots).
+// We bundle the 512px PNG locally to avoid a runtime brand-kit
+// dependency. The transparent-ring variant (coin-512.png) stays in
+// /public/brand/ for any future use that wants the framed look.
 export function FaucetMark({ className }: { className?: string }) {
   return (
     <img
-      src="/brand/coin-512.png"
+      src="/brand/coin-solid-512.png"
       alt="Sentrix"
       className={className}
       aria-label="Sentrix Faucet"
