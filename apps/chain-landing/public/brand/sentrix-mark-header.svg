@@ -1,26 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Sentrix Chain — header variant of the diamond mark.
+  Sentrix Chain — header mark. Diamond + 4 pearl dots, no ring, no disc.
 
-  Differs from sentrix-mark-tight.svg / sentrix-logo-full.svg by stripping
-  the decorative outer circle ("ring") and the four cardinal pearl dots.
-  At navbar sizes (24-36px), the pearl dots scale to ~1-2px and the ring
-  competes with adjacent wordmark for visual weight; both vanish, leaving
-  a "polos" (bare) diamond. The header variant keeps just the dual-diamond
-  silhouette — outer outline + inner filled — which preserves brand
-  recognition at every render size and pairs cleanly with a sans-serif
-  wordmark in horizontal nav layouts.
+  This is THE canonical mark for nav chrome. Composition matches the brand
+  signature (outer diamond outline + filled inner diamond + 4 cardinal
+  pearl dots) but with proportions retuned so the dots survive at navbar
+  display sizes:
 
-  Use for: navbar logos, footer logos, browser tab favicons (raster
-  pre-rendered).
+    - Original sentrix-mark-tight.svg: dots r=11 on 1024 viewBox
+      (1.07% of size). At 40px display, dots = 0.4px → invisible.
+    - This variant: dots r=13 on 200 viewBox (6.5%). At 40px display,
+      dots = 2.6px; at 32px = 2.1px; at 56px = 3.6px → visible across
+      every reasonable header size without dominating the diamond.
 
-  Do NOT use for: hero/ceremonial moments — those want the full ring +
-  pearl dots composition. See brand-kit/USAGE.md.
+  Outer diamond / inner diamond ratio (~44%) matches the original brand
+  mark for visual identity continuity — only the decorative dot scale is
+  retuned for legibility.
 
-  Stroke proportionally widened (6% of viewBox) so the outer outline
-  reads cleanly down to 24px display.
+  Use everywhere the mark appears next to a wordmark, including nav,
+  footer, breadcrumb chrome. For ceremonial hero use, scale the same
+  asset to 96px+ — the proportions still read.
+
+  See USAGE.md for sizing, alignment, and pairing rules.
 -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" shape-rendering="geometricPrecision">
-  <polygon points="50,5 95,50 50,95 5,50" fill="none" stroke="#8A5A11" stroke-width="6" stroke-linejoin="miter" stroke-miterlimit="10"/>
-  <polygon points="50,31 69,50 50,69 31,50" fill="#8A5A11"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" shape-rendering="geometricPrecision">
+  <polygon points="100,10 190,100 100,190 10,100" fill="none" stroke="#8A5A11" stroke-width="7" stroke-linejoin="miter" stroke-miterlimit="10"/>
+  <polygon points="100,60 140,100 100,140 60,100" fill="#8A5A11"/>
+  <circle cx="100" cy="10" r="13" fill="#DBC17F"/>
+  <circle cx="190" cy="100" r="13" fill="#DBC17F"/>
+  <circle cx="100" cy="190" r="13" fill="#DBC17F"/>
+  <circle cx="10" cy="100" r="13" fill="#DBC17F"/>
 </svg>

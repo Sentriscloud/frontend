@@ -1,38 +1,23 @@
-type Variant = "header" | "ceremonial";
-
-// Default = "ceremonial" — bronze ring + diamond + 4 pearl dots, the
-// canonical Sentrix mark with full brand identity intact. Use everywhere
-// the mark sits next to the wordmark, including nav chrome (paired with
-// SENTRIX serif at minimal letter-spacing). The "header" variant is the
-// stripped dual-diamond fallback for ultra-compact contexts where the
-// pearl dots can't fit.
+// Sentrix Chain header mark — diamond + 4 gold pearl dots, no ring,
+// no outer disc. The single canonical asset for nav, footer, and any
+// wordmark-adjacent context. Sourced from brand-kit/svg/sentrix-mark-
+// header.svg; pearl dots are sized so they stay legible at 32-56px
+// display. See brand-kit/USAGE.md for sizing + alignment guidance.
+//
+// For ceremonial / hero coin stamps (faucet hero, solux balance puck),
+// each app ships its own component (FaucetMark, SrxMark) loading the
+// solid-bronze-gold avatar — that's a different visual context (asset
+// value stamp, not brand chrome). Don't reach for it in nav.
 export function SentrixLogo({
-  size = 38,
-  variant = "ceremonial",
+  size = 36,
   className,
 }: {
   size?: number;
-  variant?: Variant;
   className?: string;
 }) {
-  if (variant === "header") {
-    return (
-      <img
-        src="/brand/sentrix-mark-header.svg"
-        alt="Sentrix Chain"
-        width={size}
-        height={size}
-        className={className ?? "object-contain"}
-        loading="eager"
-        decoding="sync"
-      />
-    );
-  }
   return (
     <img
-      src="/brand/coin-ring-512.png"
-      srcSet="/brand/coin-ring-128.png 128w, /brand/coin-ring-256.png 256w, /brand/coin-ring-512.png 512w"
-      sizes={`${size}px`}
+      src="/brand/sentrix-mark-header.svg"
       alt="Sentrix Chain"
       width={size}
       height={size}

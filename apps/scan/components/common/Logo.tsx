@@ -1,34 +1,13 @@
 import Image from "next/image";
 
-type Variant = "header" | "ceremonial";
-
-// Sentrix Chain mark from the brand-kit (github.com/sentrix-labs/brand-kit).
-// Default "ceremonial" = bronze ring + diamond + 4 pearl dots (the canonical
-// brand mark with full identity intact). "header" = stripped dual-diamond
-// for ultra-compact contexts where the pearl dots can't fit. See
-// brand-kit/USAGE.md for the hierarchy.
-export function SentrixLogo({
-  size = 32,
-  variant = "ceremonial",
-}: {
-  size?: number;
-  variant?: Variant;
-}) {
-  if (variant === "header") {
-    return (
-      <Image
-        src="/sentrix-mark-header.svg"
-        alt="Sentrix"
-        width={size}
-        height={size}
-        className="object-contain"
-        priority
-      />
-    );
-  }
+// Sentrix Chain header mark — diamond + 4 gold pearl dots, no ring,
+// no outer disc. Single canonical asset for nav, footer, breadcrumb
+// chrome. Sourced from brand-kit/svg/sentrix-mark-header.svg.
+// See brand-kit/USAGE.md for sizing + alignment guidance.
+export function SentrixLogo({ size = 32 }: { size?: number }) {
   return (
     <Image
-      src="/coin-ring-512.png"
+      src="/sentrix-mark-header.svg"
       alt="Sentrix"
       width={size}
       height={size}
