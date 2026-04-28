@@ -56,7 +56,7 @@ export function Footer() {
           <div className="space-y-3">
             <h3 className="font-mono text-[10px] tracking-[.22em] uppercase text-[var(--tx-d)]">Resources</h3>
             <nav className="flex flex-col gap-2 text-[12px]">
-              <a href="https://sentrix.sentriscloud.com" target="_blank" rel="noopener noreferrer" className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">
+              <a href="https://sentrixchain.com" target="_blank" rel="noopener noreferrer" className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">
                 {t("chain")}
               </a>
               <a href="https://github.com/sentrix-labs" target="_blank" rel="noopener noreferrer" className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">
