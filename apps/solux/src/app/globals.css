@@ -165,13 +165,20 @@ body {
    1px highlight on the top edge mimics polished metal. */
 .luxe-card {
   position: relative;
+  /* 3-stop diagonal gradient — top-left warm gold tint, mid bronze
+     surface, bottom-right deep amber shadow. Reads as a polished metal
+     plate, not a flat fill. Matches the layered depth Phantom and
+     Revolut Metal use on their hero cards. */
   background:
-    radial-gradient(circle at 0% 0%, rgba(244, 199, 94, 0.18) 0%, transparent 50%),
-    linear-gradient(180deg, #1d1d22 0%, #16161a 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+    radial-gradient(120% 80% at 0% 0%, rgba(255, 217, 122, 0.22) 0%, transparent 45%),
+    radial-gradient(140% 100% at 100% 100%, rgba(212, 169, 55, 0.15) 0%, transparent 55%),
+    linear-gradient(165deg, #221d15 0%, #16161a 50%, #110f12 100%);
+  border: 1px solid rgba(244, 199, 94, 0.16);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 16px 48px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    0 4px 12px rgba(244, 199, 94, 0.06);
 }
 
 /* Subtle grain texture overlay — pinch of noise that sells "real surface"
@@ -262,12 +269,42 @@ body {
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at 30% 25%, rgba(255, 217, 122, 0.22) 0%, rgba(244, 199, 94, 0.10) 60%, transparent 100%),
+    radial-gradient(circle at 30% 25%, rgba(255, 217, 122, 0.18) 0%, rgba(244, 199, 94, 0.06) 60%, transparent 100%),
     var(--sf);
-  border: 1px solid rgba(244, 199, 94, 0.22);
+  border: 1px solid rgba(244, 199, 94, 0.18);
   color: var(--gold);
-  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Primary action tile — full gold-fill disc with deep-text icon. Used
+   for the wallet's signature outbound action (Send). Cuts through the
+   uniform gold-disc grid as the obvious primary. */
+.action-disc.primary {
+  background:
+    radial-gradient(circle at 30% 25%, var(--gold-l) 0%, var(--gold) 60%, var(--gold-d) 100%);
+  border-color: var(--gold);
+  color: #3a2a0e;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 6px 16px rgba(244, 199, 94, 0.22);
+}
+
+/* Secondary — gold ring outline, no fill. For directly-paired actions
+   (Receive). Reads as inverse of primary. */
+.action-disc.outline {
+  background: transparent;
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Ghost — minimal chrome, just a hairline + dim icon. For tertiary
+   actions (Stake) where we don't want to compete with primary. */
+.action-disc.ghost {
+  background: var(--sf);
+  border-color: var(--brd);
+  color: var(--tx-2);
+  box-shadow: none;
 }
 .action-tile:not(:disabled):hover .action-disc {
   border-color: var(--gold);

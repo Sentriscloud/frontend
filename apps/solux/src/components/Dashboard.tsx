@@ -352,25 +352,33 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── Action row ─ 4 buttons, mono gold for brand cohesion ─── */}
+        {/* ── Action row — gold-intensity graded, not rainbow tinted ───
+            Send (primary, full gold-fill) > Receive (outline gold ring) >
+            Stake (ghost) > Swap (muted soon). Visual hierarchy without
+            color confetti — same brand-coding pattern Phantom uses on
+            its action row but adapted to a single accent. */}
         <div className="grid grid-cols-4 gap-2 mb-7 animate-fade-up delay-2">
           <ActionBtn
-            icon={<Send className="w-5 h-5" />}
+            variant="primary"
+            icon={<Send className="w-5 h-5" strokeWidth={2.25} />}
             label="Send"
             onClick={() => setView({ kind: 'send' })}
             disabled={watchOnly}
           />
           <ActionBtn
-            icon={<Download className="w-5 h-5" />}
+            variant="outline"
+            icon={<Download className="w-5 h-5" strokeWidth={2.25} />}
             label="Receive"
             onClick={() => setView({ kind: 'receive' })}
           />
           <ActionBtn
+            variant="ghost"
             icon={<TrendingUp className="w-5 h-5" />}
             label="Stake"
             onClick={() => setView({ kind: 'staking' })}
           />
           <ActionBtn
+            variant="ghost"
             icon={<ArrowLeftRight className="w-5 h-5" />}
             label="Swap"
             onClick={() => setComingSoon({
@@ -545,21 +553,25 @@ export default function Dashboard() {
 }
 
 function ActionBtn({
-  icon, label, onClick, disabled, soon,
+  icon, label, onClick, disabled, soon, variant = 'ghost',
 }: {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
   disabled?: boolean;
   soon?: boolean;
+  variant?: 'primary' | 'outline' | 'ghost';
 }) {
+  // primary = full gold-fill, outline = gold ring, ghost = dim chrome.
+  // soon overrides everything to muted.
+  const discClass = soon ? 'muted' : variant;
   return (
     <button
       onClick={disabled || soon ? undefined : onClick}
       disabled={disabled}
       className="action-tile"
     >
-      <span className={`action-disc ${soon ? 'muted' : ''}`}>
+      <span className={`action-disc ${discClass}`}>
         {icon}
         {soon && (
           <span
