@@ -168,12 +168,14 @@ export function Header() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 lg:px-6 h-16 flex items-center gap-4">
-        {/* Logo — header variant: solid mark + sans-serif wordmark, balanced cap-height. */}
-        <Link href="/" className="flex items-center gap-2 text-[var(--gold)] shrink-0">
-          <SentrixLogo size={24} />
-          <span className="hidden sm:inline text-[16px] font-semibold tracking-[-0.01em] text-[var(--gold)]">
-            Sentrix
-            <span className="ml-1.5 text-[11px] font-medium tracking-[0.02em] text-[var(--tx-d)]">Scan</span>
+        {/* Logo — pearl-dots ceremonial mark + SENTRIX serif wordmark with
+            "Scan" subtitle. Mark size ~1.5× wordmark cap-height keeps pearl
+            dots legible while items-center balances mark and text visually. */}
+        <Link href="/" className="flex items-center gap-2.5 text-[var(--gold)] shrink-0">
+          <SentrixLogo size={32} />
+          <span className="hidden sm:inline font-serif text-[18px] font-light tracking-[.04em] uppercase text-[var(--gold)] leading-none">
+            SENTRIX
+            <span className="ml-1.5 text-[10px] tracking-[.05em] text-[var(--tx-d)] font-sans normal-case">Scan</span>
           </span>
         </Link>
 

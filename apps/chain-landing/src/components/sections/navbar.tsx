@@ -59,11 +59,13 @@ export function Navbar() {
           ? "border-b border-[var(--brd)] bg-[var(--bk)]/90 shadow-[0_1px_20px_rgba(0,0,0,.3)]"
           : "border-b border-transparent bg-transparent shadow-none"
       }`}>
-        {/* Logo — header variant: solid mark + sans-serif wordmark, balanced cap-height. */}
-        <a href="#" className="flex items-center gap-2.5 text-[var(--gold)] shrink-0">
-          <SentrixLogo size={26} />
-          <span className="text-[18px] font-semibold tracking-[-0.01em] text-[var(--gold)]">
-            Sentrix
+        {/* Logo — pearl-dots ceremonial mark + SENTRIX serif wordmark.
+            Mark size ~1.5× wordmark cap-height keeps pearl dots legible
+            while the items-center flex visually balances the pair. */}
+        <a href="#" className="flex items-center gap-3 text-[var(--gold)] shrink-0">
+          <SentrixLogo size={38} />
+          <span className="font-serif text-[22px] font-light tracking-[.04em] uppercase text-[var(--gold)] leading-none">
+            SENTRIX
           </span>
         </a>
 
