@@ -314,6 +314,7 @@ body {
 .action-tile:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .action-disc {
+  position: relative;
   width: 52px;
   height: 52px;
   border-radius: 999px;

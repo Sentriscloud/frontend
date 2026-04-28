@@ -253,21 +253,26 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
         )}
 
         {/* Your delegations summary */}
-        <div className="luxe-card relative rounded-2xl p-5 mb-5 overflow-hidden animate-fade-up delay-2">
-          <div className="grid grid-cols-2 gap-4 relative">
+        <div className="luxe-card relative rounded-2xl p-6 mb-5 overflow-hidden animate-fade-up delay-2">
+          <div aria-hidden className="gold-orb" style={{ top: '-120px', right: '-100px', width: '180px', height: '180px' }} />
+          <div className="grid grid-cols-2 gap-6 relative">
             <div>
-              <div className="text-[12px] text-[var(--tx-m)] font-medium mb-1.5">Delegated</div>
-              <div className="text-[22px] font-bold text-[var(--tx)] tab-num leading-none">
-                {mask(sentriToSRX(totalDelegated))}
+              <div className="text-[12px] text-[var(--tx-m)] font-medium mb-2">Delegated</div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[28px] font-bold text-[var(--tx)] tab-num leading-none" style={{ letterSpacing: '-0.02em' }}>
+                  {mask(sentriToSRX(totalDelegated))}
+                </span>
+                <span className="text-[13px] font-bold text-[var(--gold)]">SRX</span>
               </div>
-              <div className="text-[12px] font-medium text-[var(--gold)] mt-1.5">SRX</div>
             </div>
-            <div>
-              <div className="text-[12px] text-[var(--tx-m)] font-medium mb-1.5">Unbonding</div>
-              <div className="text-[22px] font-bold text-[var(--tx)] tab-num leading-none">
-                {mask(sentriToSRX(totalUnbonding))}
+            <div className="border-l border-[var(--brd)] pl-6">
+              <div className="text-[12px] text-[var(--tx-m)] font-medium mb-2">Unbonding</div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[28px] font-bold text-[var(--tx)] tab-num leading-none" style={{ letterSpacing: '-0.02em' }}>
+                  {mask(sentriToSRX(totalUnbonding))}
+                </span>
+                <span className="text-[13px] font-bold text-[var(--tx-d)]">SRX</span>
               </div>
-              <div className="text-[12px] font-medium text-[var(--tx-d)] mt-1.5">SRX</div>
             </div>
           </div>
         </div>

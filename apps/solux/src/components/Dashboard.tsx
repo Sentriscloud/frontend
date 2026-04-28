@@ -277,48 +277,44 @@ export default function Dashboard() {
         <div className="luxe-card relative mb-6 rounded-[24px] overflow-hidden animate-fade-up delay-1">
           <div aria-hidden className="gold-orb" />
 
-          <div className="relative px-6 pt-6 pb-7">
+          <div className="relative px-6 pt-6 pb-6">
             {/* Top label row */}
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[12px] uppercase tracking-[0.12em] text-[var(--tx-m)] font-medium">Total balance</span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[13px] text-[var(--tx-m)] font-medium">Total balance</span>
               <button
                 onClick={() => setHideBalances(!hideBalances)}
                 aria-label={hideBalances ? 'Show balances' : 'Hide balances'}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--tx-m)] hover:text-[var(--tx)] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--tx-m)] hover:text-[var(--tx)] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
               >
                 {hideBalances
-                  ? <EyeOff className="w-3.5 h-3.5" />
-                  : <Eye className="w-3.5 h-3.5" />}
+                  ? <EyeOff className="w-4 h-4" />
+                  : <Eye className="w-4 h-4" />}
               </button>
             </div>
 
-            {/* Hero amount — Inter ExtraBold, large, confident, single solid gold */}
+            {/* Hero amount — bigger, dramatic, with SRX unit inline. No USD
+                placeholder ("≈ — USD" reads as broken until prices wire up). */}
             {loading || srxBalance === null ? (
-              <div className="mb-1">
-                <span className="skeleton h-[58px] w-52 block" />
+              <div className="mb-6">
+                <span className="skeleton h-[66px] w-56 block" />
               </div>
             ) : (
-              <div className="flex items-baseline gap-2 mb-1">
+              <div className="flex items-baseline gap-2.5 mb-6 flex-wrap">
                 <span
-                  className="text-[56px] tab-num leading-none text-[var(--tx)]"
-                  style={{ fontWeight: 800, letterSpacing: '-0.035em' }}
+                  className="text-[64px] tab-num leading-none text-[var(--tx)]"
+                  style={{ fontWeight: 800, letterSpacing: '-0.04em' }}
                 >
                   {hideBalances ? '••••••' : formatBalance(srxBalance)}
                 </span>
-                <span className="text-[18px] font-semibold text-[var(--gold)] tracking-wide">SRX</span>
+                <span className="text-[20px] font-bold text-[var(--gold)] tracking-tight">SRX</span>
               </div>
             )}
-
-            {/* Secondary fiat / unit line (placeholder for future price oracle) */}
-            <p className="text-[13px] text-[var(--tx-m)] mb-5">
-              ≈ {hideBalances ? '••••' : '—'} USD
-            </p>
 
             {/* Address + network in a single quiet row */}
             <div className="flex items-center justify-between">
               <button
                 onClick={copyAddress}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] font-mono bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.10)] text-[var(--tx-2)] hover:text-[var(--gold-l)] transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] font-mono bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.12)] text-[var(--tx-2)] hover:text-[var(--gold-l)] transition-colors"
               >
                 {copied
                   ? <Check className="w-3 h-3 text-[var(--gold)]" />
@@ -335,29 +331,25 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── Action row ─ 4 buttons w/ semantic tints ───── */}
+        {/* ── Action row ─ 4 buttons, mono gold for brand cohesion ─── */}
         <div className="grid grid-cols-4 gap-2 mb-7 animate-fade-up delay-2">
           <ActionBtn
-            tint="red"
             icon={<Send className="w-5 h-5" />}
             label="Send"
             onClick={() => setView({ kind: 'send' })}
             disabled={watchOnly}
           />
           <ActionBtn
-            tint="green"
             icon={<Download className="w-5 h-5" />}
             label="Receive"
             onClick={() => setView({ kind: 'receive' })}
           />
           <ActionBtn
-            tint="gold"
             icon={<TrendingUp className="w-5 h-5" />}
             label="Stake"
             onClick={() => setView({ kind: 'staking' })}
           />
           <ActionBtn
-            tint="violet"
             icon={<ArrowLeftRight className="w-5 h-5" />}
             label="Swap"
             onClick={() => setComingSoon({
@@ -377,9 +369,9 @@ export default function Dashboard() {
               {1 + tokens.length} {1 + tokens.length === 1 ? 'token' : 'tokens'}
             </span>
           </div>
-          <div className="space-y-1">
+          <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] divide-y divide-[var(--brd)] overflow-hidden">
             {/* SRX (always shown) */}
-            <div className="flex items-center justify-between px-2 py-3 rounded-xl">
+            <div className="flex items-center justify-between px-4 py-4">
               <div className="flex items-center gap-3">
                 <span className="token-mark">
                   <img src="/srx-mark.svg" alt="" className="w-6 h-6" />
@@ -389,16 +381,11 @@ export default function Dashboard() {
                   <p className="text-[12px] text-[var(--tx-m)]">Sentrix Chain</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-[15px] font-semibold tab-num text-[var(--tx)]">
-                  {loading || srxBalance === null
-                    ? '—'
-                    : hideBalances ? '••••' : formatBalance(srxBalance)}
-                </p>
-                <p className="text-[12px] text-[var(--tx-m)] tab-num">
-                  ≈ {hideBalances ? '••••' : '—'} USD
-                </p>
-              </div>
+              <p className="text-[15px] font-semibold tab-num text-[var(--tx)]">
+                {loading || srxBalance === null
+                  ? '—'
+                  : hideBalances ? '••••' : formatBalance(srxBalance)}
+              </p>
             </div>
 
             {/* SRC-20 tokens */}
@@ -407,8 +394,8 @@ export default function Dashboard() {
                 key={t.info.contract_address}
                 onClick={() => !watchOnly && setView({ kind: 'send-token', token: t.info })}
                 disabled={watchOnly}
-                className={`w-full flex items-center justify-between px-2 py-3 rounded-xl transition-colors text-left ${
-                  !watchOnly ? 'hover:bg-[rgba(255,255,255,0.04)]' : 'cursor-default'
+                className={`w-full flex items-center justify-between px-4 py-4 transition-colors text-left ${
+                  !watchOnly ? 'hover:bg-[rgba(255,255,255,0.03)]' : 'cursor-default'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -422,14 +409,9 @@ export default function Dashboard() {
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-[15px] font-semibold tab-num text-[var(--tx)]">
-                    {hideBalances ? '••••' : formatTokenBal(t.balance, t.info.decimals)}
-                  </p>
-                  <p className="text-[12px] text-[var(--tx-m)] tab-num">
-                    ≈ {hideBalances ? '••••' : '—'} USD
-                  </p>
-                </div>
+                <p className="text-[15px] font-semibold tab-num text-[var(--tx)]">
+                  {hideBalances ? '••••' : formatTokenBal(t.balance, t.info.decimals)}
+                </p>
               </button>
             ))}
           </div>
@@ -452,10 +434,13 @@ export default function Dashboard() {
           {loading ? (
             <p className="px-1 py-8 text-center text-[12px] text-[var(--tx-d)]">Loading…</p>
           ) : recent.length === 0 ? (
-            <div className="px-1 py-12 text-center">
-              <p className="text-[14px] text-[var(--tx-m)] font-medium">No transactions yet</p>
-              <p className="text-[12px] text-[var(--tx-d)] mt-1.5">
-                {watchOnly ? 'Watching for incoming activity' : 'Send or receive to get started'}
+            <div className="rounded-2xl bg-[var(--sf)] border border-[var(--brd)] py-10 text-center">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center bg-[var(--gold-bg)]">
+                <ArrowDownLeft className="w-5 h-5 text-[var(--gold)]" />
+              </div>
+              <p className="text-[14px] text-[var(--tx)] font-semibold">No activity yet</p>
+              <p className="text-[12px] text-[var(--tx-m)] mt-1">
+                {watchOnly ? 'Watching for incoming transactions' : 'Send or receive to get started'}
               </p>
             </div>
           ) : (
@@ -523,38 +508,34 @@ export default function Dashboard() {
 }
 
 function ActionBtn({
-  icon, label, onClick, disabled, soon, tint = 'gold',
+  icon, label, onClick, disabled, soon,
 }: {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
   disabled?: boolean;
   soon?: boolean;
-  tint?: 'gold' | 'green' | 'red' | 'violet';
 }) {
-  // Map tint → action-disc class. "gold" uses default disc styling; the
-  // others use the per-color tint variants defined in globals.css.
-  const tintClass =
-    tint === 'green'  ? 'tint-green'  :
-    tint === 'red'    ? 'tint-red'    :
-    tint === 'violet' ? 'tint-violet' : '';
   return (
     <button
       onClick={disabled || soon ? undefined : onClick}
       disabled={disabled}
       className="action-tile"
     >
-      <span className={`action-disc ${soon ? 'muted' : tintClass}`}>
+      <span className={`action-disc ${soon ? 'muted' : ''}`}>
         {icon}
+        {soon && (
+          <span
+            className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 rounded-full text-[8px] font-bold uppercase tracking-wider"
+            style={{ background: 'var(--bk)', color: 'var(--tx-d)', border: '1px solid var(--brd)' }}
+          >
+            Soon
+          </span>
+        )}
       </span>
       <span className={`text-[12px] font-semibold ${soon ? 'text-[var(--tx-d)]' : 'text-[var(--tx)]'}`}>
         {label}
       </span>
-      {soon && (
-        <span className="absolute -top-1 right-1 text-[9px] font-medium uppercase tracking-wider text-[var(--tx-d)]">
-          Soon
-        </span>
-      )}
     </button>
   );
 }
