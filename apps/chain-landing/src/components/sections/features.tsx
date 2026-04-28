@@ -19,17 +19,15 @@ const ICONS: Record<string, React.ReactNode> = {
   check: <><path d="M9 12l2 2 4-4" /><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></>,
 };
 
-const CARD_COLORS = [
-  { accent: "var(--cyan)", bg: "rgba(122,184,200,.06)", border: "rgba(122,184,200,.15)", glow: "rgba(122,184,200,.08)" },
-  { accent: "var(--purple)", bg: "rgba(167,139,250,.06)", border: "rgba(167,139,250,.15)", glow: "rgba(167,139,250,.08)" },
-  { accent: "var(--blue)", bg: "rgba(96,165,250,.06)", border: "rgba(96,165,250,.15)", glow: "rgba(96,165,250,.08)" },
-  { accent: "var(--teal)", bg: "rgba(45,212,191,.06)", border: "rgba(45,212,191,.15)", glow: "rgba(45,212,191,.08)" },
-  { accent: "var(--orange)", bg: "rgba(251,146,60,.06)", border: "rgba(251,146,60,.15)", glow: "rgba(251,146,60,.08)" },
-  { accent: "var(--green)", bg: "rgba(126,200,164,.06)", border: "rgba(126,200,164,.15)", glow: "rgba(126,200,164,.08)" },
-  { accent: "var(--pink)", bg: "rgba(244,114,182,.06)", border: "rgba(244,114,182,.15)", glow: "rgba(244,114,182,.08)" },
-  { accent: "var(--gold)", bg: "rgba(200,168,74,.06)", border: "rgba(200,168,74,.15)", glow: "rgba(200,168,74,.08)" },
-  { accent: "var(--lime)", bg: "rgba(163,230,53,.06)", border: "rgba(163,230,53,.15)", glow: "rgba(163,230,53,.08)" },
+// All feature cards share the gold accent — single-brand consistency.
+// Three intensity tiers cycle so adjacent cards stay differentiated
+// without crossing into rainbow territory.
+const GOLD_TIERS = [
+  { accent: "var(--gold)",   bg: "rgba(200,168,74,.06)", border: "rgba(200,168,74,.15)", glow: "rgba(200,168,74,.10)" },
+  { accent: "var(--gold-l)", bg: "rgba(240,208,128,.06)", border: "rgba(240,208,128,.15)", glow: "rgba(240,208,128,.10)" },
+  { accent: "var(--gold-d)", bg: "rgba(138,111,42,.08)",  border: "rgba(138,111,42,.20)",  glow: "rgba(138,111,42,.12)"  },
 ];
+const CARD_COLORS = GOLD_TIERS;
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.97 },

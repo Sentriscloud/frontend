@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { STATS } from "@/data/content";
 
+// Same gold-only palette discipline as Features / Tokens / Ecosystem.
 const STAT_COLORS = [
-  { accent: "var(--cyan)", glow: "rgba(122,184,200,.15)" },
-  { accent: "var(--gold)", glow: "rgba(200,168,74,.15)" },
-  { accent: "var(--purple)", glow: "rgba(167,139,250,.15)" },
-  { accent: "var(--orange)", glow: "rgba(251,146,60,.15)" },
+  { accent: "var(--gold)",   glow: "rgba(200,168,74,.15)" },
+  { accent: "var(--gold-l)", glow: "rgba(240,208,128,.15)" },
+  { accent: "var(--gold-d)", glow: "rgba(138,111,42,.15)" },
+  { accent: "var(--gold)",   glow: "rgba(200,168,74,.15)" },
 ];
 
 function Counter({ value, duration = 2 }: { value: string; duration?: number }) {

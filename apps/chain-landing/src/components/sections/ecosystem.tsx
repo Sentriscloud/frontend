@@ -5,12 +5,13 @@ import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
 import { ECOSYSTEM } from "@/data/content";
 
+// Single-accent gold across ecosystem cards. Three intensity tiers
+// cycle so adjacent products stay differentiable; previously rotated
+// blue/green/purple/orange/pink which read as multi-brand confetti.
 const ECO_COLORS = [
-  { accent: "var(--blue)", bg: "rgba(96,165,250,.05)", border: "rgba(96,165,250,.15)", glow: "rgba(96,165,250,.08)" },
-  { accent: "var(--green)", bg: "rgba(126,200,164,.05)", border: "rgba(126,200,164,.15)", glow: "rgba(126,200,164,.08)" },
-  { accent: "var(--purple)", bg: "rgba(167,139,250,.05)", border: "rgba(167,139,250,.15)", glow: "rgba(167,139,250,.08)" },
-  { accent: "var(--orange)", bg: "rgba(251,146,60,.05)", border: "rgba(251,146,60,.15)", glow: "rgba(251,146,60,.08)" },
-  { accent: "var(--pink)", bg: "rgba(244,114,182,.05)", border: "rgba(244,114,182,.15)", glow: "rgba(244,114,182,.08)" },
+  { accent: "var(--gold)",   bg: "rgba(200,168,74,.05)", border: "rgba(200,168,74,.15)", glow: "rgba(200,168,74,.08)" },
+  { accent: "var(--gold-l)", bg: "rgba(240,208,128,.05)", border: "rgba(240,208,128,.15)", glow: "rgba(240,208,128,.08)" },
+  { accent: "var(--gold-d)", bg: "rgba(138,111,42,.06)",  border: "rgba(138,111,42,.18)",  glow: "rgba(138,111,42,.10)"  },
 ];
 
 const cardVariants = {

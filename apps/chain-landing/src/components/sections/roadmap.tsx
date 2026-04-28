@@ -44,7 +44,7 @@ export function Roadmap() {
                 r.status === "done"
                   ? "text-[var(--green)] bg-[rgba(126,200,164,.06)] border border-[rgba(126,200,164,.12)]"
                   : r.status === "active"
-                  ? "text-[var(--cyan)] bg-[rgba(122,184,200,.06)] border border-[rgba(122,184,200,.12)]"
+                  ? "text-[var(--gold)] bg-[rgba(200,168,74,.06)] border border-[rgba(200,168,74,.12)]"
                   : "text-[var(--tx-d)] bg-[rgba(88,86,106,.06)] border border-[rgba(88,86,106,.12)]"
               }`}>
                 {r.statusText}

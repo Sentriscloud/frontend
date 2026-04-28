@@ -19,11 +19,14 @@ const BAR_COLORS = [
   { color: "var(--blue)", bg: "rgba(96,165,250,.05)", fill: "linear-gradient(90deg, rgba(96,165,250,.2), var(--blue))" },
 ];
 
+// Info cards under the allocation bars — gold-only. The bars themselves
+// keep categorical colors (data-viz convention for allocation segments)
+// since they distinguish premine destinations, not brand surfaces.
 const CARD_COLORS = [
-  { accent: "var(--orange)", bg: "rgba(251,146,60,.05)", border: "rgba(251,146,60,.15)" },
-  { accent: "var(--teal)", bg: "rgba(45,212,191,.05)", border: "rgba(45,212,191,.15)" },
-  { accent: "var(--pink)", bg: "rgba(244,114,182,.05)", border: "rgba(244,114,182,.15)" },
-  { accent: "var(--blue)", bg: "rgba(96,165,250,.05)", border: "rgba(96,165,250,.15)" },
+  { accent: "var(--gold)",   bg: "rgba(200,168,74,.05)", border: "rgba(200,168,74,.15)" },
+  { accent: "var(--gold-l)", bg: "rgba(240,208,128,.05)", border: "rgba(240,208,128,.15)" },
+  { accent: "var(--gold-d)", bg: "rgba(138,111,42,.06)",  border: "rgba(138,111,42,.18)"  },
+  { accent: "var(--gold)",   bg: "rgba(200,168,74,.05)", border: "rgba(200,168,74,.15)" },
 ];
 
 export function Tokenomics() {

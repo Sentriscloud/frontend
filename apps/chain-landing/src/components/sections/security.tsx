@@ -14,13 +14,14 @@ const ICONS: Record<string, React.ReactNode> = {
   shieldCheck: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></>,
 };
 
+// Same gold-only palette discipline. Cards rotate 3 intensity tiers.
 const SEC_COLORS = [
-  { accent: "var(--purple)", bg: "rgba(167,139,250,.05)", border: "rgba(167,139,250,.15)", glow: "rgba(167,139,250,.08)" },
-  { accent: "var(--blue)", bg: "rgba(96,165,250,.05)", border: "rgba(96,165,250,.15)", glow: "rgba(96,165,250,.08)" },
-  { accent: "var(--teal)", bg: "rgba(45,212,191,.05)", border: "rgba(45,212,191,.15)", glow: "rgba(45,212,191,.08)" },
-  { accent: "var(--cyan)", bg: "rgba(122,184,200,.05)", border: "rgba(122,184,200,.15)", glow: "rgba(122,184,200,.08)" },
-  { accent: "var(--green)", bg: "rgba(126,200,164,.05)", border: "rgba(126,200,164,.15)", glow: "rgba(126,200,164,.08)" },
-  { accent: "var(--orange)", bg: "rgba(251,146,60,.05)", border: "rgba(251,146,60,.15)", glow: "rgba(251,146,60,.08)" },
+  { accent: "var(--gold)",   bg: "rgba(200,168,74,.05)", border: "rgba(200,168,74,.15)", glow: "rgba(200,168,74,.08)" },
+  { accent: "var(--gold-l)", bg: "rgba(240,208,128,.05)", border: "rgba(240,208,128,.15)", glow: "rgba(240,208,128,.08)" },
+  { accent: "var(--gold-d)", bg: "rgba(138,111,42,.06)",  border: "rgba(138,111,42,.18)",  glow: "rgba(138,111,42,.10)"  },
+  { accent: "var(--gold)",   bg: "rgba(200,168,74,.05)", border: "rgba(200,168,74,.15)", glow: "rgba(200,168,74,.08)" },
+  { accent: "var(--gold-l)", bg: "rgba(240,208,128,.05)", border: "rgba(240,208,128,.15)", glow: "rgba(240,208,128,.08)" },
+  { accent: "var(--gold-d)", bg: "rgba(138,111,42,.06)",  border: "rgba(138,111,42,.18)",  glow: "rgba(138,111,42,.10)"  },
 ];
 
 const cardVariants = {
