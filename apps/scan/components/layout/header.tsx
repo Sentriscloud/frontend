@@ -13,6 +13,8 @@ import { useNetwork } from "@/lib/network-context";
 import { detectSearchType } from "@/lib/format";
 import { SentrixLogo } from "@/components/common/Logo";
 import { NetworkHealth } from "@/components/common/NetworkHealth";
+import { SearchAutocomplete } from "@/components/common/SearchAutocomplete";
+import { pushRecentSearch } from "@/lib/search-index";
 import { routing } from "@/i18n/routing";
 
 const LOCALE_LABELS: Record<string, { flag: string; label: string }> = {
@@ -125,10 +127,26 @@ export function Header() {
     const q = query.trim();
     if (!q) return;
     const type = detectSearchType(q);
-    if (type === "block") router.push(`/blocks/${q}`);
-    else if (type === "tx") router.push(`/tx/${q}`);
-    else if (type === "address") router.push(`/address/${q}`);
-    else router.push(`/search?q=${encodeURIComponent(q)}`);
+    let href: string;
+    let label: string;
+    if (type === "block") {
+      href = `/blocks/${q}`;
+      label = `Block ${q}`;
+    } else if (type === "tx") {
+      href = `/tx/${q}`;
+      label = `Tx ${q.slice(0, 10)}…`;
+    } else if (type === "address") {
+      href = `/address/${q}`;
+      label = `Address ${q.slice(0, 10)}…`;
+    } else {
+      // Symbol / moniker / unknown — punt to /search which now does the
+      // server-side symbol+moniker lookup and either redirects or shows a
+      // typed "no result" view.
+      href = `/search?q=${encodeURIComponent(q)}`;
+      label = q;
+    }
+    pushRecentSearch({ q, label, href });
+    router.push(href as "/blocks/${string}" | "/tx/${string}" | "/address/${string}" | "/search");
     setQuery("");
     setMobileOpen(false);
   }
@@ -250,7 +268,7 @@ export function Header() {
                 ⌘K
               </kbd>
             </div>
-            <SearchHint query={query} onPick={() => { setQuery(""); searchRef.current?.blur(); }} />
+            <SearchAutocomplete query={query} onPick={() => { setQuery(""); searchRef.current?.blur(); }} />
           </form>
         )}
         {isHome && <div className="flex-1 hidden lg:block" />}
@@ -393,52 +411,6 @@ export function Header() {
         </div>
       )}
     </header>
-  );
-}
-
-// Search autocomplete — single live hint under the input that shows what the current query
-// maps to (block height / tx / address / unknown). Pressing Enter submits the form; clicking
-// the hint navigates directly and clears the input.
-function SearchHint({ query, onPick }: { query: string; onPick: () => void }) {
-  const router = useRouter();
-  const q = query.trim();
-  if (!q) return null;
-
-  const hint = (() => {
-    if (/^\d+$/.test(q)) return { label: "Block", href: `/blocks/${q}`, icon: BlocksIcon };
-    if (/^0x[a-fA-F0-9]{64}$/.test(q)) return { label: "Transaction", href: `/tx/${q}`, icon: FileCode };
-    if (/^0x[a-fA-F0-9]{40}$/.test(q)) return { label: "Address", href: `/address/${q}`, icon: Users };
-    if (/^SRC20_[a-fA-F0-9]{40}$/i.test(q)) return { label: "Token", href: `/tokens/${q}`, icon: Coins };
-    return null;
-  })();
-
-  if (!hint) {
-    return (
-      <div className="absolute left-0 right-0 top-full mt-1 bg-[var(--bk)]/95 backdrop-blur-xl border border-[var(--brd)] rounded-lg shadow-[0_10px_40px_rgba(0,0,0,.3)] p-3 z-50 text-xs text-muted-foreground">
-        Press Enter to search across blocks, txs, and addresses.
-      </div>
-    );
-  }
-
-  const Icon = hint.icon;
-
-  return (
-    <button
-      type="button"
-      onMouseDown={(e) => {
-        e.preventDefault();
-        router.push(hint.href as "/blocks/${string}" | "/tx/${string}" | "/address/${string}" | "/tokens/${string}");
-        onPick();
-      }}
-      className="absolute left-0 right-0 top-full mt-1 bg-[var(--bk)]/95 backdrop-blur-xl border border-[var(--brd)] rounded-lg shadow-[0_10px_40px_rgba(0,0,0,.3)] p-3 z-50 flex items-center gap-3 hover:border-[var(--gold)]/40 transition-colors text-left"
-    >
-      <Icon className="h-4 w-4 text-[var(--gold)]" />
-      <div className="flex-1 min-w-0">
-        <div className="text-[10px] font-mono tracking-[.15em] uppercase text-[var(--tx-d)]">{hint.label}</div>
-        <div className="text-xs font-mono truncate">{q}</div>
-      </div>
-      <kbd className="text-[10px] font-mono text-[var(--tx-d)] border border-[var(--brd)] rounded px-1.5 py-0.5">↵</kbd>
-    </button>
   );
 }
 
