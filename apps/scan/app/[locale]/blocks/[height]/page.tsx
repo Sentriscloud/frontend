@@ -79,10 +79,10 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
       />
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="transactions">
-            Transactions <span className="ml-1 text-muted-foreground">({txCount})</span>
+            Transactions <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.5em] px-1 h-4 rounded text-[10px] font-mono leading-none bg-muted text-muted-foreground">{txCount}</span>
           </TabsTrigger>
         </TabsList>
 

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Split a formatted value (e.g. "14.2K", "3.1s", "12 tx", "14,109 SRX") into a number part
@@ -19,6 +20,13 @@ interface StatCardProps {
   title?: string;
   /** Optional time-series (recent window) rendered as a micro sparkline below the number. */
   spark?: number[];
+  /** % delta over the spark window (e.g. +5.2 → green up arrow, -1.4 → red down arrow). When
+   *  derived from `spark` the caller computes `(last - first) / first * 100` and passes the
+   *  raw percent. We render the sign + arrow + colour so the operator doesn't have to. */
+  delta?: number | null;
+  /** Tiny secondary line under the value — Solana-foundation-style "92.1% circulating" pattern.
+   *  Use it to teach what the headline number means ("of 315M SRX cap", "1 of 4 active", etc). */
+  subline?: ReactNode;
 }
 
 // DECISION: Sparkline uses a Catmull-Rom-like smoothing so the line reads as a gentle curve
@@ -70,8 +78,10 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 // Playfair serif number, tinted em-unit, animated gold corner lines on hover. One primitive
 // so every page (home + detail summary rows) reads from the same vocabulary instead of
 // shadcn's grey `text-lg font-semibold font-mono`.
-export function StatCard({ label, value, loading = false, accent = "var(--gold)", title, spark }: StatCardProps) {
+export function StatCard({ label, value, loading = false, accent = "var(--gold)", title, spark, delta, subline }: StatCardProps) {
   const { num, unit } = splitValue(value);
+  const showDelta = delta != null && Number.isFinite(delta) && Math.abs(delta) >= 0.05;
+  const deltaUp = (delta ?? 0) >= 0;
 
   return (
     <div className="card-lift group relative overflow-hidden bg-[color-mix(in_oklab,var(--card)_60%,transparent)] hover:bg-[var(--card)] border border-[var(--brd)] rounded-2xl px-5 py-6 md:px-6 md:py-7 min-w-0">
@@ -85,9 +95,25 @@ export function StatCard({ label, value, loading = false, accent = "var(--gold)"
         style={{ background: `linear-gradient(to bottom, ${accent}, transparent)` }}
       />
 
-      {/* Eyebrow label ABOVE the number — landing-style editorial hierarchy */}
-      <div className="font-mono text-[10px] text-[var(--tx-d)] tracking-[.22em] uppercase group-hover:text-[var(--tx-m)] transition-colors truncate mb-3">
-        {label}
+      {/* Eyebrow label ABOVE the number — landing-style editorial hierarchy.
+          Delta chip docks to the right of the eyebrow (top-right of the card)
+          so it doesn't crowd the headline number — Etherscan/Solscan pattern. */}
+      <div className="flex items-center justify-between gap-2 mb-3 min-w-0">
+        <div className="font-mono text-[10px] text-[var(--tx-d)] tracking-[.22em] uppercase group-hover:text-[var(--tx-m)] transition-colors truncate flex-1">
+          {label}
+        </div>
+        {showDelta && !loading && (
+          <span
+            className="inline-flex items-center gap-0.5 font-mono text-[10px] tracking-wide rounded-md px-1.5 py-0.5"
+            style={{
+              color: deltaUp ? "var(--green)" : "var(--red)",
+              background: `color-mix(in oklab, ${deltaUp ? "var(--green)" : "var(--red)"} 10%, transparent)`,
+            }}
+          >
+            {deltaUp ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+            {deltaUp ? "+" : ""}{(delta as number).toFixed(1)}%
+          </span>
+        )}
       </div>
 
       <div
@@ -111,6 +137,11 @@ export function StatCard({ label, value, loading = false, accent = "var(--gold)"
           </>
         )}
       </div>
+      {subline && !loading && (
+        <div className="mt-1.5 text-[11px] font-mono text-[var(--tx-d)] truncate">
+          {subline}
+        </div>
+      )}
       {spark && spark.length > 1 && !loading && (
         <div className="mt-3 -mx-1">
           <Sparkline data={spark} color={accent} />

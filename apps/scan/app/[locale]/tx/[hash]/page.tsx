@@ -139,7 +139,7 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
       />
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
           <TabsTrigger value="internal">Internal</TabsTrigger>
