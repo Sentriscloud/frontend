@@ -32,6 +32,9 @@ export function Footer() {
               <Link href="/validators" prefetch={false} className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">Validators</Link>
               <Link href="/tokens" prefetch={false} className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">Tokens</Link>
               <Link href="/leaderboard/account/holders" prefetch={false} className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">Leaderboard</Link>
+              <Link href="/supply" prefetch={false} className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">Supply</Link>
+              <Link href="/epochs" prefetch={false} className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">Epochs</Link>
+              <Link href="/forks" prefetch={false} className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">Fork History</Link>
             </nav>
           </div>
 
