@@ -84,7 +84,7 @@ export const FEATURES = [
   {
     icon: "clock",
     title: "SRC-20 Token Standard",
-    desc: "ERC-20 compatible: transfer, approve, transferFrom, allowance, mint, burn. Deploy via the EVM (revm 37) or the native runtime. Gas paid in SRX — every operation burns the native coin.",
+    desc: "ERC-20 compatible: transfer, approve, transferFrom, allowance, mint, burn. Deploy via the EVM (revm 38) or the native runtime. Gas paid in SRX — every operation burns the native coin.",
   },
   {
     icon: "flame",
@@ -240,7 +240,7 @@ export const ROADMAP = [
     status: "active" as const,
     statusText: "● Live on Mainnet (v2.1.47)",
     title: "DPoS + BFT + EVM",
-    items: ["Delegated Proof of Stake with reward distribution v2", "BFT finality (2/3+1 votes) wired and active", "EVM via revm 37 — eth_sendRawTransaction live", "ClaimRewards op + treasury escrow, 4 validators in production"],
+    items: ["Delegated Proof of Stake with reward distribution v2", "BFT finality (2/3+1 votes) wired and active", "EVM via revm 38 — eth_sendRawTransaction live", "ClaimRewards op + treasury escrow, 4 validators in production"],
   },
   {
     phase: "Frontier",
