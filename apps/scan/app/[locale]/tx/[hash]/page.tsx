@@ -15,6 +15,9 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { RailBadge, classifyRail } from "@/components/common/RailBadge";
 import { FinalityBadge, classifyFinality } from "@/components/common/FinalityBadge";
 import { TxLogs } from "@/components/common/TxLogs";
+import { TokenTransfers } from "@/components/common/TokenTransfers";
+import { DecodedInputData } from "@/components/common/DecodedInputData";
+import { InternalTxsPlaceholder } from "@/components/common/InternalTxsPlaceholder";
 import { Copyable } from "@/components/common/Copyable";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useNetwork } from "@/lib/network-context";
@@ -139,6 +142,7 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
+          <TabsTrigger value="internal">Internal</TabsTrigger>
           <TabsTrigger value="input">Input Data</TabsTrigger>
           <TabsTrigger value="raw">Raw JSON</TabsTrigger>
         </TabsList>
@@ -207,6 +211,10 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
             </CardContent>
           </Card>
 
+          {/* Token Transfers — Etherscan-style summary panel above Logs.
+              Renders nothing if no ERC-20 Transfer events were emitted. */}
+          <TokenTransfers network={network} txHash={tx.id} />
+
           {/* Execution — render only when EVM-ish metadata is present */}
           {(tx.gas_used !== undefined || tx.gas_price !== undefined || tx.nonce !== undefined || tx.tx_type || tx.contract_address) && (
             <Card>
@@ -243,11 +251,18 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
           <TxLogs network={network} txHash={tx.id} />
         </TabsContent>
 
+        <TabsContent value="internal">
+          <InternalTxsPlaceholder />
+        </TabsContent>
+
         <TabsContent value="input">
           <Card>
             <CardContent className="p-6">
               {tx.input_data && tx.input_data !== "0x" ? (
                 <div className="space-y-3">
+                  {tx.to && tx.input_data.length >= 10 && (
+                    <DecodedInputData network={network} to={tx.to} inputData={tx.input_data} />
+                  )}
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">Raw input data</p>
                     <Copyable text={tx.input_data} bare />

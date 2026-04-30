@@ -24,6 +24,8 @@ import { SourcifyBadge } from "@/components/common/SourcifyBadge";
 import { SourcifyViewer } from "@/components/common/SourcifyViewer";
 import { ReadContract } from "@/components/common/ReadContract";
 import { WriteContract } from "@/components/common/WriteContract";
+import { ApprovalsTab } from "@/components/common/ApprovalsTab";
+import { InternalTxsPlaceholder } from "@/components/common/InternalTxsPlaceholder";
 import { downloadCsv } from "@/lib/csv";
 import { toMillis } from "@/lib/format";
 
@@ -103,7 +105,9 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
       <Tabs defaultValue="history" className="space-y-4">
         <TabsList>
           <TabsTrigger value="history">Transactions</TabsTrigger>
+          <TabsTrigger value="internal">Internal</TabsTrigger>
           <TabsTrigger value="tokens">Tokens</TabsTrigger>
+          <TabsTrigger value="approvals">Approvals</TabsTrigger>
           <TabsTrigger value="events">Events</TabsTrigger>
           <TabsTrigger value="contract">Contract</TabsTrigger>
         </TabsList>
@@ -223,6 +227,18 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
                   hint="Inbound and outbound transfers will appear here once recorded on chain."
                 />
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="internal">
+          <InternalTxsPlaceholder />
+        </TabsContent>
+
+        <TabsContent value="approvals">
+          <Card>
+            <CardContent className="p-0">
+              <ApprovalsTab network={network} address={addr} />
             </CardContent>
           </Card>
         </TabsContent>
