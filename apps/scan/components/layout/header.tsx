@@ -138,11 +138,12 @@ export function Header() {
     setLangOpen(false);
   }
 
-  const NAV_LINKS: { href: "/blocks" | "/validators" | "/tokens" | "/" | "/analytics"; key: keyof IntlMessages["nav"] }[] = [
+  const NAV_LINKS: { href: "/blocks" | "/validators" | "/tokens" | "/" | "/analytics" | "/supply"; key: keyof IntlMessages["nav"] }[] = [
     { href: "/", key: "home" },
     { href: "/blocks", key: "blocks" },
     { href: "/validators", key: "validators" },
     { href: "/tokens", key: "tokens" },
+    { href: "/supply", key: "supply" },
     { href: "/analytics", key: "analytics" },
   ];
 

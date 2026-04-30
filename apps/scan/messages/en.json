@@ -6,7 +6,8 @@
     "tokens": "Tokens",
     "leaderboard": "Leaderboard",
     "analytics": "Analytics",
-    "search_placeholder": "Search by block / tx / address..."
+    "search_placeholder": "Search by block / tx / address...",
+    "supply": "Supply"
   },
   "leaderboard": {
     "eyebrow": "Accounts",

@@ -6,7 +6,8 @@
     "tokens": "Token",
     "leaderboard": "Leaderboard",
     "analytics": "Analitik",
-    "search_placeholder": "Cari berdasarkan blok / tx / alamat..."
+    "search_placeholder": "Cari berdasarkan blok / tx / alamat...",
+    "supply": "Suplai"
   },
   "leaderboard": {
     "eyebrow": "Akun",
