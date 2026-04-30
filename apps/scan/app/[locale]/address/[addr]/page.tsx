@@ -26,6 +26,7 @@ import { ReadContract } from "@/components/common/ReadContract";
 import { WriteContract } from "@/components/common/WriteContract";
 import { ApprovalsTab } from "@/components/common/ApprovalsTab";
 import { InternalTxsPlaceholder } from "@/components/common/InternalTxsPlaceholder";
+import { CountBadge } from "@/components/common/CountBadge";
 import { downloadCsv } from "@/lib/csv";
 import { toMillis } from "@/lib/format";
 
@@ -101,14 +102,22 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
         />
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — `line` variant for the gold-underline active state that
+          reads as "tool, not card." Counts inline so the user can scan
+          where the data is (Etherscan/Blockscout pattern). */}
       <Tabs defaultValue="history" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="history">Transactions</TabsTrigger>
+        <TabsList variant="line">
+          <TabsTrigger value="history">
+            Transactions <CountBadge count={history?.length ?? null} />
+          </TabsTrigger>
           <TabsTrigger value="internal">Internal</TabsTrigger>
-          <TabsTrigger value="tokens">Tokens</TabsTrigger>
+          <TabsTrigger value="tokens">
+            Tokens <CountBadge count={tokens?.length ?? null} />
+          </TabsTrigger>
           <TabsTrigger value="approvals">Approvals</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
+          <TabsTrigger value="events">
+            Events <CountBadge count={eventLogs?.length ?? null} />
+          </TabsTrigger>
           <TabsTrigger value="contract">Contract</TabsTrigger>
         </TabsList>
 

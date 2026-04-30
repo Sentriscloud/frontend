@@ -83,7 +83,7 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
       </div>
 
       <Tabs defaultValue="transfers" className="space-y-4">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="transfers">Transfers</TabsTrigger>
           <TabsTrigger value="holders">Holders</TabsTrigger>
           <TabsTrigger value="info">Info</TabsTrigger>

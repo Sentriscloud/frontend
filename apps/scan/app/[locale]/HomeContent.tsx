@@ -15,6 +15,7 @@ import { BlockHeight } from "@/components/common/BlockHeight";
 import { Timestamp } from "@/components/common/Timestamp";
 import { StatCard } from "@/components/common/StatCard";
 import { LiveTicker } from "@/components/home/LiveTicker";
+import { FreshnessChip } from "@/components/common/FreshnessChip";
 import { useNetwork } from "@/lib/network-context";
 import { useStats, useBlocks, useTransactions, useChainPerformance, useMempool, useCurrentEpoch, useChainStatus } from "@/lib/hooks";
 import { useLatestBlock } from "@/lib/ws";
@@ -105,6 +106,27 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
   const tpsSpark = performance?.points?.map((p) => p.tps) ?? [];
   const blockTimeSpark = performance?.points?.map((p) => p.block_time_sec) ?? [];
   const txCountSpark = performance?.points?.map((p) => p.tx_count) ?? [];
+
+  // Etherscan-style delta % computed across the spark window (first vs last
+  // point). We only show it when the window has enough data and the chain
+  // isn't paused — otherwise the percent is meaningless or misleading.
+  function pctDelta(arr: number[]): number | null {
+    if (arr.length < 2) return null;
+    const a = arr[0];
+    const b = arr[arr.length - 1];
+    if (!Number.isFinite(a) || !Number.isFinite(b) || a === 0) return null;
+    return ((b - a) / Math.abs(a)) * 100;
+  }
+  const tpsDelta = pctDelta(tpsSpark);
+  const blockTimeDelta = pctDelta(blockTimeSpark);
+  const txCountDelta = pctDelta(txCountSpark);
+
+  // Freshness — every successful poll bumps `lastFetched`. The chip ticks
+  // every second, so users can watch the data age.
+  const [lastFetched, setLastFetched] = useState<number | null>(null);
+  useEffect(() => {
+    if (stats || blocks || txs) setLastFetched(Date.now());
+  }, [stats, blocks, txs]);
 
   // DECISION: Date.now() drifts between SSR and CSR; computing this on the server triggers
   // React hydration error #418. Idle detection runs client-side only — null on first render,
@@ -198,22 +220,34 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
           Array.from({ length: 8 }).map((_, i) => <StatCardSkeleton key={i} />)
         ) : (
           <>
-            {/* Row 1 — live performance */}
+            {/* Row 1 — live performance. Delta % is computed over the
+                selected perf range so the chip changes meaning when the user
+                flips between 1m/5m/15m/1h/24h. */}
             <StatCard
               label={t("stats.tps")}
               value={liveTps}
               loading={!blocks}
               accent={tpsAccent}
               spark={isChainIdle ? undefined : tpsSpark}
+              delta={isChainIdle ? null : tpsDelta}
+              subline={isChainIdle ? undefined : `vs ${perfRange} window`}
               title={isChainIdle && latestBlockAgeSec !== null ? `Chain paused — last block ${latestBlockAgeSec < 3600 ? `${Math.round(latestBlockAgeSec / 60)}m` : `${(latestBlockAgeSec / 3600).toFixed(1)}h`} ago` : undefined}
             />
-            <StatCard label={t("stats.block_height")} value={liveHeight > 0 ? liveHeight.toLocaleString() : "—"} loading={statsLoading && liveHeight === 0} accent="var(--gold)" />
+            <StatCard
+              label={t("stats.block_height")}
+              value={liveHeight > 0 ? liveHeight.toLocaleString() : "—"}
+              loading={statsLoading && liveHeight === 0}
+              accent="var(--gold)"
+              subline={stats ? `Epoch #${epoch?.epoch_number ?? "—"}` : undefined}
+            />
             <StatCard
               label={t("stats.block_time")}
               value={isChainIdle ? "—" : blockTime}
               loading={!blocks}
               accent={isChainIdle ? "var(--orange)" : "var(--gold-l)"}
               spark={isChainIdle ? undefined : blockTimeSpark}
+              delta={isChainIdle ? null : blockTimeDelta != null ? -blockTimeDelta : null}
+              subline="target 1s"
               title={isChainIdle ? "Chain paused — block time stale" : undefined}
             />
             <StatCard
@@ -222,18 +256,39 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               loading={statsLoading && !blocks}
               accent="var(--gold-d)"
               spark={isChainIdle ? undefined : txCountSpark}
+              delta={isChainIdle ? null : txCountDelta}
             />
-            {/* Row 2 — chain state */}
-            <StatCard label={t("stats.active_validators")} value={stats ? String(stats.active_validators) : "—"} loading={statsLoading} accent="var(--gold)" />
-            <StatCard label={t("stats.tokens_deployed")} value={stats ? String(stats.deployed_tokens) : "—"} loading={statsLoading} accent="var(--gold-l)" />
+            {/* Row 2 — chain state. Sublines teach what each number means
+                (Solana foundation explorer pattern: "92.1% is circulating"). */}
+            <StatCard
+              label={t("stats.active_validators")}
+              value={stats ? String(stats.active_validators) : "—"}
+              loading={statsLoading}
+              accent="var(--gold)"
+              subline="active in BFT set"
+            />
+            <StatCard
+              label={t("stats.tokens_deployed")}
+              value={stats ? String(stats.deployed_tokens) : "—"}
+              loading={statsLoading}
+              accent="var(--gold-l)"
+              subline="SRC-20 contracts"
+            />
             <StatCard
               label={t("stats.total_burned")}
               value={stats ? formatBurnedSrx(stats.total_burned_srx) : "—"}
               title={stats ? `${stats.total_burned_srx.toLocaleString(undefined, { maximumFractionDigits: 8 })} SRX` : undefined}
               loading={statsLoading}
               accent="var(--red)"
+              subline="50% of every fee"
             />
-            <StatCard label={t("stats.block_reward")} value={stats ? `${stats.next_block_reward_srx} SRX` : "—"} loading={statsLoading} accent="var(--gold)" />
+            <StatCard
+              label={t("stats.block_reward")}
+              value={stats ? `${stats.next_block_reward_srx} SRX` : "—"}
+              loading={statsLoading}
+              accent="var(--gold)"
+              subline="claimable via StakingOp"
+            />
           </>
         )}
       </div>
@@ -303,12 +358,15 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
         {/* Latest Blocks */}
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <CardTitle className="text-base flex items-center gap-2">
                 <Blocks className="h-4 w-4 text-primary" />
                 {t("latest_blocks")}
               </CardTitle>
-              <Link href="/blocks" className="text-xs text-primary hover:underline">{t("view_all")}</Link>
+              <div className="flex items-center gap-3">
+                <FreshnessChip updatedAt={lastFetched} />
+                <Link href="/blocks" className="text-xs text-primary hover:underline">{t("view_all")}</Link>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-0 p-0">
@@ -356,12 +414,15 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
         {/* Latest Transactions */}
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <CardTitle className="text-base flex items-center gap-2">
                 <ArrowUpDown className="h-4 w-4 text-primary" />
                 {t("latest_transactions")}
               </CardTitle>
-              <Link href="/blocks" className="text-xs text-primary hover:underline">{t("view_all")}</Link>
+              <div className="flex items-center gap-3">
+                <FreshnessChip updatedAt={lastFetched} />
+                <Link href="/blocks" className="text-xs text-primary hover:underline">{t("view_all")}</Link>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-0 p-0">
