@@ -84,7 +84,8 @@ export default function TokensPage() {
             </div>
           ) : paged.length > 0 ? (
             <>
-              <div className="overflow-x-auto">
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-xs text-muted-foreground bg-muted/30">
@@ -129,6 +130,34 @@ export default function TokensPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile stacked-card layout */}
+              <ul className="md:hidden divide-y divide-border/60">
+                {paged.map((token, i) => (
+                  <li key={token.contract_address} className="px-4 py-3 hover:bg-muted/40 transition-colors">
+                    <Link href={`/tokens/${token.contract_address}`} className="flex items-center gap-3">
+                      <span className="h-9 w-9 rounded-full bg-gradient-to-br from-[var(--gold)] to-[var(--gold-d)] flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                        {token.symbol.slice(0, 2).toUpperCase()}
+                      </span>
+                      <div className="flex-1 min-w-0 space-y-0.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium text-sm text-primary truncate">{token.name}</span>
+                          <span className="text-[10px] font-mono text-muted-foreground">#{(page - 1) * PAGE_SIZE + i + 1}</span>
+                        </div>
+                        <div className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">
+                          <span className="font-mono uppercase">{token.symbol}</span>
+                          <span className="text-[var(--tx-d)]">·</span>
+                          <span>supply <span className="font-mono text-[var(--tx-m)]">{formatNumber(token.total_supply)}</span></span>
+                          {token.holders !== undefined && (
+                            <span>· {token.holders} holders</span>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+
               {sorted.length > PAGE_SIZE && (
                 <div className="border-t border-border">
                   <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />

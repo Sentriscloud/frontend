@@ -74,7 +74,8 @@ export default function BlocksPage() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Desktop table — hidden on mobile in favour of stacked cards below */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-xs text-muted-foreground bg-muted/30">
@@ -131,10 +132,43 @@ export default function BlocksPage() {
                     ))}
                   </tbody>
                 </table>
-                {(!blocks || blocks.length === 0) && (
-                  <div className="p-8 text-center text-sm text-muted-foreground">{t("no_blocks")}</div>
-                )}
               </div>
+
+              {/* Mobile stacked-card layout */}
+              <ul className="md:hidden divide-y divide-border/60">
+                {paged.map((block) => {
+                  const n = block.tx_count ?? block.transactions?.length ?? 0;
+                  return (
+                    <li key={block.index} className="px-4 py-3 hover:bg-muted/40 transition-colors space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <BlockHeight height={block.index} className="text-sm" />
+                        <span className={`inline-flex items-center justify-center min-w-7 h-6 px-2 rounded-md text-[11px] font-mono tabular-nums ${
+                          n === 0
+                            ? "text-[var(--tx-d)]"
+                            : n === 1
+                              ? "bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/20"
+                              : "bg-[var(--green)]/10 text-[var(--green)] border border-[var(--green)]/20"
+                        }`}>
+                          {n} tx
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">
+                        <Timestamp timestamp={block.timestamp} />
+                        <span className="text-[var(--tx-d)]">·</span>
+                        {block.validator_name ? (
+                          <Address address={block.validator} label={block.validator_name} muted showCopy={false} className="text-[11px]" />
+                        ) : (
+                          <Address address={block.validator} muted showCopy={false} className="text-[11px]" />
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {(!blocks || blocks.length === 0) && (
+                <div className="p-8 text-center text-sm text-muted-foreground">{t("no_blocks")}</div>
+              )}
               {totalPages > 1 && (
                 <div className="border-t border-border">
                   <Pagination
