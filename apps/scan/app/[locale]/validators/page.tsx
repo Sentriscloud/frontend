@@ -141,7 +141,8 @@ export default function ValidatorsPage() {
             </div>
           ) : paged.length > 0 ? (
             <>
-              <div className="overflow-x-auto">
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-xs text-muted-foreground bg-muted/30">
@@ -195,6 +196,44 @@ export default function ValidatorsPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile stacked-card layout */}
+              <ul className="md:hidden divide-y divide-border/60">
+                {paged.map((v, i) => (
+                  <li key={v.address} className="px-4 py-3 hover:bg-muted/40 transition-colors space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-[11px] font-mono text-muted-foreground">#{(page - 1) * PAGE_SIZE + i + 1}</span>
+                        {v.name ? (
+                          <Link href={`/validators/${v.address}`} className="font-medium text-sm text-primary hover:underline truncate">
+                            {v.name}
+                          </Link>
+                        ) : (
+                          <Address address={v.address} muted className="text-xs" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <StatusIcon status={v.status} />
+                        <span className="text-[10px] capitalize text-muted-foreground">{v.status || "active"}</span>
+                      </div>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground flex items-center gap-3 flex-wrap">
+                      <span>blocks <span className="font-mono text-[var(--tx-m)]">{v.blocks_produced !== undefined ? formatNumber(v.blocks_produced) : "-"}</span></span>
+                      {v.stake !== undefined && (
+                        <span>stake <span className="font-mono text-[var(--tx-m)]">{formatNumber(v.stake)} SRX</span></span>
+                      )}
+                      {v.commission !== undefined && (
+                        <span>fee <span className="font-mono text-[var(--tx-m)]">{v.commission}%</span></span>
+                      )}
+                      {v.uptime !== undefined && (
+                        <span>up <span className={`font-mono ${v.uptime >= 99 ? "text-green-500" : v.uptime >= 95 ? "text-yellow-500" : "text-red-500"}`}>{v.uptime.toFixed(1)}%</span></span>
+                      )}
+                    </div>
+                    {v.name && <Address address={v.address} muted className="text-[10px]" />}
+                  </li>
+                ))}
+              </ul>
+
               {filtered.length > PAGE_SIZE && (
                 <div className="border-t border-border">
                   <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
