@@ -347,14 +347,77 @@ export async function fetchAccountHistory(
   }));
 }
 
+// Backend returns DPoS-shape validators since Voyager activation
+// (2026-04-25). Field names differ from the older PoA-era shape this
+// scan UI was first written against: total_stake (sentri) instead of
+// stake (SRX), commission_rate (basis points) instead of commission
+// (%), blocks_signed instead of blocks_produced, pending_rewards
+// (sentri) instead of rewards_earned. Translate here so every page
+// further down the tree reads canonical, already-converted numbers
+// and stops dropping into the "PoA validator" fallback layout.
+type RawValidator = ValidatorData & {
+  total_stake?: number;
+  self_stake?: number;
+  total_delegated?: number;
+  commission_rate?: number;
+  blocks_signed?: number;
+  blocks_missed?: number;
+  pending_rewards?: number;
+  is_jailed?: boolean;
+  is_tombstoned?: boolean;
+};
+
 export async function fetchValidators(network: NetworkId) {
-  const res = await apiFetch<{ validators: ValidatorData[] } | ValidatorData[]>(network, "/validators");
+  const res = await apiFetch<{ validators: RawValidator[] } | RawValidator[]>(network, "/validators");
   if (!res) return [];
   const list = Array.isArray(res) ? res : (res.validators ?? []);
-  return list.map((v) => ({
-    ...v,
-    status: v.status ?? (v.is_active === false ? "inactive" : "active"),
-  }));
+  return list.map((v) => {
+    const stake =
+      v.stake !== undefined
+        ? v.stake
+        : v.total_stake !== undefined
+          ? toSrx(v.total_stake)
+          : undefined;
+    const commission =
+      v.commission !== undefined
+        ? v.commission
+        : v.commission_rate !== undefined
+          ? v.commission_rate / 100
+          : undefined;
+    const blocksProduced = v.blocks_produced ?? v.blocks_signed;
+    const totalSignable =
+      v.blocks_signed !== undefined && v.blocks_missed !== undefined
+        ? v.blocks_signed + v.blocks_missed
+        : undefined;
+    const uptime =
+      v.uptime !== undefined
+        ? v.uptime
+        : totalSignable && totalSignable > 0
+          ? ((v.blocks_signed ?? 0) / totalSignable) * 100
+          : undefined;
+    const rewards =
+      v.rewards_earned !== undefined
+        ? v.rewards_earned
+        : v.pending_rewards !== undefined
+          ? toSrx(v.pending_rewards)
+          : undefined;
+    const status =
+      v.status ??
+      (v.is_jailed
+        ? "jailed"
+        : v.is_active === false
+          ? "inactive"
+          : "active");
+    return {
+      ...v,
+      stake,
+      commission,
+      uptime,
+      blocks_produced: blocksProduced,
+      rewards_earned: rewards,
+      status,
+    };
+  });
 }
 
 export async function fetchTokens(network: NetworkId) {

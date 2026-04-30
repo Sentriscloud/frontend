@@ -18,7 +18,7 @@ import { LiveTicker } from "@/components/home/LiveTicker";
 import { FreshnessChip } from "@/components/common/FreshnessChip";
 import { useNetwork } from "@/lib/network-context";
 import { useStats, useBlocks, useTransactions, useChainPerformance, useMempool, useCurrentEpoch, useChainStatus } from "@/lib/hooks";
-import { useLatestBlock } from "@/lib/ws";
+import { useLatestBlock, useLatestFinalized } from "@/lib/ws";
 import { formatNumber, formatSRX, toMillis } from "@/lib/format";
 import { detectSearchType } from "@/lib/format";
 import type { ChainPerformance, HomeBundle } from "@/lib/api";
@@ -79,10 +79,13 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
   const { data: stats, loading: statsLoading, refetch: refetchStats } = useStats(network, initial.stats);
   const { data: blocks, loading: blocksLoading, refetch: refetchBlocks } = useBlocks(network, 10, initial.blocks);
   const { data: txs, loading: txsLoading, refetch: refetchTxs } = useTransactions(network, 10, initial.txs);
-  // Live block height via WebSocket (newHeads). Each new head also
-  // nudges the REST hooks to refetch immediately so the list views
+  // Live block height via WebSocket. newHeads (proposed) + sentrix_finalized
+  // (BFT-supermajority sealed) — both fed in so the UI can show the proposer
+  // tip + the canonical finality cursor as separate values. Each new head
+  // also nudges the REST hooks to refetch immediately so the list views
   // stay fresh without waiting for the 5s poll cycle.
   const wsHead = useLatestBlock(network);
+  const wsFinalized = useLatestFinalized(network);
   useEffect(() => {
     if (!wsHead) return;
     refetchStats();
@@ -90,6 +93,13 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
     refetchTxs();
   }, [wsHead?.number, refetchStats, refetchBlocks, refetchTxs]);
   const liveHeight = Math.max(stats?.height ?? 0, wsHead?.number ?? 0);
+  // Lag between proposer tip and BFT-finalized cursor. 0 = chain is finalising
+  // every block as it lands; > 0 = BFT is several blocks behind production
+  // (typical during round-skip livelock recovery).
+  const finalityLag =
+    wsFinalized != null && liveHeight > 0
+      ? Math.max(0, liveHeight - wsFinalized)
+      : null;
   const { data: performance, loading: perfLoading } = useChainPerformance(network, perfRange, initial.performance);
   const { data: mempool } = useMempool(network, initial.mempool);
   const { data: epoch } = useCurrentEpoch(network, initial.epoch);
@@ -238,7 +248,18 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               value={liveHeight > 0 ? liveHeight.toLocaleString() : "—"}
               loading={statsLoading && liveHeight === 0}
               accent="var(--gold)"
-              subline={stats ? `Epoch #${epoch?.epoch_number ?? "—"}` : undefined}
+              subline={
+                finalityLag === 0
+                  ? "BFT-finalized · live"
+                  : finalityLag != null
+                    ? `BFT-finalized · −${finalityLag}`
+                    : (stats ? `Epoch #${epoch?.epoch_number ?? "—"}` : undefined)
+              }
+              title={
+                wsFinalized != null
+                  ? `Tip ${liveHeight.toLocaleString()} / Finalized ${wsFinalized.toLocaleString()}`
+                  : undefined
+              }
             />
             <StatCard
               label={t("stats.block_time")}

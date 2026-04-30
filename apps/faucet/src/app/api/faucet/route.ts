@@ -35,7 +35,12 @@ function getConfig(network: Network): NetworkConfig {
   if (network === 'mainnet') {
     return {
       chainId: 7119,
-      restUrl: process.env.MAINNET_REST_URL ?? 'http://127.0.0.1:8545',
+      // Default to the public RPC over HTTPS — that endpoint is Caddy-LB'd
+      // across all 4 mainnet validators and stays reachable from any host.
+      // The previous loopback default (http://127.0.0.1:8545) only worked
+      // when faucet ran ON a validator host, and silently broke from any
+      // other deploy target with confusing "Failed to fetch nonce" errors.
+      restUrl: process.env.MAINNET_REST_URL ?? 'https://rpc.sentrixchain.com',
       faucetAddress: process.env.MAINNET_FAUCET_ADDRESS,
       faucetPrivateKey: process.env.MAINNET_FAUCET_PRIVATE_KEY,
       amountSrx: parseFloat(process.env.MAINNET_DRIP_AMOUNT_SRX ?? '0.01'),
@@ -45,7 +50,10 @@ function getConfig(network: Network): NetworkConfig {
   }
   return {
     chainId: 7120,
-    restUrl: process.env.TESTNET_REST_URL ?? 'http://127.0.0.1:9545',
+    // Same rationale as the mainnet default above. Testnet container exposes
+    // 9545 on loopback when faucet co-locates; for any other deploy target,
+    // fall through to the public testnet RPC.
+    restUrl: process.env.TESTNET_REST_URL ?? 'https://testnet-rpc.sentrixchain.com',
     faucetAddress: process.env.TESTNET_FAUCET_ADDRESS,
     faucetPrivateKey: process.env.TESTNET_FAUCET_PRIVATE_KEY,
     amountSrx: parseFloat(process.env.TESTNET_DRIP_AMOUNT_SRX ?? '10'),

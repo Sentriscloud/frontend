@@ -213,9 +213,9 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
             </CardContent>
           </Card>
 
-          {/* Consensus — only render on PoW chains that actually populate nonce/difficulty.
-              Sentrix is PoA so the backend omits both; hide the whole card instead of
-              rendering two empty rows. */}
+          {/* Consensus — only render on PoW-style chains that actually populate
+              nonce/difficulty. Sentrix is DPoS+BFT (no PoW), so the backend
+              omits both; hide the whole card instead of rendering two empty rows. */}
           {(block.nonce != null && String(block.nonce) !== "" && block.nonce !== 0) ||
            (block.difficulty != null && String(block.difficulty) !== "" && block.difficulty !== 0) ? (
             <Card>

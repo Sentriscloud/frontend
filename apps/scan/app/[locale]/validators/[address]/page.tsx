@@ -113,8 +113,10 @@ export default function ValidatorDetailPage({ params }: { params: Promise<{ addr
         }
       />
 
-      {/* Stats — on PoA, only Blocks Produced is populated. Render a single hero card in that
-          case instead of 4 cards full of em-dashes. Post-Voyager DPoS will re-fill the grid. */}
+      {/* Stats — Voyager DPoS populates Stake/Commission/Uptime/Blocks. The
+          fallback below is for the bootstrap window before Voyager activated
+          (or for any future chain state where DPoS fields are unset); it
+          shouldn't render in normal mainnet operation. */}
       {validator.stake !== undefined || validator.commission !== undefined || validator.uptime !== undefined ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard
@@ -152,9 +154,9 @@ export default function ValidatorDetailPage({ params }: { params: Promise<{ addr
           />
           <StatCard
             label="Consensus"
-            value="PoA"
+            value="DPoS+BFT"
             accent="var(--gold)"
-            title="Proof of Authority — stake/commission/uptime are DPoS-only fields."
+            title="Stake/commission/uptime are unavailable for this validator (likely a bootstrap-era record before Voyager activation, or a node that never registered DPoS state)."
           />
           <StatCard
             label="Status"
@@ -174,8 +176,9 @@ export default function ValidatorDetailPage({ params }: { params: Promise<{ addr
         </TabsList>
 
         <TabsContent value="overview">
-          {/* Only render rows that actually have data. Stake/Commission/Uptime/Rewards are
-              DPoS fields the PoA backend omits — listing them as '-' just reads as broken. */}
+          {/* Only render rows that actually have data. Stake/Commission/Uptime/Rewards
+              are populated by the DPoS backend; listing them as '-' for a record
+              that legitimately has no DPoS state would just read as broken. */}
           <Card>
             <CardContent className="px-6 py-0">
               <InfoRow label="Name" value={validator.name ?? "-"} />
@@ -392,8 +395,9 @@ function RewardsCalculator({ blockRewardSrx, blocksProduced, totalBlocks, commis
   const dailyValidatorRevenue = dailyChainMint * validatorShare;
 
   // After commission: delegator share = (1 - commission) × their pro-rata of the pool.
-  // For a PoA chain without DPoS, stake has no yield — show a clear notice and keep the
-  // calculator visible for post-Voyager preview.
+  // If the validator record is missing stake/commission, the calculator can't
+  // compute a yield for it — show a clear notice and keep the form visible
+  // so a delegator can still preview hypothetical numbers.
   const delegatorShare = (1 - commission / 100);
 
   // We don't know the delegator pool size here; assume user is a sole delegator for a rough
