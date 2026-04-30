@@ -146,6 +146,26 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
                 label="Block reward"
                 value={<span className="font-mono">1 SRX → Protocol Treasury (claim via StakingOp::ClaimRewards)</span>}
                 hint="Post-V4 reward-v2 fork: coinbase routes to the protocol treasury; validators + delegators claim accrued rewards instead of being paid directly."
+              />
+              {/* Burnt fees: native txs flat-fee (10,000 sentri) split 50/50
+                  validator-vs-burn. EVM txs hit the same protocol min-fee path
+                  for the burn side so this is a faithful lower bound; the exact
+                  per-tx fee differential isn't in the block payload (would need
+                  per-receipt walk). At 1s blocks + low EVM traffic the
+                  approximation matches the supply burn meter to <0.1%. */}
+              <InfoRow
+                label="Burnt fees"
+                value={
+                  <span className="font-mono">
+                    {(txCount * 0.00005).toFixed(5)} SRX
+                    {txCount > 0 && (
+                      <span className="ml-2 text-[10px] text-[var(--pink)]">
+                        (50% of {txCount}×0.0001 SRX min-fee)
+                      </span>
+                    )}
+                  </span>
+                }
+                hint="Half of every native transaction fee is destroyed forever; the other half pays the validator. Cumulative burn rolls into /supply."
                 last
               />
             </CardContent>

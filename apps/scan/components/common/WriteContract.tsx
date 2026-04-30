@@ -66,7 +66,39 @@ export function WriteContract({ network, address }: WriteContractProps) {
     );
   }
 
-  if (status === "none" || !abi) return null;
+  if (status === "none" || !abi) {
+    return (
+      <DetailCard
+        title={
+          <span className="inline-flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-muted-foreground" /> Write Contract
+          </span>
+        }
+      >
+        <div className="py-3 px-1 space-y-2 text-sm">
+          <p className="text-muted-foreground">
+            Write functions need a verified ABI to encode the call. This contract isn&apos;t verified
+            on Sourcify yet.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Deployer can verify by submitting source + metadata to{" "}
+            <a
+              href="https://verify.sentrixchain.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--gold)] hover:underline"
+            >
+              verify.sentrixchain.com
+            </a>
+            {" "}— or via foundry:{" "}
+            <code className="font-mono text-xs px-1 py-0.5 rounded bg-muted">
+              forge verify-contract --verifier sourcify --verifier-url https://verify.sentrixchain.com {address} ContractName
+            </code>
+          </p>
+        </div>
+      </DetailCard>
+    );
+  }
 
   const writeFns = abi.filter(
     (e): e is AbiFunction =>

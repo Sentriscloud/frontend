@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { decodeEventLog, type Abi, type Log as ViemLog } from "viem";
-import { FileCode, Loader2 } from "lucide-react";
+import { FileCode } from "lucide-react";
 import { createClient, type NetworkId } from "@/lib/chain";
+import { resolveAbi } from "@/lib/abi-resolver";
 import { Address } from "./Address";
 import { Copyable } from "./Copyable";
 import { DetailCard } from "./DetailCard";
@@ -28,43 +29,6 @@ interface DecodedLog {
     | { eventName: string | undefined; args: Record<string, unknown> | unknown[] }
     | null;
   abiSource: "verified" | "none";
-}
-
-const SOURCIFY_URL = "https://verify.sentrixchain.com";
-const CHAIN_FOR_NETWORK: Record<NetworkId, string> = { mainnet: "7119", testnet: "7120" };
-
-// In-memory ABI cache keyed by `${network}:${address}` so the page doesn't
-// re-fetch the same Sourcify metadata for every log emitted by the same
-// contract within one tx (very common — a single token transfer typically
-// emits 1-3 logs from the same contract).
-const abiCache = new Map<string, Abi | null>();
-
-async function resolveAbi(network: NetworkId, address: string): Promise<Abi | null> {
-  const key = `${network}:${address.toLowerCase()}`;
-  if (abiCache.has(key)) return abiCache.get(key) ?? null;
-  try {
-    const res = await fetch(
-      `${SOURCIFY_URL}/files/any/${CHAIN_FOR_NETWORK[network]}/${address}`,
-      { signal: AbortSignal.timeout(5000) },
-    );
-    if (!res.ok) {
-      abiCache.set(key, null);
-      return null;
-    }
-    const body = await res.json();
-    const meta = body?.files?.find?.((f: { name: string }) => f.name?.toLowerCase() === "metadata.json");
-    if (!meta?.content) {
-      abiCache.set(key, null);
-      return null;
-    }
-    const parsed = JSON.parse(meta.content);
-    const abi = Array.isArray(parsed?.output?.abi) ? (parsed.output.abi as Abi) : null;
-    abiCache.set(key, abi);
-    return abi;
-  } catch {
-    abiCache.set(key, null);
-    return null;
-  }
 }
 
 export function TxLogs({ network, txHash }: TxLogsProps) {
@@ -243,11 +207,3 @@ function stringify(v: unknown): string {
   return JSON.stringify(v, (_, x) => (typeof x === "bigint" ? x.toString() : x));
 }
 
-// Cache shape for next session that wants to invalidate.
-export function _resetTxLogsAbiCache() {
-  abiCache.clear();
-}
-
-// `useEffect` is intentionally unused if a caller imports a non-hook path —
-// suppress lint by re-export.
-export const _internal = { resolveAbi };
