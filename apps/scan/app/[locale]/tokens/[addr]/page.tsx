@@ -15,6 +15,8 @@ import { fetchToken, type TokenData } from "@/lib/api";
 import { useTokenHolders, useTokenTrades } from "@/lib/hooks";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatCard } from "@/components/common/StatCard";
+import { SourcifyViewer } from "@/components/common/SourcifyViewer";
+import { ReadContract } from "@/components/common/ReadContract";
 import { formatNumber } from "@/lib/format";
 
 export default function TokenDetailPage({ params }: { params: Promise<{ addr: string }> }) {
@@ -195,7 +197,7 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
           </Card>
         </TabsContent>
 
-        <TabsContent value="contract">
+        <TabsContent value="contract" className="space-y-4">
           <Card>
             <CardContent className="p-6 space-y-4">
               <div>
@@ -212,10 +214,10 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
                   <Copyable text={token.owner} bare />
                 </div>
               </div>
-              {/* TODO(api): needs GET /accounts/{address}/code — contract bytecode pending */}
-              <p className="text-xs text-muted-foreground text-center pt-2">Contract bytecode viewer coming soon.</p>
             </CardContent>
           </Card>
+          <SourcifyViewer network={network} address={token.contract_address} />
+          <ReadContract network={network} address={token.contract_address} />
         </TabsContent>
       </Tabs>
     </div>
