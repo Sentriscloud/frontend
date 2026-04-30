@@ -21,6 +21,7 @@ import { Link } from "@/i18n/navigation";
 import { useAddressLabel, toneForKind } from "@/lib/labels";
 import { AddressNote } from "@/components/common/AddressNote";
 import { SourcifyBadge } from "@/components/common/SourcifyBadge";
+import { SourcifyViewer } from "@/components/common/SourcifyViewer";
 import { downloadCsv } from "@/lib/csv";
 import { toMillis } from "@/lib/format";
 
@@ -102,6 +103,7 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
           <TabsTrigger value="history">Transactions</TabsTrigger>
           <TabsTrigger value="tokens">Tokens</TabsTrigger>
           <TabsTrigger value="events">Events</TabsTrigger>
+          <TabsTrigger value="contract">Contract</TabsTrigger>
         </TabsList>
 
         <TabsContent value="history">
@@ -320,6 +322,10 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="contract">
+          <SourcifyViewer network={network} address={addr} />
         </TabsContent>
       </Tabs>
     </div>
