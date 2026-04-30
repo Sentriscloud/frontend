@@ -12,10 +12,12 @@ import { BlockHeight } from "@/components/common/BlockHeight";
 import { Timestamp } from "@/components/common/Timestamp";
 import { InfoRow } from "@/components/common/InfoRow";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { RailBadge, classifyRail } from "@/components/common/RailBadge";
+import { FinalityBadge, classifyFinality } from "@/components/common/FinalityBadge";
 import { Copyable } from "@/components/common/Copyable";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useNetwork } from "@/lib/network-context";
-import { useTransaction } from "@/lib/hooks";
+import { useTransaction, useStats } from "@/lib/hooks";
 
 export default function TxDetailPage({ params }: { params: Promise<{ hash: string }> }) {
   const { hash } = use(params);
@@ -42,6 +44,9 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
   const { data: tx, loading } = useTransaction(network, hash);
   const otherNetwork = network === "mainnet" ? "testnet" : "mainnet";
   const { data: txOther } = useTransaction(otherNetwork, hash);
+  // BFT finality is "did a descendant block land?" — we only need the chain
+  // tip to compute that; we already have everything else from the tx body.
+  const { data: stats } = useStats(network);
 
   if (loading) {
     return (
@@ -95,6 +100,23 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
 
   const success = tx.status !== "failed";
 
+  // Rail classification doubles as a tx-shape teaching aid — Sentrix has
+  // four rails (EVM / Native / SRC-20 / Staking) and "user sent SRX, why
+  // does the receipt look weird" tickets stem from not knowing which rail
+  // they're staring at. classifyRail() centralises the heuristic so the
+  // tx detail page agrees with the address page agrees with the home feed.
+  const rail = classifyRail({ to_address: tx.to, data: tx.input_data ?? null });
+  // BFT finality: pending if no block, finalized if a descendant block has
+  // already landed, justified if we're at the tip with the precommit set.
+  // We don't have the per-block "hasJustification" field on the tx detail
+  // body shape, so assume true for any block past the Voyager activation
+  // height — every Voyager block ships one.
+  const finality = classifyFinality({
+    txBlockHeight: tx.block_height ?? null,
+    latestHeight: stats?.height ?? null,
+    hasJustification: tx.block_height != null && tx.block_height >= 579_047,
+  });
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
       <PageHeader
@@ -103,7 +125,13 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
         title={`${tx.id.slice(0, 10)}...${tx.id.slice(-6)}`}
         mono
         tone="muted"
-        actions={<StatusBadge status={success ? "success" : "failed"} size="md" />}
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            <RailBadge rail={rail} size="md" />
+            <FinalityBadge finality={finality} size="md" />
+            <StatusBadge status={success ? "success" : "failed"} size="md" />
+          </div>
+        }
       />
 
       <Tabs defaultValue="overview" className="space-y-4">
@@ -127,7 +155,26 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
                   </span>
                 }
               />
-              <InfoRow label="Status" value={<StatusBadge status={success ? "success" : "failed"} />} />
+              <InfoRow
+                label="Status"
+                value={
+                  <span className="inline-flex items-center gap-2 flex-wrap">
+                    <StatusBadge status={success ? "success" : "failed"} />
+                    <FinalityBadge finality={finality} />
+                  </span>
+                }
+                hint="BFT finality: Pending → Included → Justified (2/3+1 stake-weighted precommits) → Finalized (descendant block also justified)."
+              />
+              <InfoRow
+                label="Rail"
+                value={<RailBadge rail={rail} />}
+                hint={
+                  rail === "evm" ? "EVM transaction — runs in the embedded revm interpreter."
+                    : rail === "token" ? "SRC-20 token operation — applied at the protocol level, not via revm."
+                    : rail === "stake" ? "Native staking operation — applied directly against the stake registry."
+                    : "Native SRX transfer between two accounts."
+                }
+              />
               {tx.block_height !== undefined && (
                 <InfoRow label="Block" value={<BlockHeight height={tx.block_height} prefix="#" />} />
               )}
