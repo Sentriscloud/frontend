@@ -11,7 +11,6 @@ import { Timestamp } from "@/components/common/Timestamp";
 import { Copyable } from "@/components/common/Copyable";
 import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
-import { StatCard } from "@/components/common/StatCard";
 import { EmptyState } from "@/components/common/EmptyState";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { useNetwork } from "@/lib/network-context";
@@ -27,6 +26,7 @@ import { WriteContract } from "@/components/common/WriteContract";
 import { ApprovalsTab } from "@/components/common/ApprovalsTab";
 import { InternalTxsPlaceholder } from "@/components/common/InternalTxsPlaceholder";
 import { CountBadge } from "@/components/common/CountBadge";
+import { WatchButton } from "@/components/common/WatchButton";
 import { downloadCsv } from "@/lib/csv";
 import { toMillis } from "@/lib/format";
 
@@ -67,6 +67,7 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
             })()}
             {/* Sourcify verification badge — only meaningful for contract addresses, but harmless on EOAs (returns "unverified" badge) */}
             <SourcifyBadge network={network} address={addr} />
+            <WatchButton address={addr} kind="address" label={label?.name} />
           </div>
         }
       />
@@ -80,27 +81,43 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
       {/* Private note (localStorage, stays in-browser) */}
       <AddressNote address={addr} />
 
-      {/* Balance card */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <StatCard
-          label="Balance"
-          value={account ? formatSRX(account.balance) : "0 SRX"}
-          loading={accountLoading}
-          accent="var(--gold)"
-        />
-        <StatCard
-          label="Nonce"
-          value={account ? String(account.nonce) : "0"}
-          loading={accountLoading}
-          accent="var(--cyan)"
-        />
-        <StatCard
-          label="Tx Count"
-          value={account?.tx_count !== undefined ? formatNumber(account.tx_count) : "—"}
-          loading={accountLoading}
-          accent="var(--purple)"
-        />
-      </div>
+      {/* Balance hero — DeBank-inspired single big number with the secondary
+          metrics demoted to one chip-row beneath. Reads as "this is the
+          headline; nonce/tx-count are footnotes" instead of three equal
+          stat cards competing for attention. */}
+      <Card>
+        <CardContent className="p-6 md:p-8">
+          <div className="space-y-2 min-w-0">
+            <p className="font-mono text-[10px] tracking-[.22em] uppercase text-[var(--tx-d)]">Balance</p>
+            <div className="font-serif font-light leading-none truncate" style={{ fontSize: "clamp(34px, 5.5vw, 64px)" }}>
+              {accountLoading && !account ? (
+                <Skeleton className="h-12 w-64" />
+              ) : (
+                <>
+                  <span>{account ? formatSRX(account.balance).replace(/\s*SRX$/i, "") : "0"}</span>
+                  <em className="not-italic ml-2 text-[0.45em] text-[var(--gold)]">SRX</em>
+                </>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 pt-3 text-[11px] font-mono uppercase tracking-[.1em] text-[var(--tx-d)]">
+              <span>
+                Nonce <span className="text-[var(--tx-m)] normal-case font-mono">{account ? account.nonce : "—"}</span>
+              </span>
+              <span>
+                Tx count <span className="text-[var(--tx-m)] normal-case font-mono">{account?.tx_count !== undefined ? formatNumber(account.tx_count) : "—"}</span>
+              </span>
+              {tokens && tokens.length > 0 && (
+                <span>
+                  Tokens <span className="text-[var(--tx-m)] normal-case font-mono">{tokens.length}</span>
+                </span>
+              )}
+              <span className="ml-auto text-[10px] tracking-[.15em]">
+                Network: <span className="text-[var(--gold)] uppercase">{network}</span>
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tabs — `line` variant for the gold-underline active state that
           reads as "tool, not card." Counts inline so the user can scan
@@ -173,13 +190,16 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
                 </div>
               ) : filtered.length > 0 ? (
                 <>
-                  <div className="overflow-x-auto">
+                  {/* Desktop table — single column hidden md+ on narrow viewports.
+                      Below md the same data renders as a stacked card list so
+                      mobile users don't have to scroll-pan a 6-column table. */}
+                  <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border text-left text-xs text-muted-foreground bg-muted/30">
                           <th className="px-3 py-2.5 font-medium w-7"></th>
                           <th className="px-4 py-2.5 font-medium">Tx Hash</th>
-                          <th className="px-4 py-2.5 font-medium hidden md:table-cell">Age</th>
+                          <th className="px-4 py-2.5 font-medium">Age</th>
                           <th className="px-4 py-2.5 font-medium">Peer</th>
                           <th className="px-4 py-2.5 font-medium hidden lg:table-cell">Status</th>
                           <th className="px-4 py-2.5 font-medium text-right">Amount</th>
@@ -191,13 +211,12 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
                           const isSelf = isIn && tx.from.toLowerCase() === addr.toLowerCase();
                           const dirIcon = isSelf ? <ArrowLeftRight className="h-3.5 w-3.5 text-muted-foreground" /> : isIn ? <ArrowDown className="h-3.5 w-3.5 text-green-500" /> : <ArrowUp className="h-3.5 w-3.5 text-red-500" />;
                           const success = tx.status !== "failed";
-                          // "Peer" = the counterparty. If we sent, show `to`. If we received, show `from`.
                           const peerAddr = isSelf ? tx.from : isIn ? tx.from : tx.to;
                           return (
                             <tr key={tx.id}>
                               <td className="px-3 py-2.5">{dirIcon}</td>
                               <td className="px-4 py-2.5"><TxHash hash={tx.id} /></td>
-                              <td className="px-4 py-2.5 text-muted-foreground text-xs hidden md:table-cell">
+                              <td className="px-4 py-2.5 text-muted-foreground text-xs">
                                 <Timestamp timestamp={tx.timestamp} />
                               </td>
                               <td className="px-4 py-2.5">
@@ -221,6 +240,51 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Mobile stacked-card layout (<md). Each tx becomes a card
+                      with the direction icon + amount on the right and tx-hash
+                      + peer + age stacked on the left. Avoids horizontal scroll
+                      which feels broken on phones. */}
+                  <ul className="md:hidden divide-y divide-border/60">
+                    {filtered.map((tx) => {
+                      const isIn = tx.to.toLowerCase() === addr.toLowerCase();
+                      const isSelf = isIn && tx.from.toLowerCase() === addr.toLowerCase();
+                      const success = tx.status !== "failed";
+                      const peerAddr = isSelf ? tx.from : isIn ? tx.from : tx.to;
+                      return (
+                        <li key={tx.id} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/40 transition-colors">
+                          <div className={`mt-0.5 h-7 w-7 rounded-md flex items-center justify-center shrink-0 ${
+                            isSelf ? "bg-muted" : isIn ? "bg-green-500/10" : "bg-red-500/10"
+                          }`}>
+                            {isSelf ? <ArrowLeftRight className="h-3.5 w-3.5 text-muted-foreground" /> : isIn ? <ArrowDown className="h-3.5 w-3.5 text-green-500" /> : <ArrowUp className="h-3.5 w-3.5 text-red-500" />}
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <TxHash hash={tx.id} />
+                              {!success && <StatusBadge status="failed" size="sm" />}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">
+                              <span>{isIn ? "from" : "to"}</span>
+                              {peerAddr === "COINBASE" || peerAddr.toUpperCase() === "COINBASE" ? (
+                                <span className="font-mono text-[var(--tx-d)]">COINBASE</span>
+                              ) : (
+                                <Address address={peerAddr} showCopy={false} className="text-[11px]" />
+                              )}
+                              <span className="text-[var(--tx-d)]">·</span>
+                              <Timestamp timestamp={tx.timestamp} />
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className={`font-mono text-sm ${isSelf ? "text-muted-foreground" : isIn ? "text-green-500" : "text-red-500"}`}>
+                              {isSelf ? "" : isIn ? "+" : "-"}{tx.amount}
+                            </span>
+                            <div className="text-[10px] text-muted-foreground font-mono">SRX</div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
                   <div className="border-t border-border">
                     <Pagination
                       page={page}
