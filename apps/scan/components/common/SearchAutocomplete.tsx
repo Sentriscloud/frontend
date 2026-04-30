@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Blocks as BlocksIcon, Coins, FileCode, History, Shield, Users, X } from "lucide-react";
 import { useNetwork } from "@/lib/network-context";
@@ -50,11 +50,20 @@ function iconForHit(kind: SearchHit["kind"]): typeof BlocksIcon {
   return kind === "token" ? Coins : Shield;
 }
 
+type Filter = "all" | "token" | "validator";
+
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "token", label: "Tokens" },
+  { id: "validator", label: "Validators" },
+];
+
 export function SearchAutocomplete({ query, onPick }: Props) {
   const router = useRouter();
   const { network } = useNetwork();
   const { match } = useSearchIndex(network);
   const [recents, setRecents] = useState<RecentEntry[]>([]);
+  const [filter, setFilter] = useState<Filter>("all");
 
   // Refresh recents whenever the dropdown opens or storage changes — gives
   // the user the up-to-date list across tabs without complicated bus wiring.
@@ -70,6 +79,11 @@ export function SearchAutocomplete({ query, onPick }: Props) {
   }, [query]);
 
   const q = query.trim();
+  const allHits = match(q, 12);
+  const hits = useMemo(
+    () => (filter === "all" ? allHits : allHits.filter((h) => h.kind === filter)).slice(0, 6),
+    [allHits, filter],
+  );
 
   function handlePick(href: string, label: string, raw: string) {
     pushRecentSearch({ q: raw, label, href });
@@ -127,7 +141,6 @@ export function SearchAutocomplete({ query, onPick }: Props) {
 
   // ── typed state: combine raw-detection + index match ──────────────
   const raw = detectRaw(q);
-  const hits = match(q);
 
   // Nothing matched at all
   if (!raw && hits.length === 0) {
@@ -138,8 +151,47 @@ export function SearchAutocomplete({ query, onPick }: Props) {
     );
   }
 
+  // Pre-compute counts so the chips can show how many hits each filter would
+  // surface — Blockscout 2.0 / Etherscan-search-dropdown pattern.
+  const counts = {
+    all: allHits.length,
+    token: allHits.filter((h) => h.kind === "token").length,
+    validator: allHits.filter((h) => h.kind === "validator").length,
+  };
+
   return (
     <div className="absolute left-0 right-0 top-full mt-1 bg-[var(--bk)]/95 backdrop-blur-xl border border-[var(--brd)] rounded-lg shadow-[0_10px_40px_rgba(0,0,0,.3)] z-50 overflow-hidden">
+      {/* Type-chip filter row — only render when index has hits to filter,
+          otherwise it'd just be three "All / Tokens / Validators" pills with
+          0/0/0 counts. */}
+      {allHits.length > 0 && (
+        <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[var(--brd)]">
+          {FILTERS.map((f) => {
+            const c = counts[f.id];
+            const active = filter === f.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setFilter(f.id);
+                }}
+                className={`text-[10px] font-mono tracking-[.1em] uppercase px-2 py-1 rounded-full border transition-colors ${
+                  active
+                    ? "border-[var(--gold)]/40 text-[var(--gold)] bg-[color-mix(in_oklab,var(--gold)_8%,transparent)]"
+                    : "border-[var(--brd)] text-[var(--tx-d)] hover:text-[var(--gold)] hover:border-[var(--gold)]/30"
+                }`}
+              >
+                {f.label}
+                {c > 0 && (
+                  <span className="ml-1 text-[var(--tx-d)] font-mono normal-case">{c}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
       {raw && (
         <button
           type="button"

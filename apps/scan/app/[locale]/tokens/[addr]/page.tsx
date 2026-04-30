@@ -15,6 +15,7 @@ import { fetchToken, type TokenData } from "@/lib/api";
 import { useTokenHolders, useTokenTrades } from "@/lib/hooks";
 import { PageHeader } from "@/components/common/PageHeader";
 import { WatchButton } from "@/components/common/WatchButton";
+import { HoldersDonut } from "@/components/common/HoldersDonut";
 import { StatCard } from "@/components/common/StatCard";
 import { SourcifyViewer } from "@/components/common/SourcifyViewer";
 import { ReadContract } from "@/components/common/ReadContract";
@@ -135,7 +136,12 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
           </Card>
         </TabsContent>
 
-        <TabsContent value="holders">
+        <TabsContent value="holders" className="space-y-4">
+          {/* Distribution donut — Etherscan/Solscan/Blockscout all surface the
+              top-N concentration as a chart so users can spot whether a token
+              is whale-heavy at a glance. Below it, the long-form holders
+              table for the full enumerable list. */}
+          <HoldersDonut holders={holders ?? null} symbol={token.symbol} />
           <Card>
             <CardContent className="p-0">
               {holdersLoading && !holders ? (
