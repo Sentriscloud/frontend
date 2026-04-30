@@ -12,6 +12,7 @@ import { useTheme } from "next-themes";
 import { useNetwork } from "@/lib/network-context";
 import { detectSearchType } from "@/lib/format";
 import { SentrixLogo } from "@/components/common/Logo";
+import { NetworkHealth } from "@/components/common/NetworkHealth";
 import { routing } from "@/i18n/routing";
 
 const LOCALE_LABELS: Record<string, { flag: string; label: string }> = {
@@ -283,6 +284,12 @@ export function Header() {
               </div>
             )}
           </div>
+
+          {/* Live network-health dot — colour reflects time since the chain
+              head last advanced. Sits next to the network switcher so the
+              user has both "which network" and "is it healthy" answered
+              in one glance. */}
+          <NetworkHealth />
 
           {/* Network — segmented control so both options are always visible */}
           <div className="inline-flex items-center h-8 p-0.5 rounded-full border border-[var(--brd)] bg-[color-mix(in_oklab,var(--foreground)_3%,transparent)]" role="radiogroup" aria-label="Network">
