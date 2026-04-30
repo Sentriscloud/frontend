@@ -23,6 +23,7 @@ import { AddressNote } from "@/components/common/AddressNote";
 import { SourcifyBadge } from "@/components/common/SourcifyBadge";
 import { SourcifyViewer } from "@/components/common/SourcifyViewer";
 import { ReadContract } from "@/components/common/ReadContract";
+import { WriteContract } from "@/components/common/WriteContract";
 import { downloadCsv } from "@/lib/csv";
 import { toMillis } from "@/lib/format";
 
@@ -328,6 +329,7 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
         <TabsContent value="contract" className="space-y-4">
           <SourcifyViewer network={network} address={addr} />
           <ReadContract network={network} address={addr} />
+          <WriteContract network={network} address={addr} />
         </TabsContent>
       </Tabs>
     </div>

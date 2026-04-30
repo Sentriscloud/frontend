@@ -38,6 +38,18 @@ export interface ChainInfo {
   total_transactions?: number;
 }
 
+export interface BlockJustification {
+  height: number;
+  round: number;
+  block_hash: string;
+  precommits: Array<{
+    validator: string;
+    block_hash: string;
+    signature: number[];
+    stake_weight: number;
+  }>;
+}
+
 export interface BlockData {
   index: number;
   hash: string;
@@ -51,6 +63,12 @@ export interface BlockData {
   merkle_root: string;
   nonce: number;
   difficulty: number;
+  /** BFT round at which this block finalised. 0 = first-round happy-path. */
+  round?: number;
+  /** State root committed in the block hash (post STATE_ROOT_FORK_HEIGHT). */
+  state_root?: string | number[] | null;
+  /** Precommit-supermajority justification — only populated post-Voyager. */
+  justification?: BlockJustification | null;
 }
 
 export interface TransactionData {

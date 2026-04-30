@@ -17,6 +17,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { StatCard } from "@/components/common/StatCard";
 import { SourcifyViewer } from "@/components/common/SourcifyViewer";
 import { ReadContract } from "@/components/common/ReadContract";
+import { WriteContract } from "@/components/common/WriteContract";
 import { formatNumber } from "@/lib/format";
 
 export default function TokenDetailPage({ params }: { params: Promise<{ addr: string }> }) {
@@ -218,6 +219,7 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
           </Card>
           <SourcifyViewer network={network} address={token.contract_address} />
           <ReadContract network={network} address={token.contract_address} />
+          <WriteContract network={network} address={token.contract_address} />
         </TabsContent>
       </Tabs>
     </div>
