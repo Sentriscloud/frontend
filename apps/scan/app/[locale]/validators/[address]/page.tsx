@@ -15,6 +15,7 @@ import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatCard } from "@/components/common/StatCard";
 import { EmptyState } from "@/components/common/EmptyState";
+import { WatchButton } from "@/components/common/WatchButton";
 import { useNetwork } from "@/lib/network-context";
 import { useValidators, useBlocks, useValidatorRewards, useValidatorBlocksOverTime, useValidatorDelegators, useStats } from "@/lib/hooks";
 import { formatNumber } from "@/lib/format";
@@ -102,10 +103,13 @@ export default function ValidatorDetailPage({ params }: { params: Promise<{ addr
         eyebrow="Validator"
         title={validator.name || "Unnamed"}
         actions={
-          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${st.color}`}>
-            {st.icon}
-            {st.text}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${st.color}`}>
+              {st.icon}
+              {st.text}
+            </span>
+            <WatchButton address={address} kind="validator" label={validator.name || undefined} />
+          </div>
         }
       />
 

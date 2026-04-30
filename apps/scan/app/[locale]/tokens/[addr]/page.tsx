@@ -14,6 +14,7 @@ import { useNetwork } from "@/lib/network-context";
 import { fetchToken, type TokenData } from "@/lib/api";
 import { useTokenHolders, useTokenTrades } from "@/lib/hooks";
 import { PageHeader } from "@/components/common/PageHeader";
+import { WatchButton } from "@/components/common/WatchButton";
 import { StatCard } from "@/components/common/StatCard";
 import { SourcifyViewer } from "@/components/common/SourcifyViewer";
 import { ReadContract } from "@/components/common/ReadContract";
@@ -72,6 +73,7 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
             <span className="text-base text-muted-foreground font-normal">({token.symbol})</span>
           </span>
         }
+        actions={<WatchButton address={token.contract_address} kind="token" label={token.symbol} />}
       />
 
       {/* Stats */}
