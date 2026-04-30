@@ -1,0 +1,41 @@
+{
+  "name": "Sentrix Canonical",
+  "logoURI": "https://cdn.jsdelivr.net/gh/sentrix-labs/brand-kit@master/png-transparent/sentrix-labs-256.png",
+  "keywords": ["sentrix", "srx", "canonical"],
+  "version": { "major": 1, "minor": 0, "patch": 0 },
+  "timestamp": "2026-04-30T00:00:00.000Z",
+  "tokens": [
+    {
+      "chainId": 7119,
+      "address": "0x4693b113e523A196d9579333c4ab8358e2656553",
+      "name": "Wrapped SRX",
+      "symbol": "WSRX",
+      "decimals": 18,
+      "logoURI": "https://cdn.jsdelivr.net/gh/sentrix-labs/brand-kit@master/png-transparent/sentrix-labs-256.png",
+      "tags": ["wrapped-native", "canonical"]
+    },
+    {
+      "chainId": 7120,
+      "address": "0x85d5E7694AF31C2Edd0a7e66b7c6c92C59fF949A",
+      "name": "Wrapped tSRX",
+      "symbol": "WtSRX",
+      "decimals": 18,
+      "logoURI": "https://cdn.jsdelivr.net/gh/sentrix-labs/brand-kit@master/png-transparent/sentrix-labs-256.png",
+      "tags": ["wrapped-native", "canonical", "testnet"]
+    }
+  ],
+  "tags": {
+    "wrapped-native": {
+      "name": "Wrapped Native",
+      "description": "ERC-20 wrapper around the native SRX coin — backed 1:1 by SRX deposits."
+    },
+    "canonical": {
+      "name": "Canonical",
+      "description": "Deployed by Sentrix Labs and present in `sentrix-labs/canonical-contracts`."
+    },
+    "testnet": {
+      "name": "Testnet",
+      "description": "Token lives on chain 7120 (Sentrix Testnet); not transferable to mainnet."
+    }
+  }
+}

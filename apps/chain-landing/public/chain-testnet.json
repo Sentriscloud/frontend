@@ -1,0 +1,60 @@
+{
+  "$schema": "https://chainagnostic.org/chain-meta/v1.json",
+  "name": "Sentrix Testnet",
+  "chain": "SRX",
+  "chainId": 7120,
+  "networkId": 7120,
+  "shortName": "srx-testnet",
+  "infoURL": "https://sentrixchain.com",
+  "nativeCurrency": {
+    "name": "Sentrix Testnet",
+    "symbol": "tSRX",
+    "decimals": 18
+  },
+  "rpc": [
+    {
+      "url": "https://testnet-rpc.sentrixchain.com",
+      "tracking": "limited",
+      "isOpenSource": false
+    }
+  ],
+  "ws": [
+    {
+      "url": "wss://testnet-rpc.sentrixchain.com/ws"
+    }
+  ],
+  "explorers": [
+    {
+      "name": "Sentrix Scan Testnet",
+      "url": "https://scan.sentrixchain.com",
+      "standard": "EIP3091"
+    }
+  ],
+  "faucets": [
+    "https://faucet.sentrixchain.com"
+  ],
+  "features": [
+    { "name": "EIP-1559" },
+    { "name": "EIP-3091" }
+  ],
+  "consensus": "DPoS+BFT",
+  "blockTime": 1,
+  "finality": {
+    "kind": "single-slot",
+    "supermajorityThreshold": "2/3+1",
+    "expectedSeconds": 1
+  },
+  "canonicalContracts": {
+    "WSRX": "0x85d5E7694AF31C2Edd0a7e66b7c6c92C59fF949A",
+    "Multicall3": "0x7900826De548425c6BE56caEbD4760AB0155Cd54",
+    "TokenFactory": "0x7A2992af0d4979aDD076347666023d66d29276Fc",
+    "SentrixSafe": "0xc9D7a61D7C2F428F6A055916488041fD00532110"
+  },
+  "verifier": {
+    "name": "Sourcify",
+    "url": "https://verify.sentrixchain.com",
+    "selfHosted": true
+  },
+  "documentation": "https://sentrixchain.com/docs",
+  "brand": "https://github.com/sentrix-labs/brand-kit"
+}
