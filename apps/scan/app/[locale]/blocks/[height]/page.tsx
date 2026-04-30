@@ -108,6 +108,44 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
                     )}
                   </div>
                 }
+              />
+              {block.round != null && (
+                <InfoRow
+                  label="BFT Round"
+                  value={
+                    <span className="font-mono text-xs">
+                      {block.round}
+                      {block.round === 0 && (
+                        <span className="ml-2 text-[10px] text-green-500">first-round (happy path)</span>
+                      )}
+                    </span>
+                  }
+                  hint="0 = block finalised on the proposer's first attempt. Higher rounds mean the cluster needed a re-proposal — usually network jitter, not a problem."
+                />
+              )}
+              {block.justification && (
+                <InfoRow
+                  label="Justification signers"
+                  value={
+                    <span className="font-mono text-xs">
+                      {block.justification.precommits.length} precommit
+                      {block.justification.precommits.length === 1 ? "" : "s"} ·{" "}
+                      {(
+                        block.justification.precommits.reduce(
+                          (s, p) => s + (p.stake_weight ?? 0),
+                          0,
+                        ) / 100_000_000
+                      ).toFixed(2)}{" "}
+                      SRX stake-weight
+                    </span>
+                  }
+                  hint="2/3+1 stake-weighted supermajority is required to finalise; signers listed here are the validators whose precommit was included in the justification."
+                />
+              )}
+              <InfoRow
+                label="Block reward"
+                value={<span className="font-mono">1 SRX → Protocol Treasury (claim via StakingOp::ClaimRewards)</span>}
+                hint="Post-V4 reward-v2 fork: coinbase routes to the protocol treasury; validators + delegators claim accrued rewards instead of being paid directly."
                 last
               />
             </CardContent>
