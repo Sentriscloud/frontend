@@ -7,7 +7,7 @@ import { GRADUATION_THRESHOLD } from '@/lib/bonding-curve'
 import { formatNumber } from '@/lib/utils'
 import { Rocket, AlertTriangle, Globe, Send, MessageSquare, ChevronDown, Upload, Settings2 } from 'lucide-react'
 
-const REQUIRED_SNTX = 100
+const REQUIRED_SRX = 1
 
 interface FormData {
   name: string
@@ -104,7 +104,7 @@ export default function CreatePage() {
           <div className="flex justify-between"><span className="text-[var(--tx-d)]">Name</span><span className="text-[var(--tx)]">{form.name}</span></div>
           <div className="flex justify-between"><span className="text-[var(--tx-d)]">Symbol</span><span className="text-[var(--tx)] font-mono">{form.symbol.toUpperCase()}</span></div>
           <div className="flex justify-between"><span className="text-[var(--tx-d)]">Supply</span><span className="text-[var(--tx)]">{formatNumber(supply, 0)}</span></div>
-          <div className="flex justify-between"><span className="text-[var(--tx-d)]">Launch fee</span><span className="text-[var(--gold)]">100 SNTX (burned)</span></div>
+          <div className="flex justify-between"><span className="text-[var(--tx-d)]">Launch fee</span><span className="text-[var(--gold)]">1 SRX (burned)</span></div>
         </div>
         <Button variant="secondary" onClick={() => setSubmitted(false)}>← Back to form</Button>
       </div>
@@ -117,7 +117,7 @@ export default function CreatePage() {
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-black text-[var(--tx)]">Launch a Coin</h1>
         <p className="text-[var(--tx-m)] mt-1 text-sm">
-          Fill the form · pay 100 SNTX · coin goes live instantly
+          Fill the form · pay 1 SRX · coin goes live instantly
         </p>
       </div>
 
@@ -283,7 +283,7 @@ export default function CreatePage() {
             <p className="text-xs text-[var(--tx-d)]">100% burned on Sentrix Chain</p>
           </div>
           <div className="text-right">
-            <p className="text-xl font-black text-[var(--gold)]">{REQUIRED_SNTX} SNTX</p>
+            <p className="text-xl font-black text-[var(--gold)]">{REQUIRED_SRX} SRX</p>
             <p className="text-xs text-[var(--tx-d)]">Graduates at {formatNumber(GRADUATION_THRESHOLD)} SRX mcap</p>
           </div>
         </div>
@@ -291,7 +291,7 @@ export default function CreatePage() {
         {/* Launch button */}
         <Button variant="gold" size="lg" className="w-full" onClick={handleSubmit}>
           <Rocket className="w-4 h-4" />
-          {!isConnected ? 'Connect Wallet to Launch' : `Launch ${form.symbol || 'Coin'} — Pay 100 SNTX`}
+          {!isConnected ? 'Connect Wallet to Launch' : `Launch ${form.symbol || 'Coin'} — Pay 1 SRX`}
         </Button>
 
         {!isConnected && (

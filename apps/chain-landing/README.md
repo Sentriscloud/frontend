@@ -23,7 +23,7 @@ Official marketing landing page for Sentrix Chain (SRX) — a Layer-1 blockchain
 4. Animated stat counters
 5. About (5 core features + 3D coin)
 6. Features (9 cards)
-7. Tokens (SRX, SNTX, SRTX)
+7. Token (SRX — single-token chain)
 8. Tokenomics
 9. Ecosystem products
 10. SRX-20 standard

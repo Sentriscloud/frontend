@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/Footer'
 export const metadata: Metadata = {
   title: 'CoinBlast — Launch Your Coin',
   description: 'Launch your coin in seconds. No coding. No pre-sale. Fair for everyone. Powered by Sentrix Chain.',
-  keywords: ['CoinBlast', 'coin launchpad', 'bonding curve', 'SRX', 'SNTX', 'fair launch'],
+  keywords: ['CoinBlast', 'coin launchpad', 'bonding curve', 'SRX', 'fair launch'],
   openGraph: {
     title: 'CoinBlast',
     description: 'Launch your coin in seconds. Fair for everyone.',

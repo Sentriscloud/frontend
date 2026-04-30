@@ -3,7 +3,7 @@ import type { BondingCurvePoint } from '@/types'
 // Bonding curve parameters (matches whitepaper)
 export const BASE_PRICE = 0.0001       // SRX per token
 export const K = 0.5                    // curve steepness
-export const LAUNCH_FEE = 100          // SNTX (burned on deploy)
+export const LAUNCH_FEE = 1            // SRX (burned on deploy)
 export const TRADING_FEE = 0.01        // 1% per trade
 export const GRADUATION_THRESHOLD = 69_000  // SRX market cap
 

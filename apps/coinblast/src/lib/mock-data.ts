@@ -167,6 +167,6 @@ export const MOCK_TRADES: Trade[] = [
 export const PLATFORM_STATS = {
   totalTokens: 24,
   totalVolumeSRX: 142_800,
-  totalSNTXBurned: 2_400, // 24 tokens × 100 SNTX
+  totalSRXBurned: 24, // 24 launches × 1 SRX
   activeTraders: 318,
 }
