@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Blocks } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,26 +12,39 @@ import { Copyable } from "@/components/common/Copyable";
 import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useNetwork } from "@/lib/network-context";
-import { useBlocks } from "@/lib/hooks";
+import { fetchBlocksPage, type BlockData } from "@/lib/api";
 import { shortenHash } from "@/lib/format";
 
-const PAGE_SIZE = 25;
-const BATCH = 100;
+const PAGE_SIZE = 50; // server cap is 100; 50 is comfortable on a phone
 
 export default function BlocksPage() {
   const t = useTranslations("blocks");
   const { network } = useNetwork();
-  // DECISION: fetch a rolling batch (100) and paginate client-side — backend has no pagination endpoint yet.
-  // TODO(api): needs GET /chain/blocks?page=N&limit=M — using client-side slice for now
-  const { data: blocks, loading } = useBlocks(network, BATCH);
+  // Server-paginated against `/chain/blocks?page=N&limit=M`. Each page hits
+  // the backend fresh so we get accurate "page N of M" semantics across the
+  // full in-memory window (CHAIN_WINDOW_SIZE = 1000) — much deeper than the
+  // old client-side slice of one 100-block batch.
   const [page, setPage] = useState(1);
+  const [blocks, setBlocks] = useState<BlockData[] | null>(null);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const totalPages = blocks ? Math.max(1, Math.ceil(blocks.length / PAGE_SIZE)) : 1;
-  const paged = useMemo(() => {
-    if (!blocks) return [];
-    const start = (page - 1) * PAGE_SIZE;
-    return blocks.slice(start, start + PAGE_SIZE);
-  }, [blocks, page]);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchBlocksPage(network, page - 1, PAGE_SIZE).then((res) => {
+      if (cancelled) return;
+      setBlocks(res.blocks);
+      setTotal(res.pagination.total);
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [network, page]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const paged = blocks ?? [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
@@ -41,7 +54,7 @@ export default function BlocksPage() {
         actions={
           blocks ? (
             <span className="text-xs px-2 py-1 rounded-md bg-muted/60 border border-border text-muted-foreground font-mono">
-              {t("most_recent", { count: blocks.length })}
+              {t("most_recent", { count: total })}
             </span>
           ) : null
         }
@@ -122,7 +135,7 @@ export default function BlocksPage() {
                   <div className="p-8 text-center text-sm text-muted-foreground">{t("no_blocks")}</div>
                 )}
               </div>
-              {blocks && blocks.length > PAGE_SIZE && (
+              {totalPages > 1 && (
                 <div className="border-t border-border">
                   <Pagination
                     page={page}

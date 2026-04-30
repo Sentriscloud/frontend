@@ -14,6 +14,7 @@ import { InfoRow } from "@/components/common/InfoRow";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { RailBadge, classifyRail } from "@/components/common/RailBadge";
 import { FinalityBadge, classifyFinality } from "@/components/common/FinalityBadge";
+import { TxLogs } from "@/components/common/TxLogs";
 import { Copyable } from "@/components/common/Copyable";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useNetwork } from "@/lib/network-context";
@@ -137,6 +138,7 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="logs">Logs</TabsTrigger>
           <TabsTrigger value="input">Input Data</TabsTrigger>
           <TabsTrigger value="raw">Raw JSON</TabsTrigger>
         </TabsList>
@@ -235,6 +237,10 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="logs">
+          <TxLogs network={network} txHash={tx.id} />
         </TabsContent>
 
         <TabsContent value="input">

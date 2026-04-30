@@ -161,6 +161,32 @@ export async function fetchLatestBlocks(network: NetworkId, count = 10) {
   return res?.blocks ?? [];
 }
 
+export interface BlocksPage {
+  blocks: BlockData[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    has_more: boolean;
+  };
+}
+
+/**
+ * Server-paginated block list. Backend exposes `?page=N&limit=M` (limit
+ * capped at 100 server-side) over the in-memory CHAIN_WINDOW_SIZE = 1000
+ * window. For deeper history users navigate per-block via /chain/blocks/:height
+ * or via the indexer's `/blocks` endpoint once that catches up.
+ */
+export async function fetchBlocksPage(network: NetworkId, page = 0, limit = 50): Promise<BlocksPage> {
+  const res = await apiFetch<BlocksPage>(network, `/chain/blocks?page=${page}&limit=${Math.min(limit, 100)}`);
+  return (
+    res ?? {
+      blocks: [],
+      pagination: { page, limit, total: 0, has_more: false },
+    }
+  );
+}
+
 // DECISION: backend /transactions/{txid} wraps the tx in { block_hash, block_index,
 // block_timestamp, transaction: {...} }. Flatten here so downstream code sees a single
 // TransactionData with block_height, and sentri → SRX amount/fee conversion applied.
