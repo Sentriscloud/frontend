@@ -160,3 +160,94 @@ export function useValidatorSet(wsUrl: string): number | null {
   }, [wsUrl]);
   return count;
 }
+
+// Token op events streamed by the chain (SRC-20/721/1155 family). Optionally
+// filtered to events touching `address` (matches `from`, `to`, or contract);
+// pass `null`/`undefined` to receive all token ops.
+//
+// In-wallet UX: subscribe with the connected address to populate a "live
+// activity" feed without polling /address/{addr}/history.
+export interface TokenOpEvent {
+  height: number;
+  txid: string;
+  op: string;
+  contract?: string;
+  from?: string;
+  to?: string;
+  amount?: number;
+  raw: Record<string, unknown>;
+}
+
+export function useTokenOps(
+  wsUrl: string,
+  address?: string | null,
+  limit = 20,
+): TokenOpEvent[] {
+  const [events, setEvents] = useState<TokenOpEvent[]>([]);
+  useEffect(() => {
+    const client = getClient(wsUrl);
+    const watchAddr = address?.toLowerCase() ?? null;
+    const unsub = client.subscribe("sentrix_subscribe", "sentrix_tokenOps", (msg) => {
+      const m = msg as Record<string, unknown>;
+      const from = typeof m.from === "string" ? m.from.toLowerCase() : undefined;
+      const to = typeof m.to === "string" ? m.to.toLowerCase() : undefined;
+      const contract = typeof m.contract === "string" ? m.contract.toLowerCase() : undefined;
+      if (watchAddr && watchAddr !== from && watchAddr !== to && watchAddr !== contract) return;
+      const ev: TokenOpEvent = {
+        height: typeof m.height === "number" ? m.height : 0,
+        txid: typeof m.txid === "string" ? m.txid : "",
+        op: typeof m.op === "string" ? m.op : "unknown",
+        contract,
+        from,
+        to,
+        amount: typeof m.amount === "number" ? m.amount : undefined,
+        raw: m,
+      };
+      setEvents((prev) => [ev, ...prev].slice(0, limit));
+    });
+    return () => { unsub(); setEvents([]); };
+  }, [wsUrl, address, limit]);
+  return events;
+}
+
+// Staking op events: Delegate / Undelegate / ClaimRewards / RegisterValidator /
+// AddSelfStake / ForceUnjail. Same filter semantics as useTokenOps.
+export interface StakingOpEvent {
+  height: number;
+  txid: string;
+  op: string;
+  validator?: string;
+  delegator?: string;
+  amount?: number;
+  raw: Record<string, unknown>;
+}
+
+export function useStakingOps(
+  wsUrl: string,
+  address?: string | null,
+  limit = 20,
+): StakingOpEvent[] {
+  const [events, setEvents] = useState<StakingOpEvent[]>([]);
+  useEffect(() => {
+    const client = getClient(wsUrl);
+    const watchAddr = address?.toLowerCase() ?? null;
+    const unsub = client.subscribe("sentrix_subscribe", "sentrix_stakingOps", (msg) => {
+      const m = msg as Record<string, unknown>;
+      const validator = typeof m.validator === "string" ? m.validator.toLowerCase() : undefined;
+      const delegator = typeof m.delegator === "string" ? m.delegator.toLowerCase() : undefined;
+      if (watchAddr && watchAddr !== validator && watchAddr !== delegator) return;
+      const ev: StakingOpEvent = {
+        height: typeof m.height === "number" ? m.height : 0,
+        txid: typeof m.txid === "string" ? m.txid : "",
+        op: typeof m.op === "string" ? m.op : "unknown",
+        validator,
+        delegator,
+        amount: typeof m.amount === "number" ? m.amount : undefined,
+        raw: m,
+      };
+      setEvents((prev) => [ev, ...prev].slice(0, limit));
+    });
+    return () => { unsub(); setEvents([]); };
+  }, [wsUrl, address, limit]);
+  return events;
+}

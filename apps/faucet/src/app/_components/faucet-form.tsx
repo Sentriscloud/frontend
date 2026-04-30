@@ -7,6 +7,7 @@ import {
 import { FaucetMark } from './faucet-mark'
 import { AnimatedNumber } from './animated-number'
 import { NetworkCard } from './network-card'
+import { useLatestFinalized } from '@/lib/ws'
 
 declare global {
   interface Window {
@@ -29,7 +30,21 @@ declare global {
   }
 }
 
-type Status = 'idle' | 'loading' | 'success' | 'error' | 'cooldown'
+type Status = 'idle' | 'loading' | 'success' | 'finalized' | 'error' | 'cooldown'
+
+// restUrl is e.g. https://api.sentrixchain.com → wss://rpc.sentrixchain.com/ws
+// testnet-api.sentrixchain.com → wss://testnet-rpc.sentrixchain.com/ws
+function deriveWsUrl(restUrl: string): string {
+  try {
+    const u = new URL(restUrl)
+    const host = u.host
+      .replace(/^api\./, 'rpc.')
+      .replace(/^testnet-api\./, 'testnet-rpc.')
+    return `wss://${host}/ws`
+  } catch {
+    return restUrl
+  }
+}
 
 type FaucetStats = {
   balance: number
@@ -107,6 +122,22 @@ export function FaucetForm({
 
   const captchaRequired = Boolean(turnstileSiteKey)
   const isMainnet = network === 'mainnet'
+
+  // Live BFT-finalised height. The faucet API returns as soon as the tx is
+  // accepted by the RPC's mempool (effectively "broadcast OK"); the user
+  // benefits from a clearer signal once the block holding the tx has crossed
+  // BFT supermajority. We capture the finalised height at submit time and
+  // flip status from 'success' to 'finalized' as soon as the WS pushes a
+  // higher value (the next finalised block — within ~2s for a 1s-block chain
+  // when the tx lands in the very next block).
+  const wsFinalized = useLatestFinalized(deriveWsUrl(publicRestUrl))
+  const [submitFinalizedAt, setSubmitFinalizedAt] = useState<number | null>(null)
+  useEffect(() => {
+    if (status !== 'success' || submitFinalizedAt == null || wsFinalized == null) return
+    if (wsFinalized > submitFinalizedAt) {
+      setStatus('finalized')
+    }
+  }, [status, submitFinalizedAt, wsFinalized])
 
   // ── On mount: cooldown + stats ─────────────────────────────────────────
   useEffect(() => {
@@ -210,6 +241,12 @@ export function FaucetForm({
         setStatus('success')
         setTxHash(data.txHash ?? '')
         setMessage(`${stats?.amount ?? defaultAmountSrx} SRX sent`)
+        // Capture the finalised height the moment we get tx-accepted. The
+        // useEffect watching wsFinalized flips us to 'finalized' once the
+        // chain advances past this. WS has been live since mount so a value
+        // is almost always available; on the rare miss (WS reconnect) we
+        // never flip and the user just sees the green "sent" state.
+        setSubmitFinalizedAt(wsFinalized)
         localStorage.setItem(lsKey(network), Date.now().toString())
         fetch(`/api/faucet?network=${network}`)
           .then((r) => r.json())
@@ -355,11 +392,20 @@ export function FaucetForm({
             </div>
           )}
 
-          {status === 'success' && (
+          {(status === 'success' || status === 'finalized') && (
             <div className="flex items-start gap-3 p-4 bg-[rgba(34,197,94,0.10)] border border-[rgba(34,197,94,0.25)] rounded-xl">
-              <CheckCircle className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5" />
+              {status === 'finalized' ? (
+                <CheckCircle className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5" />
+              ) : (
+                <Loader className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5 animate-spin-slow" />
+              )}
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] text-[var(--green)] font-semibold">{message}</p>
+                <p className="text-[14px] text-[var(--green)] font-semibold">
+                  {message}
+                  <span className="ml-2 text-[11px] font-normal text-[var(--green)] opacity-80">
+                    {status === 'finalized' ? '· BFT finalized' : '· awaiting BFT finality…'}
+                  </span>
+                </p>
                 {txHash && (
                   <a
                     href={`${explorerUrl}/tx/${txHash}`}

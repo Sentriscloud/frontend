@@ -169,3 +169,75 @@ export function useLatestFinalized(network: NetworkId): number | null {
   }, [network]);
   return height;
 }
+
+// Token op events streamed from the chain (Deploy / Transfer / Burn / Mint /
+// Approve / NFT family / SRC-1155 family). Returns the most recent N events,
+// newest-first. Pass `limit = 0` to disable buffering and just receive a
+// single setter (use the subscribe-callback variant directly).
+export interface TokenOpEvent {
+  height: number;
+  txid: string;
+  op: string;
+  contract?: string;
+  from?: string;
+  to?: string;
+  amount?: number;
+  raw: Record<string, unknown>;
+}
+
+export function useTokenOps(network: NetworkId, limit = 20): TokenOpEvent[] {
+  const [events, setEvents] = useState<TokenOpEvent[]>([]);
+  useEffect(() => {
+    const client = getClient(getWsUrl(network));
+    const unsub = client.subscribe("sentrix_subscribe", "sentrix_tokenOps", (msg) => {
+      const m = msg as Record<string, unknown>;
+      const ev: TokenOpEvent = {
+        height: typeof m.height === "number" ? m.height : 0,
+        txid: typeof m.txid === "string" ? m.txid : "",
+        op: typeof m.op === "string" ? m.op : "unknown",
+        contract: typeof m.contract === "string" ? m.contract : undefined,
+        from: typeof m.from === "string" ? m.from : undefined,
+        to: typeof m.to === "string" ? m.to : undefined,
+        amount: typeof m.amount === "number" ? m.amount : undefined,
+        raw: m,
+      };
+      setEvents((prev) => [ev, ...prev].slice(0, limit));
+    });
+    return () => { unsub(); setEvents([]); };
+  }, [network, limit]);
+  return events;
+}
+
+// Staking op events: Delegate / Undelegate / ClaimRewards / RegisterValidator /
+// AddSelfStake / ForceUnjail. Same buffer semantics as useTokenOps.
+export interface StakingOpEvent {
+  height: number;
+  txid: string;
+  op: string;
+  validator?: string;
+  delegator?: string;
+  amount?: number;
+  raw: Record<string, unknown>;
+}
+
+export function useStakingOps(network: NetworkId, limit = 20): StakingOpEvent[] {
+  const [events, setEvents] = useState<StakingOpEvent[]>([]);
+  useEffect(() => {
+    const client = getClient(getWsUrl(network));
+    const unsub = client.subscribe("sentrix_subscribe", "sentrix_stakingOps", (msg) => {
+      const m = msg as Record<string, unknown>;
+      const ev: StakingOpEvent = {
+        height: typeof m.height === "number" ? m.height : 0,
+        txid: typeof m.txid === "string" ? m.txid : "",
+        op: typeof m.op === "string" ? m.op : "unknown",
+        validator: typeof m.validator === "string" ? m.validator : undefined,
+        delegator: typeof m.delegator === "string" ? m.delegator : undefined,
+        amount: typeof m.amount === "number" ? m.amount : undefined,
+        raw: m,
+      };
+      setEvents((prev) => [ev, ...prev].slice(0, limit));
+    });
+    return () => { unsub(); setEvents([]); };
+  }, [network, limit]);
+  return events;
+}
