@@ -27,6 +27,7 @@ interface SourcifyViewerProps {
 export function SourcifyViewer({ network, address }: SourcifyViewerProps) {
   const { files, status, loading } = useSourcifyFiles(network, address);
   const { source, metadata } = useMemo(() => partitionSourceFiles(files), [files]);
+  const abi = useMemo(() => parseAbiFromMetadata(metadata), [metadata]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [showAbi, setShowAbi] = useState(false);
 
@@ -68,7 +69,6 @@ export function SourcifyViewer({ network, address }: SourcifyViewerProps) {
   }
 
   const activeFile = source[activeIdx] ?? source[0];
-  const abi = useMemo(() => parseAbiFromMetadata(metadata), [metadata]);
 
   return (
     <DetailCard
