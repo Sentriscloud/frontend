@@ -150,7 +150,7 @@ export default function FaucetDocsPage() {
               <tbody className="divide-y divide-[var(--brd)]">
                 <Row label="Chain ID" mainnet="7119" testnet="7120" />
                 <Row label="Native token" mainnet="SRX" testnet="SRX (test)" />
-                <Row label="EVM" mainnet="revm 37" testnet="revm 37" />
+                <Row label="EVM" mainnet="revm 38" testnet="revm 38" />
                 <Row
                   label="Faucet drip"
                   mainnet="Gas-only"
