@@ -19,6 +19,28 @@ const nextConfig: NextConfig = {
     // badly with Turbopack 15.5 optimizePackageImports (seen a build hang in this repo).
     optimizePackageImports: ["lucide-react"],
   },
+  // EIP-3091 compliance — wallets and chain registries deeplink via the
+  // singular `/block` and `/token` paths. Our app canonical routes are
+  // plural (`/blocks/[height]`, `/tokens/[addr]`). The /tx/ and /address/
+  // routes already match EIP-3091 because they're singular AND match the
+  // existing app structure (the i18n middleware redirects them to
+  // /en/tx/<hash> etc which serves 200 — that satisfies the spec).
+  //
+  // The two paths that genuinely 404 today and break EIP-3091:
+  //   /block/<n>   — singular form not in app, need redirect to /blocks/<n>
+  //   /token/<a>   — singular form not in app, need redirect to /tokens/<a>
+  //
+  // Permanent 308 redirects + locale prefix to engage the i18n middleware
+  // cleanly. Also handles inside-locale variants
+  // (`/en/block/<n>` → `/en/blocks/<n>`) for completeness.
+  async redirects() {
+    return [
+      { source: "/block/:height", destination: "/en/blocks/:height", permanent: true },
+      { source: "/token/:addr", destination: "/en/tokens/:addr", permanent: true },
+      { source: "/:locale(en|id)/block/:height", destination: "/:locale/blocks/:height", permanent: true },
+      { source: "/:locale(en|id)/token/:addr", destination: "/:locale/tokens/:addr", permanent: true },
+    ];
+  },
 };
 
 const withIntl = withNextIntl(nextConfig);
