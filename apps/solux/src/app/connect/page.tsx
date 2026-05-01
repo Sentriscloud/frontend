@@ -78,6 +78,15 @@ export default function ConnectPage() {
       origin,
     };
     window.opener.postMessage(msg, origin);
+    // Pull the requesting tab back to the foreground so the user
+    // doesn't have to manually click back to it after Approve. Some
+    // browsers gate this on a still-active user gesture; the click
+    // that triggered handleApprove qualifies.
+    try {
+      window.opener.focus();
+    } catch {
+      /* opener might be cross-origin-restricted on some browsers — ignore */
+    }
   }
 
   function handleApprove() {

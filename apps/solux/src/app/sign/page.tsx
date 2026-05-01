@@ -131,6 +131,13 @@ export default function SignPage() {
       ...(errMsg ? { error: errMsg } : {}),
     };
     window.opener.postMessage(msg, origin);
+    // Bring the requesting tab to the front so the user lands back
+    // on the dapp without an extra click. Same trick as /connect.
+    try {
+      window.opener.focus();
+    } catch {
+      /* cross-origin restricted on some browsers — silent */
+    }
   }
 
   async function handleApprove() {
