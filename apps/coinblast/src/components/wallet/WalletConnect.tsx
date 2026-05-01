@@ -1,16 +1,17 @@
 'use client'
 import { useWalletStore } from '@/store/wallet'
 import { Button } from '@/components/ui/Button'
+import { SignInModal } from './SignInModal'
 import { formatAddress } from '@/lib/utils'
 import { Wallet, ChevronDown, LogOut, Copy, Eye } from 'lucide-react'
 import { useState } from 'react'
-import { ManualAddressInput, SoluxConnectButton, useEffectiveAddress } from '@sentriscloud/wallet-config'
+import { useEffectiveAddress } from '@sentriscloud/wallet-config'
 
 export function WalletConnect() {
-  const { address, isConnected, isConnecting, error, connect, disconnect } = useWalletStore()
+  const { address, isConnected, error, disconnect } = useWalletStore()
   const [showMenu, setShowMenu] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [showManual, setShowManual] = useState(false)
+  const [signInOpen, setSignInOpen] = useState(false)
   const { source: addrSource, manualAddress, setManualAddress } = useEffectiveAddress('coinblast')
 
   const copyAddress = async () => {
@@ -20,9 +21,22 @@ export function WalletConnect() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // Modal lives at the top so the "Sign in" trigger from the
+  // watch-address branch can open it; without the shared mount the
+  // manual-mode "Sign in to trade" button would fire setSignInOpen
+  // against a modal that isn't in the tree.
+  const modal = (
+    <SignInModal
+      open={signInOpen}
+      onClose={() => setSignInOpen(false)}
+      namespace="coinblast"
+    />
+  )
+
   if (isConnected && address) {
     return (
       <div className="relative">
+        {modal}
         <button
           onClick={() => setShowMenu(!showMenu)}
           className="flex items-center gap-2 px-3 py-1.5 bg-[var(--gold)]/10 hover:bg-[var(--gold)]/15 rounded-full border border-[var(--brd2)] transition-colors text-sm"
@@ -67,6 +81,7 @@ export function WalletConnect() {
   if (addrSource === 'manual' && manualAddress) {
     return (
       <div className="relative">
+        {modal}
         <button
           onClick={() => setShowMenu(!showMenu)}
           className="flex items-center gap-2 px-3 py-1.5 bg-[var(--sf2)] hover:bg-[var(--sf)] rounded-full border border-[var(--brd)] transition-colors text-sm"
@@ -84,8 +99,8 @@ export function WalletConnect() {
             <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-[var(--sf)] border border-[var(--brd)] rounded-xl shadow-xl p-3">
               <p className="text-[10px] uppercase tracking-widest text-[var(--tx-d)] mb-2">View-only address</p>
               <p className="text-xs font-mono text-[var(--tx)] truncate mb-3">{manualAddress}</p>
-              <Button variant="primary" size="sm" onClick={() => { setShowMenu(false); connect() }} className="w-full mb-2 gap-2">
-                <Wallet className="w-3.5 h-3.5" /> Connect a wallet to trade
+              <Button variant="primary" size="sm" onClick={() => { setShowMenu(false); setSignInOpen(true) }} className="w-full mb-2 gap-2">
+                <Wallet className="w-3.5 h-3.5" /> Sign in to trade
               </Button>
               <button
                 onClick={() => { setManualAddress(null); setShowMenu(false) }}
@@ -103,37 +118,16 @@ export function WalletConnect() {
 
   return (
     <div className="flex flex-col items-end gap-1.5 relative">
+      {modal}
       <Button
         variant="primary"
         size="sm"
-        onClick={connect}
-        loading={isConnecting}
+        onClick={() => setSignInOpen(true)}
         className="gap-2"
       >
         <Wallet className="w-4 h-4" />
-        <span className="hidden sm:block">Connect Wallet</span>
-        <span className="sm:hidden">Connect</span>
+        Sign in
       </Button>
-      <SoluxConnectButton namespace="coinblast" />
-      <button
-        onClick={() => setShowManual(!showManual)}
-        className="text-[10px] text-[var(--tx-d)] hover:text-[var(--tx-m)] underline underline-offset-2"
-      >
-        or watch any address
-      </button>
-      {showManual && (
-        <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-[var(--sf)] border border-[var(--brd)] rounded-xl shadow-xl p-3">
-          <p className="text-[10px] uppercase tracking-widest text-[var(--tx-d)] mb-2">Watch any address</p>
-          <ManualAddressInput
-            namespace="coinblast"
-            placeholder="0x… address"
-            onAccept={() => setShowManual(false)}
-          />
-          <p className="text-[10px] text-[var(--tx-d)] mt-2 leading-snug">
-            View-only. To trade you still need to connect a real wallet.
-          </p>
-        </div>
-      )}
       {error && (
         <p className="text-xs text-red-400 max-w-[200px] text-right">{error}</p>
       )}
