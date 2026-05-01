@@ -157,6 +157,10 @@ export default function CreatePage() {
           owner: (address ?? '0x0000000000000000000000000000000000000000') as `0x${string}`,
           chainId: chainId === 7120 ? 7120 : 7119,
           createdAt: Math.floor(Date.now() / 1000),
+          // ipfs://<cid> from /api/pin if the user uploaded an image; empty
+          // string if they didn't bother (TokenAvatar then renders the
+          // deterministic gradient placeholder).
+          imageUrl: form.imageUrl || undefined,
         })
       }
     }
@@ -165,12 +169,48 @@ export default function CreatePage() {
   const set = (key: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [key]: e.target.value }))
 
+  // Image upload state. previewUrl is a local blob URL for instant
+  // visual feedback; form.imageUrl is the persistent ipfs:// reference
+  // we get back from /api/pin and ship into recordLocalLaunch + (later)
+  // any token-list / metadata payloads. The two are deliberately split
+  // so the user sees the image immediately while the pin is in flight.
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const uploadImage = async (file: File) => {
+    setUploadError(null)
+    // Show local preview right away so the UI feels instant — even if
+    // the IPFS pin takes a couple of seconds.
+    setPreviewUrl(URL.createObjectURL(file))
+    // Clear any previous CID while we're re-uploading.
+    setForm((p) => ({ ...p, imageUrl: '' }))
+    setIsUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/pin', { method: 'POST', body: fd })
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(j.error || `Upload failed (${res.status})`)
+      }
+      const j = (await res.json()) as { cid: string; uri: string }
+      setForm((p) => ({ ...p, imageUrl: j.uri }))
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Upload failed'
+      setUploadError(msg)
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const url = URL.createObjectURL(file)
-    setPreviewUrl(url)
-    setForm((p) => ({ ...p, imageUrl: url }))
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Pick an image file (PNG, JPG, GIF, SVG, WebP)')
+      return
+    }
+    void uploadImage(file)
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -178,9 +218,7 @@ export default function CreatePage() {
     setIsDragging(false)
     const file = e.dataTransfer.files?.[0]
     if (!file || !file.type.startsWith('image/')) return
-    const url = URL.createObjectURL(file)
-    setPreviewUrl(url)
-    setForm((p) => ({ ...p, imageUrl: url }))
+    void uploadImage(file)
   }
 
   const validate = (): boolean => {
@@ -425,6 +463,11 @@ export default function CreatePage() {
                 <p className="text-xs text-white font-medium">Change image</p>
               </div>
             )}
+            {isUploading && (
+              <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
+                <p className="text-[11px] text-white font-medium tracking-wide animate-pulse">Pinning to IPFS…</p>
+              </div>
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -433,7 +476,15 @@ export default function CreatePage() {
               onChange={handleFileChange}
             />
           </div>
-          <p className="text-[10px] text-[var(--tx-d)]">Coin image (optional, 1:1 recommended)</p>
+          {uploadError ? (
+            <p className="text-[10px] text-red-400 max-w-[260px] text-center">{uploadError}</p>
+          ) : form.imageUrl ? (
+            <p className="text-[10px] text-emerald-400/90 max-w-[260px] text-center break-all">
+              Pinned — {form.imageUrl.slice(0, 28)}…
+            </p>
+          ) : (
+            <p className="text-[10px] text-[var(--tx-d)]">Coin image (optional, 1:1 recommended)</p>
+          )}
         </div>
 
         {/* Coin name */}
@@ -576,10 +627,22 @@ export default function CreatePage() {
           </div>
         </div>
 
-        {/* Launch button */}
-        <Button variant="gold" size="lg" className="w-full" onClick={handleSubmit}>
+        {/* Launch button. Block while the IPFS pin is in flight so the
+            launch doesn't get recorded with an empty imageUrl while the
+            user thinks their image is going to make it on. */}
+        <Button
+          variant="gold"
+          size="lg"
+          className="w-full"
+          onClick={handleSubmit}
+          disabled={isUploading}
+        >
           <Rocket className="w-4 h-4" />
-          {!isConnected ? 'Connect Wallet to Launch' : `Launch ${form.symbol || 'Coin'}`}
+          {!isConnected
+            ? 'Connect Wallet to Launch'
+            : isUploading
+              ? 'Pinning image…'
+              : `Launch ${form.symbol || 'Coin'}`}
         </Button>
 
         {!isConnected && (

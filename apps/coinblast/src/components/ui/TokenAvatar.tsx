@@ -10,6 +10,7 @@
 // links, expired blob URLs, or empty strings.
 
 import { useState } from 'react'
+import { ipfsToGateway } from '@/lib/ipfs'
 
 interface TokenAvatarProps {
   address: string
@@ -57,7 +58,7 @@ export function TokenAvatar({ address, symbol, imageUrl, size = 64, fluid = fals
   if (hasImage) {
     return (
       <img
-        src={imageUrl}
+        src={ipfsToGateway(imageUrl)}
         alt={symbol}
         width={fluid ? undefined : size}
         height={fluid ? undefined : size}
