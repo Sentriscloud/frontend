@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { WalletConnect } from '@/components/wallet/WalletConnect'
 import { useEffect, useState } from 'react'
-import { MOCK_TOKENS } from '@/lib/mock-data'
 
 const NAV = [
   { href: '/', label: 'Home' },
@@ -13,12 +12,11 @@ const NAV = [
   { href: '/portfolio', label: 'Portfolio' },
 ]
 
-// Mock % change derived deterministically from tokensSold ratio
-const TICKER_ITEMS = MOCK_TOKENS.map((t) => {
-  const ratio = t.tokensSold / t.totalSupply
-  const change = parseFloat((ratio * 30 - 10).toFixed(1))
-  return { symbol: t.symbol, change }
-})
+// Ticker tape removed 2026-05-01 along with mock-data — rendering empty
+// from on-chain reads (zero curves deployed) made the marquee read as a
+// blank stripe. Re-add when the launchpad has live tokens to scroll
+// through (CoinBlastCurve `Buy`/`Sell` events, or aggregated 24h % via
+// the indexer).
 
 export function Header() {
   const pathname = usePathname()
@@ -42,21 +40,6 @@ export function Header() {
         hidden && '-translate-y-full'
       )}
     >
-      {/* ── Ticker tape ── */}
-      <div className="h-8 overflow-hidden border-b border-[var(--brd)] bg-[var(--bk)] flex items-center">
-        <div className="animate-marquee flex items-center whitespace-nowrap select-none">
-          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((t, i) => (
-            <span key={i} className="inline-flex items-center gap-1.5 px-5 text-xs">
-              <span className="font-mono font-semibold text-[var(--tx-m)]">{t.symbol}</span>
-              <span className={t.change >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                {t.change >= 0 ? '+' : ''}{t.change}%
-              </span>
-              <span className="text-[var(--brd2)] pl-4">|</span>
-            </span>
-          ))}
-        </div>
-      </div>
-
       {/* ── Nav bar ── */}
       <div
         className="border-b border-[var(--brd)]"

@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { TokenCard } from '@/components/token/TokenCard'
 import { DotGrid, GradientBlur } from '@/components/ui/GridBg'
-import { MOCK_TOKENS, MOCK_TRADES, PLATFORM_STATS } from '@/lib/mock-data'
-import { formatNumber, formatAddress } from '@/lib/utils'
+import { MOCK_TOKENS, PLATFORM_STATS } from '@/lib/mock-data'
+import { formatNumber } from '@/lib/utils'
 import { Rocket, TrendingUp } from 'lucide-react'
 
 type Tab = 'hot' | 'new' | 'graduating' | 'graduated'
@@ -17,11 +17,16 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'graduated', label: '✅ Graduated' },
 ]
 
-const RECENT_ACTIVITY = [
-  ...MOCK_TRADES.map((t) => ({ type: t.type, symbol: MOCK_TOKENS[0].symbol, srx: t.srxAmount, addr: t.address, ts: t.timestamp })),
-  { type: 'launch' as const, symbol: 'BATIK', srx: 0, addr: '0x2578cad17e3e56c2970a5b5eab45952439f5ba97', ts: Math.floor(Date.now() / 1000) - 3600 * 6 },
-  { type: 'buy' as const, symbol: 'NUSA', srx: 240, addr: '0x753f2f68829fbe76a0132295624f48b27ce2e2d9', ts: Math.floor(Date.now() / 1000) - 3600 * 8 },
-]
+// Live activity feed reads from the chain (CoinBlastCurve Buy/Sell/Graduated
+// events) once the launchpad ships. For now the launchpad has zero on-chain
+// curves so the feed renders empty.
+const RECENT_ACTIVITY: Array<{
+  type: 'buy' | 'sell' | 'launch'
+  symbol: string
+  srx: number
+  addr: string
+  ts: number
+}> = []
 
 function getTabTokens(tab: Tab) {
   switch (tab) {
@@ -150,24 +155,29 @@ export default function HomePage() {
           <div className="lg:w-[260px] shrink-0">
             <h2 className="text-lg font-bold text-[var(--tx)] mb-5">Live Activity</h2>
             <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl overflow-hidden">
-              {RECENT_ACTIVITY.map((a, i) => (
-                <div key={i} className="flex items-center gap-2.5 px-3 py-2.5 border-b border-[var(--brd)] last:border-0 hover:bg-[var(--sf2)] transition-colors">
-                  <span className={`text-xs font-bold w-12 shrink-0 ${
-                    a.type === 'buy' ? 'text-emerald-400' :
-                    a.type === 'sell' ? 'text-red-400' :
-                    'text-[var(--gold)]'
-                  }`}>
-                    {a.type === 'buy' ? '▲ BUY' : a.type === 'sell' ? '▼ SELL' : '🚀 NEW'}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-[var(--tx)] font-medium truncate">{a.symbol}</p>
-                    <p className="text-[10px] text-[var(--tx-d)] truncate">{formatAddress(a.addr)}</p>
-                  </div>
-                  {a.srx > 0 && (
-                    <span className="text-xs text-[var(--tx-m)] shrink-0">{formatNumber(a.srx, 0)} SRX</span>
-                  )}
+              {RECENT_ACTIVITY.length === 0 ? (
+                <div className="px-3 py-6 text-center text-xs text-[var(--tx-d)]">
+                  No on-chain activity yet — be the first to launch.
                 </div>
-              ))}
+              ) : (
+                RECENT_ACTIVITY.map((a, i) => (
+                  <div key={i} className="flex items-center gap-2.5 px-3 py-2.5 border-b border-[var(--brd)] last:border-0 hover:bg-[var(--sf2)] transition-colors">
+                    <span className={`text-xs font-bold w-12 shrink-0 ${
+                      a.type === 'buy' ? 'text-emerald-400' :
+                      a.type === 'sell' ? 'text-red-400' :
+                      'text-[var(--gold)]'
+                    }`}>
+                      {a.type === 'buy' ? '▲ BUY' : a.type === 'sell' ? '▼ SELL' : '🚀 NEW'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-[var(--tx)] font-medium truncate">{a.symbol}</p>
+                    </div>
+                    {a.srx > 0 && (
+                      <span className="text-xs text-[var(--tx-m)] shrink-0">{formatNumber(a.srx, 0)} SRX</span>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
 
             {/* CTA box */}
