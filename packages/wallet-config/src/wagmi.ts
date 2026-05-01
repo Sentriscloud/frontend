@@ -19,10 +19,20 @@ import {
   trustWallet,
   rabbyWallet,
   phantomWallet,
-  walletConnectWallet,
   coinbaseWallet,
   injectedWallet,
 } from "@rainbow-me/rainbowkit/wallets";
+
+// walletConnectWallet pulled out 2026-05-01: pulls Reown AppKit, which
+// runs an init pass at module-load time that calls useConfig outside
+// the WagmiProvider tree. On statically-rendered pages (notably the
+// airdrop home) that throws WagmiProviderNotFoundError on hydration —
+// the page crashes with "Application error" before any wallet UI
+// renders. We don't ship a real Reown project ID anyway, so WC was
+// already non-functional (Reown rejects the placeholder origin with
+// 403 + allowlist errors). Removing it fixes airdrop without losing
+// any working capability. When a real Reown project ID lands, the
+// import + Recommended-group entry can come back together.
 import { http } from "viem";
 import { SENTRIX_CHAINS, SENTRIX_MAINNET, SENTRIX_TESTNET } from "./chain";
 
@@ -90,7 +100,6 @@ export function createSentrixWalletConfig(opts: SentrixWalletConfigOptions) {
           trustWallet,
           rabbyWallet,
           phantomWallet,
-          walletConnectWallet,
         ],
       },
       {
