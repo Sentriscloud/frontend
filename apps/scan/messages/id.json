@@ -7,7 +7,9 @@
     "leaderboard": "Leaderboard",
     "analytics": "Analitik",
     "search_placeholder": "Cari berdasarkan blok / tx / alamat...",
-    "supply": "Suplai"
+    "supply": "Suplai",
+    "evm": "EVM",
+    "native": "Native"
   },
   "leaderboard": {
     "eyebrow": "Akun",

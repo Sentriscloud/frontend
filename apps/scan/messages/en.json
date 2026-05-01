@@ -7,7 +7,9 @@
     "leaderboard": "Leaderboard",
     "analytics": "Analytics",
     "search_placeholder": "Search by block / tx / address...",
-    "supply": "Supply"
+    "supply": "Supply",
+    "evm": "EVM",
+    "native": "Native"
   },
   "leaderboard": {
     "eyebrow": "Accounts",

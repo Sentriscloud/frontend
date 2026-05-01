@@ -30,7 +30,7 @@ export async function Stats() {
                 {isLive ? "Mainnet · live" : "Mainnet · sync warming"}
               </span>
               <span className="mono text-[11px] uppercase tracking-[0.22em] text-(--color-ink-4)">
-                · Voyager v2.1.30
+                · Voyager DPoS+BFT
               </span>
             </div>
             <div className="mt-5 flex items-baseline gap-4">

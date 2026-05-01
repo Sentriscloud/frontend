@@ -157,8 +157,14 @@ export function Header() {
     setLangOpen(false);
   }
 
-  const NAV_LINKS: { href: "/blocks" | "/validators" | "/tokens" | "/" | "/analytics" | "/supply"; key: keyof IntlMessages["nav"] }[] = [
+  // EVM and Native are dedicated rail-focused pages (right after Home in
+  // the nav so they're impossible to miss). Sentrix runs both rails at the
+  // protocol level — splitting them out of the mixed home feed is what
+  // newcomers ask for first when they land on the explorer.
+  const NAV_LINKS: { href: "/blocks" | "/validators" | "/tokens" | "/" | "/analytics" | "/supply" | "/evm" | "/native"; key: keyof IntlMessages["nav"] }[] = [
     { href: "/", key: "home" },
+    { href: "/evm", key: "evm" },
+    { href: "/native", key: "native" },
     { href: "/blocks", key: "blocks" },
     { href: "/validators", key: "validators" },
     { href: "/tokens", key: "tokens" },

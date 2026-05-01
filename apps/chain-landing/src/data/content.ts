@@ -1,6 +1,6 @@
 export const SITE = {
   name: "Sentrix",
-  tagline: "Where real assets live",
+  tagline: "Open source, EVM-compatible L1 built in Rust",
   chainId: 7119,
   testnetChainId: 7120,
   symbol: "SRX",
@@ -238,7 +238,7 @@ export const ROADMAP = [
   {
     phase: "Voyager",
     status: "active" as const,
-    statusText: "● Live on Mainnet (v2.1.47)",
+    statusText: "● Live on Mainnet",
     title: "DPoS + BFT + EVM",
     items: ["Delegated Proof of Stake with reward distribution v2", "BFT finality (2/3+1 votes) wired and active", "EVM via revm 38 — eth_sendRawTransaction live", "ClaimRewards op + treasury escrow, 4 validators in production"],
   },
