@@ -13,7 +13,7 @@
 // pretending to be more than it is.
 
 import { useEffect, useRef, useState } from "react";
-import { useManualAddress, isAddress } from "./manual-address";
+import { useManualAddress, useEffectiveAddress, isAddress } from "./manual-address";
 
 const SOLUX_ORIGIN = "https://solux.sentriscloud.com";
 const POPUP_FEATURES = "width=420,height=560,popup=yes,noopener=no,noreferrer=no";
@@ -108,19 +108,46 @@ export function useSoluxConnect(namespace: string): {
 /**
  * Drop-in button. Apps with a small connect-affordance area can render
  * this directly; apps with custom-styled connect rows should call
- * `useSoluxConnect()` directly.
+ * `useSoluxConnect()` directly. Renders three states:
+ *  - not connected (RainbowKit) and no Solux address → "Connect Solux (view-only)"
+ *  - Solux address persisted in manual mode → pill showing "Solux 0x12…ab · disconnect"
+ *  - RainbowKit wallet already connected → hidden (real wallet wins; the
+ *    Solux pill would only confuse the affordance)
  */
 export function SoluxConnectButton(props: { namespace: string; className?: string }) {
   const { connect, isConnecting, error } = useSoluxConnect(props.namespace);
+  const { source, manualAddress, setManualAddress, isConnected } = useEffectiveAddress(props.namespace);
+
+  if (isConnected) return null;
+
+  const soluxConnected = source === "manual" && manualAddress !== null;
+
   return (
     <div className={props.className}>
-      <button
-        onClick={connect}
-        disabled={isConnecting}
-        className="text-[10px] text-[var(--tx-d, #65656d)] hover:text-[var(--gold, #f4c75e)] underline underline-offset-2"
-      >
-        {isConnecting ? "waiting for Solux…" : "or connect Solux (view-only)"}
-      </button>
+      {soluxConnected ? (
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--gold,#f4c75e)]/40 bg-[var(--gold,#f4c75e)]/10">
+          <span className="text-[10px] uppercase tracking-widest text-[var(--gold,#f4c75e)] font-semibold">Solux</span>
+          <span className="text-xs font-mono text-[var(--tx,#fafafa)]">
+            {manualAddress!.slice(0, 6)}…{manualAddress!.slice(-4)}
+          </span>
+          <button
+            onClick={() => setManualAddress(null)}
+            className="text-[10px] text-[var(--tx-m,#9a9aa4)] hover:text-red-400 underline underline-offset-2"
+            title="Disconnect Solux (view-only)"
+          >
+            disconnect
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={connect}
+          disabled={isConnecting}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--brd,rgba(255,255,255,0.12))] bg-[var(--sf,rgba(255,255,255,0.04))] hover:border-[var(--gold,#f4c75e)]/60 hover:text-[var(--gold,#f4c75e)] text-xs font-medium text-[var(--tx,#fafafa)] transition-colors disabled:opacity-50 disabled:cursor-wait"
+        >
+          <span className="text-base leading-none">⌬</span>
+          {isConnecting ? "waiting for Solux…" : "Connect Solux (view-only)"}
+        </button>
+      )}
       {error && <p className="mt-1 text-[10px] text-red-400">{error}</p>}
     </div>
   );

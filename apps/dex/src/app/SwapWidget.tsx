@@ -12,6 +12,7 @@ import {
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { formatUnits, parseUnits } from "viem";
 import { ArrowDown, Loader, ExternalLink } from "lucide-react";
+import { useEffectiveAddress } from "@sentriscloud/wallet-config";
 import { DEX, TOKENS, ROUTER_ABI, ERC20_ABI, type Token } from "@/lib/contracts";
 
 // Choose chain config + token list dynamically — wagmi tells us which
@@ -24,6 +25,7 @@ function netFromChainId(chainId: number | undefined): "mainnet" | "testnet" {
 export function SwapWidget() {
   const chainId = useChainId();
   const { address: account, isConnected } = useAccount();
+  const { source: addrSource } = useEffectiveAddress("dex");
   const net = netFromChainId(chainId);
   const cfg = DEX[net];
   const tokens = TOKENS[net];
@@ -221,8 +223,14 @@ export function SwapWidget() {
       </div>
 
       {!isConnected ? (
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-2">
           <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
+          {addrSource === "manual" && (
+            <p className="text-[11px] text-amber-300/80 leading-snug text-center max-w-xs">
+              Solux is view-only on this surface. Swap needs a signing wallet (MetaMask, Rabby, etc.) — your
+              Solux address will keep showing balances either way.
+            </p>
+          )}
         </div>
       ) : isPending ? (
         <button disabled className="w-full py-3 rounded-xl bg-[var(--gold)]/30 text-[var(--bk)] font-semibold text-sm flex items-center justify-center gap-2">
