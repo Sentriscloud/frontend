@@ -17,10 +17,23 @@ export function getPrice(tokensSold: number, totalSupply: number): number {
 }
 
 /**
- * Market cap = price × tokensSold
+ * Market cap.
+ *
+ * Pre-graduation: the curve owns the un-sold inventory, so circulating supply
+ *   == tokensSold and marketCap = price × tokensSold.
+ * Post-graduation: the curve has migrated *all* supply into a DEX pair, so
+ *   circulating == totalSupply and marketCap = price × totalSupply.
+ *
+ * Caller should pass the curve's `graduated` flag (read from the on-chain
+ * contract). Defaults to `false` for back-compat with pre-deploy callers.
  */
-export function getMarketCap(tokensSold: number, totalSupply: number): number {
-  return getPrice(tokensSold, totalSupply) * tokensSold
+export function getMarketCap(
+  tokensSold: number,
+  totalSupply: number,
+  graduated = false,
+): number {
+  const price = getPrice(tokensSold, totalSupply)
+  return graduated ? price * totalSupply : price * tokensSold
 }
 
 /**
