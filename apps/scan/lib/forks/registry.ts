@@ -1,13 +1,12 @@
-// Authoritative fork-activation registry. Same source-of-truth that
-// `founder-private/U64_MAX_FORK_GATES.md` documents — kept in sync by hand
-// for now (any time we ship a new fork const in `crates/sentrix-core`, we
-// add an entry here too).
+// Authoritative fork-activation registry. Mirrors the internal Sentrix Labs
+// fork-gates reference — kept in sync by hand for now (any time we ship a
+// new fork const in `crates/sentrix-core`, we add an entry here too).
 //
 // Each entry pairs an env-var name with the height the fork activated on
 // each network. `null` for a network means "still parked at u64::MAX (not
 // activated)" — the UI renders that as "Dormant" in the timeline.
 //
-// Sources for the heights below: BIBLE.md hardfork table + jail-consensus
+// Sources for the heights below: chain hardfork table + jail-consensus
 // activation note in `U64_MAX_FORK_GATES.md`.
 
 import type { NetworkId } from "../chain";

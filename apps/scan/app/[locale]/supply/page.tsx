@@ -31,7 +31,7 @@ const SupplyDonut = dynamic(() => import("./donut").then((m) => m.SupplyDonut), 
 interface PremineEntry {
   label: string;
   address: string;
-  /** Disclosed premine size in SRX. Pulled from `founder-private/CANONICAL_ADDRESSES.md`. */
+  /** Disclosed premine size in SRX (from the Sentrix Labs canonical addresses register). */
   amount: number;
 }
 

@@ -115,5 +115,5 @@ Deploy planner:
 
 - Mechanics: [`sentrix/docs/tokenomics/AIRDROP_MECHANICS.md`](https://github.com/sentrix-labs/sentrix/blob/main/docs/tokenomics/AIRDROP_MECHANICS.md)
 - Contract: [`canonical-contracts/contracts/MerkleAirdrop.sol`](https://github.com/sentrix-labs/canonical-contracts/blob/main/contracts/MerkleAirdrop.sol)
-- Tokenomics doc: `founder-private/TOKENOMICS.md` §6
-- Operator runbook: `founder-private/runbooks/airdrop-phase1-deploy.md`
+- Tokenomics overview: [`sentrix/docs/tokenomics/SRX.md`](https://github.com/sentrix-labs/sentrix/blob/main/docs/tokenomics/SRX.md)
+- Phase 1 deploy runbook: operator-internal (Sentrix Labs)

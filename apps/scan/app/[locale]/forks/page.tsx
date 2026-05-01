@@ -18,8 +18,8 @@ import { cn } from "@/lib/utils";
 //   - Bottom section: cross-network comparison table so Satya can spot drift
 //     between mainnet and testnet at a glance.
 //
-// Source of truth lives in `founder-private/U64_MAX_FORK_GATES.md`. The
-// registry below is hand-synced any time we ship a new fork.
+// Source of truth lives in the internal Sentrix Labs fork-gates reference.
+// The registry below is hand-synced any time we ship a new fork.
 
 export default function ForksPage() {
   const { network } = useNetwork();

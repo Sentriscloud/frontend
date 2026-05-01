@@ -43,15 +43,30 @@ const CANONICAL: CanonicalEntry[] = [
   },
   {
     name: "TokenFactory",
-    description: "Deploys minimal ERC-20 tokens via a single function call.",
-    mainnet: "0xc753199b723649ab92c6db8A45F158921CFDEe49",
-    testnet: "0x7A2992af0d4979aDD076347666023d66d29276Fc",
+    description:
+      "Deploys minimal ERC-20 tokens via a single function call. v1.1.0 adds input validation (zero-supply / empty-name / oversize-symbol guards) and rejects ERC-20 transfers to address(0) per spec. v1.0.0 is still on-chain (immutable) but deprecated — frontends should use v1.1.0.",
+    mainnet: "0x53C3838e18703c763564Bb983694CF117B33D366",
+    testnet: "0xaE2a8512f0de635F8E90069e2877098c9e0baEc7",
   },
   {
     name: "SentrixSafe",
     description: "Minimal multi-sig wallet (Gnosis Safe v1.4.1-derived). Currently 1-of-1 with the Sentrix Labs authority.",
     mainnet: "0x6272dC0C842F05542f9fF7B5443E93C0642a3b26",
     testnet: "0xc9D7a61D7C2F428F6A055916488041fD00532110",
+  },
+  {
+    name: "SentrixV2 Factory",
+    description:
+      "Native AMM factory (UniswapV2-equivalent). CREATE2 pair deployer with feeToSetter pinned to the Sentrix Labs authority.",
+    mainnet: "0xC5344f0DDE0B9916217449Ad9222e446475aD936",
+    testnet: "0x8565392086cbA8D39cBba1F6f60ad1F1A17651C7",
+  },
+  {
+    name: "SentrixV2 Router02",
+    description:
+      "Native AMM router. Adds liquidity, removes liquidity, swaps along the constant-product curve. Includes UniV2 fee-on-transfer + permit-gated removeLiquidity helpers.",
+    mainnet: "0xAb67E171c0DE0Cd6dD6fE87E5E399C091F9c9dE8",
+    testnet: "0x2bF73491733c3b87D72b16d4f7151dA294b55cB0",
   },
 ];
 
