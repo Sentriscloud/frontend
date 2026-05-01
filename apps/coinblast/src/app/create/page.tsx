@@ -1,13 +1,13 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from 'wagmi'
+import { parseUnits } from 'viem'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useWalletStore } from '@/store/wallet'
-import { GRADUATION_THRESHOLD } from '@/lib/bonding-curve'
 import { formatNumber } from '@/lib/utils'
-import { Rocket, AlertTriangle, Globe, Send, MessageSquare, ChevronDown, Upload, Settings2 } from 'lucide-react'
-
-const REQUIRED_SRX = 1
+import { TOKEN_FACTORY_ADDRESSES, TOKEN_FACTORY_ABI, extractDeployedTokenAddress } from '@/lib/token-factory'
+import { Rocket, AlertTriangle, Globe, Send, MessageSquare, ChevronDown, Upload, Settings2, ExternalLink, Copy, Check, Loader } from 'lucide-react'
 
 interface FormData {
   name: string
@@ -24,6 +24,8 @@ interface FormData {
 
 export default function CreatePage() {
   const { isConnected, connect } = useWalletStore()
+  const { address } = useAccount()
+  const chainId = useChainId()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [previewUrl, setPreviewUrl] = useState('')
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -43,6 +45,40 @@ export default function CreatePage() {
   })
   const [submitted, setSubmitted] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
+
+  // ── On-chain deploy state ─────────────────────────────────────
+  const factoryAddr =
+    chainId === 7120
+      ? TOKEN_FACTORY_ADDRESSES.testnet
+      : TOKEN_FACTORY_ADDRESSES.mainnet
+  const explorerBase =
+    chainId === 7120
+      ? 'https://scan.sentrixchain.com/?network=testnet'
+      : 'https://scan.sentrixchain.com'
+  const {
+    writeContract,
+    data: deployTxHash,
+    isPending: isWriting,
+    error: writeError,
+    reset: resetWrite,
+  } = useWriteContract()
+  const {
+    data: receipt,
+    isLoading: isMining,
+    isSuccess: isMined,
+  } = useWaitForTransactionReceipt({ hash: deployTxHash })
+  const [deployedAddress, setDeployedAddress] = useState<`0x${string}` | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  // When the receipt arrives, parse the TokenDeployed event for the new
+  // contract address. Indexer + frontend list pages can pick it up via
+  // factory.tokensOf(connected) on next load.
+  useEffect(() => {
+    if (isMined && receipt && !deployedAddress) {
+      const addr = extractDeployedTokenAddress(receipt.logs, factoryAddr)
+      if (addr) setDeployedAddress(addr)
+    }
+  }, [isMined, receipt, deployedAddress, factoryAddr])
 
   const set = (key: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [key]: e.target.value }))
@@ -81,32 +117,137 @@ export default function CreatePage() {
   }
 
   const handleSubmit = () => {
-    if (!isConnected) { connect(); return }
+    if (!isConnected || !address) { connect(); return }
     if (!validate()) return
+    resetWrite()
+    setDeployedAddress(null)
+    // 18 decimals — matches FactoryToken's `uint8 public constant decimals = 18`.
+    const supplyWei = parseUnits(form.totalSupply || '1000000000', 18)
+    writeContract({
+      abi: TOKEN_FACTORY_ABI,
+      address: factoryAddr,
+      functionName: 'deployToken',
+      args: [form.name, form.symbol.toUpperCase(), supplyWei],
+    })
     setSubmitted(true)
   }
 
   const supply = parseInt(form.totalSupply) || 1_000_000_000
 
   if (submitted) {
+    const status: 'pending' | 'mining' | 'success' | 'error' =
+      writeError ? 'error' :
+      isWriting ? 'pending' :
+      (isMining && !isMined) ? 'mining' :
+      isMined ? 'success' :
+      'pending'
+
+    const reset = () => {
+      setSubmitted(false)
+      setDeployedAddress(null)
+      resetWrite()
+    }
+
     return (
       <div className="max-w-lg mx-auto px-4 pt-[96px] pb-20 text-center">
-        <div className="w-20 h-20 bg-[var(--gold)]/15 border border-[var(--brd2)] rounded-full flex items-center justify-center mx-auto mb-6 animate-glow-pulse">
-          <Rocket className="w-10 h-10 text-[var(--gold)]" />
-        </div>
-        <h2 className="text-3xl font-black text-[var(--tx)] mb-3">Almost there!</h2>
-        <p className="text-[var(--tx-m)] mb-6 leading-relaxed">
-          Contracts deploy in the Voyager update. Your coin{' '}
-          <span className="text-[var(--tx)] font-semibold">{form.name} ({form.symbol.toUpperCase()})</span>{' '}
-          is queued and will launch as soon as the launchpad goes live.
-        </p>
-        <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5 text-left mb-6 space-y-2 text-sm">
-          <div className="flex justify-between"><span className="text-[var(--tx-d)]">Name</span><span className="text-[var(--tx)]">{form.name}</span></div>
-          <div className="flex justify-between"><span className="text-[var(--tx-d)]">Symbol</span><span className="text-[var(--tx)] font-mono">{form.symbol.toUpperCase()}</span></div>
-          <div className="flex justify-between"><span className="text-[var(--tx-d)]">Supply</span><span className="text-[var(--tx)]">{formatNumber(supply, 0)}</span></div>
-          <div className="flex justify-between"><span className="text-[var(--tx-d)]">Launch fee</span><span className="text-[var(--gold)]">1 SRX (burned)</span></div>
-        </div>
-        <Button variant="secondary" onClick={() => setSubmitted(false)}>← Back to form</Button>
+        {status === 'pending' && (
+          <>
+            <div className="w-20 h-20 bg-[var(--gold)]/15 border border-[var(--brd2)] rounded-full flex items-center justify-center mx-auto mb-6">
+              <Loader className="w-10 h-10 text-[var(--gold)] animate-spin" />
+            </div>
+            <h2 className="text-3xl font-black text-[var(--tx)] mb-3">Confirm in your wallet</h2>
+            <p className="text-[var(--tx-m)] leading-relaxed">
+              Approve the deploy tx for{' '}
+              <span className="text-[var(--tx)] font-semibold">{form.name} ({form.symbol.toUpperCase()})</span>{' '}
+              in MetaMask / Rabby / your wallet. Cancel to come back to the form.
+            </p>
+          </>
+        )}
+
+        {status === 'mining' && (
+          <>
+            <div className="w-20 h-20 bg-[var(--gold)]/15 border border-[var(--brd2)] rounded-full flex items-center justify-center mx-auto mb-6">
+              <Loader className="w-10 h-10 text-[var(--gold)] animate-spin" />
+            </div>
+            <h2 className="text-3xl font-black text-[var(--tx)] mb-3">Mining…</h2>
+            <p className="text-[var(--tx-m)] mb-3 leading-relaxed">
+              Tx broadcast — waiting for finality (~3 blocks, &lt;5s).
+            </p>
+            {deployTxHash && (
+              <a
+                href={`${explorerBase}/tx/${deployTxHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-mono text-[var(--gold)] hover:text-[var(--gold-l)]"
+              >
+                {deployTxHash.slice(0, 10)}…{deployTxHash.slice(-8)} <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
+          </>
+        )}
+
+        {status === 'success' && (
+          <>
+            <div className="w-20 h-20 bg-[var(--gold)]/15 border border-[var(--brd2)] rounded-full flex items-center justify-center mx-auto mb-6 animate-glow-pulse">
+              <Rocket className="w-10 h-10 text-[var(--gold)]" />
+            </div>
+            <h2 className="text-3xl font-black text-[var(--tx)] mb-3">Launched 🚀</h2>
+            <p className="text-[var(--tx-m)] mb-6 leading-relaxed">
+              <span className="text-[var(--tx)] font-semibold">{form.name} ({form.symbol.toUpperCase()})</span>{' '}
+              is live on chain {chainId === 7120 ? '7120 (testnet)' : '7119'}. Full supply
+              minted to your wallet — share away.
+            </p>
+            <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5 text-left mb-6 space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-[var(--tx-d)]">Contract</span>
+                {deployedAddress ? (
+                  <button
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(deployedAddress)
+                      setCopied(true)
+                      setTimeout(() => setCopied(false), 1500)
+                    }}
+                    className="font-mono text-xs text-[var(--gold)] hover:text-[var(--gold-l)] inline-flex items-center gap-1"
+                  >
+                    {deployedAddress.slice(0, 10)}…{deployedAddress.slice(-8)}
+                    {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  </button>
+                ) : (
+                  <span className="text-[var(--tx-d)] text-xs">parsing receipt…</span>
+                )}
+              </div>
+              <div className="flex justify-between"><span className="text-[var(--tx-d)]">Symbol</span><span className="text-[var(--tx)] font-mono">{form.symbol.toUpperCase()}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--tx-d)]">Supply</span><span className="text-[var(--tx)]">{formatNumber(supply, 0)} {form.symbol.toUpperCase()}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--tx-d)]">Holder</span><span className="font-mono text-xs text-[var(--tx)]">{address?.slice(0, 8)}…{address?.slice(-6)}</span></div>
+            </div>
+            <div className="flex gap-2 justify-center">
+              {deployedAddress && (
+                <a
+                  href={`${explorerBase}/address/${deployedAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-[var(--gold)] text-[var(--bk)] text-sm font-semibold hover:bg-[var(--gold-l)] transition-colors"
+                >
+                  View on Scan <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
+              <Button variant="secondary" onClick={reset}>Launch another</Button>
+            </div>
+          </>
+        )}
+
+        {status === 'error' && (
+          <>
+            <div className="w-20 h-20 bg-red-500/15 border border-red-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertTriangle className="w-10 h-10 text-red-400" />
+            </div>
+            <h2 className="text-3xl font-black text-[var(--tx)] mb-3">Deploy failed</h2>
+            <p className="text-[var(--tx-m)] mb-6 leading-relaxed">
+              {writeError?.message?.slice(0, 200) ?? 'Unknown error'}
+            </p>
+            <Button variant="secondary" onClick={reset}>← Try again</Button>
+          </>
+        )}
       </div>
     )
   }
@@ -117,7 +258,7 @@ export default function CreatePage() {
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-black text-[var(--tx)]">Launch a Coin</h1>
         <p className="text-[var(--tx-m)] mt-1 text-sm">
-          Fill the form · pay 1 SRX · coin goes live instantly
+          Fill the form · sign once · coin goes live instantly
         </p>
       </div>
 
@@ -279,19 +420,19 @@ export default function CreatePage() {
         {/* Fee summary */}
         <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4 flex items-center justify-between text-sm">
           <div className="space-y-0.5">
-            <p className="text-[var(--tx)] font-semibold">Launch fee</p>
-            <p className="text-xs text-[var(--tx-d)]">100% burned on Sentrix Chain</p>
+            <p className="text-[var(--tx)] font-semibold">Network fee</p>
+            <p className="text-xs text-[var(--tx-d)]">~0.0001 SRX gas (paid by your wallet)</p>
           </div>
           <div className="text-right">
-            <p className="text-xl font-black text-[var(--gold)]">{REQUIRED_SRX} SRX</p>
-            <p className="text-xs text-[var(--tx-d)]">Graduates at {formatNumber(GRADUATION_THRESHOLD)} SRX mcap</p>
+            <p className="text-xs text-[var(--tx-d)]">via TokenFactory v1.1.0</p>
+            <p className="text-xs text-[var(--tx-d)]">Trade later on dex.sentrixchain.com</p>
           </div>
         </div>
 
         {/* Launch button */}
         <Button variant="gold" size="lg" className="w-full" onClick={handleSubmit}>
           <Rocket className="w-4 h-4" />
-          {!isConnected ? 'Connect Wallet to Launch' : `Launch ${form.symbol || 'Coin'} — Pay 1 SRX`}
+          {!isConnected ? 'Connect Wallet to Launch' : `Launch ${form.symbol || 'Coin'}`}
         </Button>
 
         {!isConnected && (
