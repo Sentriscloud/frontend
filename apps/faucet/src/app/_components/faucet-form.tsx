@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
+import { useSoluxConnect, useEffectiveAddress } from '@sentriscloud/wallet-config'
 import { FaucetMark } from './faucet-mark'
 import { AnimatedNumber } from './animated-number'
 import { NetworkCard } from './network-card'
@@ -123,6 +124,13 @@ export function FaucetForm({
   // their typed value automatically (that'd be confusing if they're
   // requesting SRX for a different recipient).
   const { address: connectedAddr, isConnected } = useAccount()
+
+  // Solux cross-app connect (view-only). Stashes the returned address
+  // in the wallet-config manual store; we read it back via
+  // useEffectiveAddress so a "Use Solux address" affordance can fill
+  // the input the same way "Use connected wallet" does.
+  const { connect: connectSolux, isConnecting: isSoluxConnecting } = useSoluxConnect('faucet')
+  const { manualAddress: soluxAddr } = useEffectiveAddress('faucet')
   const [cooldownSeconds, setCooldownSeconds] = useState(0)
   const [stats, setStats] = useState<FaucetStats | null>(null)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
@@ -358,25 +366,43 @@ export function FaucetForm({
                 <span className="text-[13px] font-medium text-[var(--tx-2)]">
                   Wallet address
                 </span>
-                <ConnectButton.Custom>
-                  {({ account, openConnectModal }) => (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (account?.address) {
-                          // Already connected → autofill
-                          setAddress(account.address)
-                        } else {
-                          // Not connected → open RainbowKit modal
-                          openConnectModal()
-                        }
-                      }}
-                      className="text-[11px] text-[var(--gold)] hover:text-[var(--gold-l)] underline underline-offset-2"
-                    >
-                      {account?.address ? 'Use connected wallet' : 'or connect a wallet'}
-                    </button>
-                  )}
-                </ConnectButton.Custom>
+                <div className="flex items-center gap-2">
+                  <ConnectButton.Custom>
+                    {({ account, openConnectModal }) => (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (account?.address) {
+                            setAddress(account.address)
+                          } else {
+                            openConnectModal()
+                          }
+                        }}
+                        className="text-[11px] text-[var(--gold)] hover:text-[var(--gold-l)] underline underline-offset-2"
+                      >
+                        {account?.address ? 'Use connected wallet' : 'or connect a wallet'}
+                      </button>
+                    )}
+                  </ConnectButton.Custom>
+                  <span className="text-[var(--tx-d)] text-[11px]">·</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (soluxAddr) {
+                        setAddress(soluxAddr)
+                      } else {
+                        connectSolux()
+                      }
+                    }}
+                    className="text-[11px] text-[var(--tx-m)] hover:text-[var(--gold)] underline underline-offset-2"
+                  >
+                    {isSoluxConnecting
+                      ? 'waiting for Solux…'
+                      : soluxAddr
+                        ? 'Use Solux address'
+                        : 'or Solux'}
+                  </button>
+                </div>
               </div>
               <input
                 type="text"

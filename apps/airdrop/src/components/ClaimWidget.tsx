@@ -8,6 +8,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   SENTRIX_MAINNET,
   ManualAddressInput,
+  SoluxConnectButton,
   useEffectiveAddress,
 } from "@sentriscloud/wallet-config";
 import { AIRDROP_CONTRACT_ADDRESS } from "@/lib/chain";
@@ -212,8 +213,11 @@ export function ClaimWidget() {
           it we offer a manual-address input so visitors can check
           eligibility for any address WITHOUT installing a wallet plugin.
           Claiming still needs a real connection (msg.sender must match). */}
-      <div className="mb-3 flex justify-center">
+      <div className="mb-2 flex justify-center">
         <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
+      </div>
+      <div className="mb-4 flex justify-center">
+        <SoluxConnectButton namespace="airdrop" />
       </div>
       <div className="mb-4">
         <details className="text-[11px] text-[var(--tx-m)]">

@@ -11,3 +11,4 @@ export {
   useManualAddress,
   isAddress,
 } from "./manual-address";
+export { SoluxConnectButton, useSoluxConnect } from "./solux-connect";

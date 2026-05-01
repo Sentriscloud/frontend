@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { formatAddress } from '@/lib/utils'
 import { Wallet, ChevronDown, LogOut, Copy, Eye } from 'lucide-react'
 import { useState } from 'react'
-import { ManualAddressInput, useEffectiveAddress } from '@sentriscloud/wallet-config'
+import { ManualAddressInput, SoluxConnectButton, useEffectiveAddress } from '@sentriscloud/wallet-config'
 
 export function WalletConnect() {
   const { address, isConnected, isConnecting, error, connect, disconnect } = useWalletStore()
@@ -114,6 +114,7 @@ export function WalletConnect() {
         <span className="hidden sm:block">Connect Wallet</span>
         <span className="sm:hidden">Connect</span>
       </Button>
+      <SoluxConnectButton namespace="coinblast" />
       <button
         onClick={() => setShowManual(!showManual)}
         className="text-[10px] text-[var(--tx-d)] hover:text-[var(--tx-m)] underline underline-offset-2"

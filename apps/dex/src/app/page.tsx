@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { ManualAddressInput, useEffectiveAddress } from "@sentriscloud/wallet-config";
+import { ManualAddressInput, SoluxConnectButton, useEffectiveAddress } from "@sentriscloud/wallet-config";
 import { SwapWidget } from "./SwapWidget";
 
 export default function HomePage() {
@@ -20,6 +20,7 @@ export default function HomePage() {
         </div>
         <div className="flex flex-col items-end gap-1.5 relative">
           <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
+          <SoluxConnectButton namespace="dex" />
           <button
             onClick={() => setShowManual(!showManual)}
             className="text-[10px] text-[var(--tx-d)] hover:text-[var(--tx-m)] underline underline-offset-2"
