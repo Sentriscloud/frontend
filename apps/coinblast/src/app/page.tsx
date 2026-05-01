@@ -7,7 +7,9 @@ import { DotGrid, GradientBlur } from '@/components/ui/GridBg'
 import { MOCK_TOKENS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
 import { useDeployedCurves } from '@/lib/useDeployedCurves'
+import { useCurveTradeStats } from '@/lib/useCurveTradeStats'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
+import { formatNumber } from '@/lib/utils'
 import { Rocket, TrendingUp } from 'lucide-react'
 import type { Token } from '@/types'
 
@@ -65,6 +67,16 @@ export default function HomePage() {
   const { tokens: deployed } = useDeployedTokens()
   const { curves, latestBlock } = useDeployedCurves()
 
+  // Volume + trader stats — scans Buy/Sell events from every curve.
+  // Only the address+deploy-block is stable input; pulling those out
+  // keeps the hook from re-firing every render when DeployedCurve
+  // shape (which carries strings + bigints) gets a fresh array ref.
+  const tradeInput = useMemo(
+    () => curves.map((c) => ({ curveAddress: c.curveAddress, blockNumber: c.blockNumber })),
+    [curves],
+  )
+  const trade = useCurveTradeStats(tradeInput)
+
   const merged = useMemo(
     () => mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves),
     [deployed, curves],
@@ -121,13 +133,28 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Live stats strip */}
+      {/* Live stats strip — left side is launchpad inventory, right
+          side is real on-chain trade activity scanned across every
+          curve. Trade numbers blank-out while loading so we don't
+          flash zeroes that look like "nothing's happening". */}
       <div className="border-y border-[var(--brd)] bg-[var(--sf)]/50 py-3 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-8 text-sm flex-wrap">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-x-8 gap-y-2 text-sm flex-wrap">
           {[
-            { label: 'coins launched', value: merged.length },
-            { label: 'with bonding curve', value: merged.filter(t => t.curveAddress).length },
-            { label: 'graduated to DEX', value: merged.filter(t => t.isGraduated).length },
+            { label: 'coins launched', value: String(merged.length) },
+            { label: 'with bonding curve', value: String(merged.filter(t => t.curveAddress).length) },
+            { label: 'graduated to DEX', value: String(merged.filter(t => t.isGraduated).length) },
+            {
+              label: 'SRX volume',
+              value: trade.isLoading ? '…' : formatNumber(trade.totalVolumeSrx, trade.totalVolumeSrx < 1 ? 4 : 2),
+            },
+            {
+              label: 'traders',
+              value: trade.isLoading ? '…' : String(trade.uniqueTraders),
+            },
+            {
+              label: 'trades',
+              value: trade.isLoading ? '…' : String(trade.buyCount + trade.sellCount),
+            },
           ].map((s) => (
             <span key={s.label} className="text-[var(--tx-d)]">
               <span className="text-[var(--gold)] font-bold">{s.value}</span> {s.label}
