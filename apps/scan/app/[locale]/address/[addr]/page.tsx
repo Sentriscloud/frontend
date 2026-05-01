@@ -29,14 +29,20 @@ import { CountBadge } from "@/components/common/CountBadge";
 import { WatchButton } from "@/components/common/WatchButton";
 import { downloadCsv } from "@/lib/csv";
 import { toMillis } from "@/lib/format";
+import { classifyRail, RailBadge, type Rail } from "@/components/common/RailBadge";
 
 type DirFilter = "all" | "in" | "out";
+type RailFilter = "all" | Rail;
 
 export default function AddressDetailPage({ params }: { params: Promise<{ addr: string }> }) {
   const { addr } = use(params);
   const { network } = useNetwork();
   const [page, setPage] = useState(1);
   const [dirFilter, setDirFilter] = useState<DirFilter>("all");
+  // Rail filter sits next to direction so a user can ask things like
+  // "show me only this address's EVM activity" or "only its staking ops"
+  // — both common asks on a mixed-rail chain.
+  const [railFilter, setRailFilter] = useState<RailFilter>("all");
   const { data: account, loading: accountLoading } = useAddress(network, addr);
   const { data: history, loading: historyLoading } = useAddressHistory(network, addr, page);
   const { data: tokens, loading: tokensLoading } = useAccountTokens(network, addr);
@@ -44,9 +50,15 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
   const label = useAddressLabel(addr);
 
   const filtered = (history ?? []).filter((tx) => {
-    if (dirFilter === "all") return true;
-    const isIn = tx.to.toLowerCase() === addr.toLowerCase();
-    return dirFilter === "in" ? isIn : !isIn;
+    if (dirFilter !== "all") {
+      const isIn = tx.to.toLowerCase() === addr.toLowerCase();
+      if ((dirFilter === "in") !== isIn) return false;
+    }
+    if (railFilter !== "all") {
+      const rail = classifyRail({ to_address: tx.to, data: tx.input_data });
+      if (rail !== railFilter) return false;
+    }
+    return true;
   });
 
   return (
@@ -141,9 +153,11 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
         <TabsContent value="history">
           <Card>
             <CardContent className="p-0">
-              {/* Filter bar + CSV export */}
+              {/* Filter bar + CSV export. Two pill rows: direction and rail.
+                  Both apply simultaneously — e.g. "Outbound + EVM" shows
+                  only EVM contracts this address called. */}
               <div className="flex items-center gap-2 p-3 border-b border-border flex-wrap">
-                <span className="text-xs text-muted-foreground mr-2">Filter:</span>
+                <span className="text-xs text-muted-foreground mr-2">Direction:</span>
                 {(["all", "in", "out"] as const).map((f) => (
                   <button
                     key={f}
@@ -155,6 +169,28 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
                     }`}
                   >
                     {f === "all" ? "All" : f === "in" ? "Inbound" : "Outbound"}
+                  </button>
+                ))}
+                <span className="text-xs text-muted-foreground ml-3 mr-2">Rail:</span>
+                {(
+                  [
+                    { key: "all", label: "All" },
+                    { key: "evm", label: "EVM" },
+                    { key: "native", label: "Native" },
+                    { key: "token", label: "SRC-20" },
+                    { key: "stake", label: "Staking" },
+                  ] as const
+                ).map((p) => (
+                  <button
+                    key={p.key}
+                    onClick={() => setRailFilter(p.key)}
+                    className={`text-xs px-3 py-1 rounded-md border transition-colors ${
+                      railFilter === p.key
+                        ? "bg-primary/10 text-primary border-primary/30"
+                        : "border-border text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {p.label}
                   </button>
                 ))}
                 <div className="ml-auto">
@@ -215,7 +251,12 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
                           return (
                             <tr key={tx.id}>
                               <td className="px-3 py-2.5">{dirIcon}</td>
-                              <td className="px-4 py-2.5"><TxHash hash={tx.id} /></td>
+                              <td className="px-4 py-2.5">
+                                <div className="flex items-center gap-2">
+                                  <TxHash hash={tx.id} />
+                                  <RailBadge rail={classifyRail({ to_address: tx.to, data: tx.input_data })} size="sm" />
+                                </div>
+                              </td>
                               <td className="px-4 py-2.5 text-muted-foreground text-xs">
                                 <Timestamp timestamp={tx.timestamp} />
                               </td>
@@ -261,6 +302,7 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
                           <div className="flex-1 min-w-0 space-y-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <TxHash hash={tx.id} />
+                              <RailBadge rail={classifyRail({ to_address: tx.to, data: tx.input_data })} size="sm" />
                               {!success && <StatusBadge status="failed" size="sm" />}
                             </div>
                             <div className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">

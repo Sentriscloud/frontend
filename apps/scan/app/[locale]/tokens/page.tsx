@@ -15,6 +15,7 @@ import { useTokens } from "@/lib/hooks";
 import { formatNumber, shortenAddress } from "@/lib/format";
 
 type SortKey = "supply" | "holders" | "transfers" | "none";
+type StandardFilter = "all" | "evm" | "tokenop";
 const PAGE_SIZE = 25;
 
 export default function TokensPage() {
@@ -23,18 +24,29 @@ export default function TokensPage() {
   const { data: tokens, loading } = useTokens(network);
   const [sortKey, setSortKey] = useState<SortKey>("none");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [standardFilter, setStandardFilter] = useState<StandardFilter>("all");
   const [page, setPage] = useState(1);
+
+  // Counts before filtering — drive the pill row labels so the user sees
+  // at a glance how many tokens of each rail exist on the chain.
+  const counts = useMemo(() => {
+    const evm = (tokens ?? []).filter((tk) => tk.standard === "evm").length;
+    const tokenop = (tokens ?? []).filter((tk) => tk.standard === "tokenop").length;
+    return { all: (tokens ?? []).length, evm, tokenop };
+  }, [tokens]);
 
   const sorted = useMemo(() => {
     if (!tokens) return [];
-    if (sortKey === "none") return tokens;
+    const filtered =
+      standardFilter === "all" ? tokens : tokens.filter((tk) => tk.standard === standardFilter);
+    if (sortKey === "none") return filtered;
     const dir = sortDir === "asc" ? 1 : -1;
-    return [...tokens].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       const av = (sortKey === "supply" ? a.total_supply : sortKey === "holders" ? a.holders : a.transfers) ?? 0;
       const bv = (sortKey === "supply" ? b.total_supply : sortKey === "holders" ? b.holders : b.transfers) ?? 0;
       return (av - bv) * dir;
     });
-  }, [tokens, sortKey, sortDir]);
+  }, [tokens, sortKey, sortDir, standardFilter]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -72,10 +84,42 @@ export default function TokensPage() {
       />
 
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 space-y-3">
           <CardTitle className="text-sm text-muted-foreground font-normal">
             {network === "mainnet" ? t("subtitle_mainnet") : t("subtitle_testnet")}
           </CardTitle>
+          {/* Rail filter — Sentrix has both EVM (ERC-20) and native (SRC-20)
+              tokens at the protocol level. Without this pill row, the two
+              get mixed together with only a small badge to tell them apart;
+              users hunting for one or the other had to eyeball the list. */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {(
+              [
+                { key: "all", label: "All", n: counts.all },
+                { key: "evm", label: "EVM (ERC-20)", n: counts.evm },
+                { key: "tokenop", label: "Native (SRC-20)", n: counts.tokenop },
+              ] as const
+            ).map((p) => {
+              const active = standardFilter === p.key;
+              return (
+                <button
+                  key={p.key}
+                  onClick={() => {
+                    setStandardFilter(p.key);
+                    setPage(1);
+                  }}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-transparent text-muted-foreground border-border/60 hover:text-foreground hover:border-border"
+                  }`}
+                >
+                  {p.label}
+                  <span className="ml-1.5 opacity-70 font-mono">{p.n}</span>
+                </button>
+              );
+            })}
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {loading && !tokens ? (

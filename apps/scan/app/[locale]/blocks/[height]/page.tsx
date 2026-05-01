@@ -16,8 +16,10 @@ import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useNetwork } from "@/lib/network-context";
 import { useBlock } from "@/lib/hooks";
+import { classifyRail, RailBadge, type Rail } from "@/components/common/RailBadge";
 
 const TX_PAGE_SIZE = 25;
+type RailFilter = "all" | Rail;
 
 export default function BlockDetailPage({ params }: { params: Promise<{ height: string }> }) {
   const { height } = use(params);
@@ -25,12 +27,32 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
   const blockHeight = parseInt(height, 10);
   const { data: block, loading } = useBlock(network, blockHeight);
   const [txPage, setTxPage] = useState(1);
+  const [railFilter, setRailFilter] = useState<RailFilter>("all");
+
+  // Per-rail counts surfaced on the Transactions tab so the user can see
+  // at a glance "this block was 12 EVM txs, 5 native, 3 SRC-20" without
+  // scrolling the table.
+  const railCounts = useMemo(() => {
+    const txs = block?.transactions ?? [];
+    const counts: Record<Rail, number> = { evm: 0, native: 0, token: 0, stake: 0 };
+    for (const tx of txs) {
+      counts[classifyRail({ to_address: tx.to, data: tx.input_data })] += 1;
+    }
+    return counts;
+  }, [block]);
+
+  const filteredTxs = useMemo(() => {
+    const txs = block?.transactions ?? [];
+    if (railFilter === "all") return txs;
+    return txs.filter(
+      (tx) => classifyRail({ to_address: tx.to, data: tx.input_data }) === railFilter,
+    );
+  }, [block, railFilter]);
 
   const pagedTxs = useMemo(() => {
-    if (!block?.transactions) return [];
     const start = (txPage - 1) * TX_PAGE_SIZE;
-    return block.transactions.slice(start, start + TX_PAGE_SIZE);
-  }, [block, txPage]);
+    return filteredTxs.slice(start, start + TX_PAGE_SIZE);
+  }, [filteredTxs, txPage]);
 
   if (loading) {
     return (
@@ -55,7 +77,7 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
   }
 
   const txCount = block.transactions?.length || 0;
-  const totalTxPages = Math.max(1, Math.ceil(txCount / TX_PAGE_SIZE));
+  const totalTxPages = Math.max(1, Math.ceil(filteredTxs.length / TX_PAGE_SIZE));
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
@@ -236,12 +258,56 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
 
         <TabsContent value="transactions">
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 space-y-3">
               <CardTitle className="text-base">Block Transactions</CardTitle>
+              {/* Rail breakdown + filter — Sentrix mixes EVM and native txs in
+                  the same block; surfacing per-rail counts up front lets the
+                  user see what kind of activity this block carried without
+                  scanning the table. */}
+              {txCount > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {(
+                    [
+                      { key: "all", label: "All", n: txCount },
+                      { key: "evm", label: "EVM", n: railCounts.evm },
+                      { key: "native", label: "Native", n: railCounts.native },
+                      { key: "token", label: "SRC-20", n: railCounts.token },
+                      { key: "stake", label: "Staking", n: railCounts.stake },
+                    ] as const
+                  ).map((p) => {
+                    const active = railFilter === p.key;
+                    const dimmed = !active && p.n === 0;
+                    return (
+                      <button
+                        key={p.key}
+                        onClick={() => {
+                          setRailFilter(p.key);
+                          setTxPage(1);
+                        }}
+                        disabled={p.n === 0 && p.key !== "all"}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors ${
+                          active
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : dimmed
+                              ? "bg-transparent text-muted-foreground/50 border-border/40 cursor-default"
+                              : "bg-transparent text-muted-foreground border-border/60 hover:text-foreground hover:border-border"
+                        }`}
+                      >
+                        {p.label}
+                        <span className="ml-1.5 opacity-70 font-mono">{p.n}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </CardHeader>
             <CardContent className="p-0">
               {txCount === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">No transactions in this block.</div>
+              ) : pagedTxs.length === 0 ? (
+                <div className="p-8 text-center text-sm text-muted-foreground">
+                  No {railFilter} transactions in this block.
+                </div>
               ) : (
                 <>
                   <div className="overflow-x-auto">
@@ -258,7 +324,12 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
                       <tbody className="divide-y divide-border/60 row-hover">
                         {pagedTxs.map((tx) => (
                           <tr key={tx.id}>
-                            <td className="px-4 py-2.5"><TxHash hash={tx.id} /></td>
+                            <td className="px-4 py-2.5">
+                              <div className="flex items-center gap-2">
+                                <TxHash hash={tx.id} />
+                                <RailBadge rail={classifyRail({ to_address: tx.to, data: tx.input_data })} size="sm" />
+                              </div>
+                            </td>
                             <td className="px-4 py-2.5"><Address address={tx.from} muted showCopy={false} className="text-xs" /></td>
                             <td className="px-4 py-2.5"><Address address={tx.to} muted showCopy={false} className="text-xs" /></td>
                             <td className="px-4 py-2.5 text-right font-mono">{tx.amount} SRX</td>
@@ -268,7 +339,7 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
                       </tbody>
                     </table>
                   </div>
-                  {txCount > TX_PAGE_SIZE && (
+                  {filteredTxs.length > TX_PAGE_SIZE && (
                     <div className="border-t border-border">
                       <Pagination page={txPage} totalPages={totalTxPages} onPageChange={setTxPage} />
                     </div>
