@@ -1,5 +1,10 @@
 import { ClaimWidget } from "@/components/ClaimWidget";
 
+// Skip static prerendering — ClaimWidget reads from wagmi hooks which need
+// the WagmiProvider mounted, and Next can't run that during SSG. We don't
+// gain anything from prerendering this single-page claim site anyway.
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   return (
     <main className="min-h-screen flex flex-col">
