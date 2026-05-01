@@ -8,7 +8,8 @@ import type { Token } from '@/types'
 import { useWalletStore } from '@/store/wallet'
 import { ArrowDown, Info, ExternalLink, Loader } from 'lucide-react'
 import { parseEther, formatEther } from 'viem'
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
+import { useEffectiveAddress, useSoluxSigner } from '@sentriscloud/wallet-config'
 import {
   useCurveState,
   useQuoteBuy,
@@ -16,6 +17,7 @@ import {
   useBuy,
   useSell,
 } from '@/lib/useCoinBlastCurve'
+import { coinBlastCurveAbi } from '@/lib/coinblast-curve-abi'
 
 interface BuySellWidgetProps {
   token: Token
@@ -64,6 +66,15 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
   const [tab, setTab] = useState<'buy' | 'sell'>('buy')
   const [amount, setAmount] = useState('')
   const { isConnected, connect, address } = useWalletStore()
+  const { source: addrSource, manualAddress } = useEffectiveAddress('coinblast')
+  // Real-wallet path wins on isConnected; Solux/manual path takes over
+  // when the user has only connected a view-only address. Submit branch
+  // dispatches accordingly further down.
+  const effectiveAddress: `0x${string}` | undefined = isConnected
+    ? (address as `0x${string}` | undefined)
+    : (manualAddress as `0x${string}` | undefined) ?? undefined
+  const useSoluxPath = !isConnected && addrSource === 'manual' && !!manualAddress
+  const publicClient = usePublicClient({ chainId: 7119 })
 
   const curve = useCurveState(curveAddr)
   const isGraduated = curve.graduated === true
@@ -101,12 +112,13 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
   const sellQuote = useQuoteSell(curveAddr, tab === 'sell' ? sellAmountWei : undefined)
 
   // Allowance check for sell (curve pulls tokens via transferFrom).
+  // Reads against effectiveAddress so Solux-mode users see correct gating.
   const allowanceRead = useReadContract({
     abi: erc20Abi,
     address: tokenAddr,
     functionName: 'allowance',
-    args: address ? [address as `0x${string}`, curveAddr] : undefined,
-    query: { enabled: !!address && tab === 'sell' && sellAmountWei > 0n },
+    args: effectiveAddress ? [effectiveAddress, curveAddr] : undefined,
+    query: { enabled: !!effectiveAddress && tab === 'sell' && sellAmountWei > 0n },
   })
   const needsApproval =
     tab === 'sell' &&
@@ -121,12 +133,30 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
   // allowance read, so the user just clicks Sell again once it lands.
   const { writeContract: writeApprove, data: approveTx, isPending: isApproving } = useWriteContract()
   const approveReceipt = useWaitForTransactionReceipt({ hash: approveTx })
+  // Solux popup signer for the manual-mode path. signAndSend opens the
+  // Solux /sign popup, the user reviews + signs locally, and the raw
+  // signed tx broadcasts via wagmi's public client. We track its hash
+  // separately and merge into the existing isMining/isMined flow.
+  const soluxSigner = useSoluxSigner({
+    chainId: 7119,
+    from: effectiveAddress ?? '0x0000000000000000000000000000000000000000',
+  })
+  const [soluxTxHash, setSoluxTxHash] = useState<`0x${string}` | undefined>()
+  const soluxReceipt = useWaitForTransactionReceipt({ hash: soluxTxHash })
   const explorerBase = 'https://scan.sentrixchain.com'
-  const txHash = buyHook.txHash ?? sellHook.txHash ?? approveTx
-  const isPending = buyHook.isPending || sellHook.isPending || isApproving
-  const isMining = buyHook.isConfirming || sellHook.isConfirming || approveReceipt.isLoading
-  const isMined = buyHook.isConfirmed || sellHook.isConfirmed || approveReceipt.isSuccess
-  const txError = buyHook.error ?? sellHook.error
+  const txHash = buyHook.txHash ?? sellHook.txHash ?? approveTx ?? soluxTxHash
+  const isPending = buyHook.isPending || sellHook.isPending || isApproving || soluxSigner.isSigning
+  const isMining =
+    buyHook.isConfirming ||
+    sellHook.isConfirming ||
+    approveReceipt.isLoading ||
+    soluxReceipt.isLoading
+  const isMined =
+    buyHook.isConfirmed ||
+    sellHook.isConfirmed ||
+    approveReceipt.isSuccess ||
+    soluxReceipt.isSuccess
+  const txError = buyHook.error ?? sellHook.error ?? (soluxSigner.error ? new Error(soluxSigner.error) : null)
 
   // Refetch allowance once the approve mines so the button label flips
   // from "Approve ..." to "Sell ..." automatically.
@@ -142,17 +172,46 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
   }, [isMined])
 
   function handleAction() {
-    if (!isConnected) { connect(); return }
+    // Three-way branch:
+    //   1. neither connected nor Solux-mode → kick wagmi connect modal
+    //   2. Solux-mode → open Solux /sign popup, broadcast via publicClient
+    //   3. real wallet connected → existing wagmi useBuy/useSell path
+    if (!isConnected && !useSoluxPath) { connect(); return }
     if (isGraduated) return
+
     if (tab === 'buy') {
       if (amountNum <= 0) return
-      // Pass a 0 minTokensOut for now — the contract refunds dust if the
-      // binary search underfills msg.value. A future iteration plugs in a
-      // user-set slippage % to derive minTokensOut from the live quote.
-      buyHook.submit(amount, 0n)
+      if (useSoluxPath) {
+        soluxSigner
+          .signAndSend({
+            to: curveAddr,
+            abi: coinBlastCurveAbi,
+            functionName: 'buy',
+            args: [0n], // minTokensOut=0; refund-dust handles slippage
+            value: parseEther(amount),
+            label: `Buy ${token.symbol} on CoinBlast`,
+          })
+          .then(setSoluxTxHash)
+          .catch(() => {})
+      } else {
+        buyHook.submit(amount, 0n)
+      }
     } else {
       if (sellAmountWei === 0n) return
       if (needsApproval) {
+        if (useSoluxPath) {
+          soluxSigner
+            .signAndSend({
+              to: tokenAddr,
+              abi: erc20Abi,
+              functionName: 'approve',
+              args: [curveAddr, sellAmountWei],
+              label: `Approve ${token.symbol} for CoinBlast curve`,
+            })
+            .then(setSoluxTxHash)
+            .catch(() => {})
+          return
+        }
         writeApprove({
           abi: erc20Abi,
           address: tokenAddr,
@@ -161,7 +220,20 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
         })
         return
       }
-      sellHook.submit(sellAmountWei, 0n)
+      if (useSoluxPath) {
+        soluxSigner
+          .signAndSend({
+            to: curveAddr,
+            abi: coinBlastCurveAbi,
+            functionName: 'sell',
+            args: [sellAmountWei, 0n],
+            label: `Sell ${token.symbol} on CoinBlast`,
+          })
+          .then(setSoluxTxHash)
+          .catch(() => {})
+      } else {
+        sellHook.submit(sellAmountWei, 0n)
+      }
     }
   }
 
@@ -265,17 +337,17 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
             isMining
           }
         >
-          {!isConnected
+          {!isConnected && !useSoluxPath
             ? 'Connect Wallet'
             : isPending
-            ? 'Confirm in wallet…'
+            ? useSoluxPath ? 'Sign in Solux popup…' : 'Confirm in wallet…'
             : isMining
             ? 'Mining…'
             : tab === 'buy'
-            ? `Buy ${token.symbol}`
+            ? useSoluxPath ? `Buy ${token.symbol} with Solux ⌬` : `Buy ${token.symbol}`
             : needsApproval
-            ? `Approve ${token.symbol}`
-            : `Sell ${token.symbol}`}
+            ? useSoluxPath ? `Approve ${token.symbol} (Solux)` : `Approve ${token.symbol}`
+            : useSoluxPath ? `Sell ${token.symbol} (Solux)` : `Sell ${token.symbol}`}
         </Button>
 
         {(isPending || isMining) && (
