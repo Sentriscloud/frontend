@@ -101,8 +101,15 @@ export default function NetworkCard() {
             />
             <Stat
               label="Finalized"
-              value={lag !== null ? (lag === 0 ? 'live' : `−${lag}`) : '—'}
-              tone={lag === 0 ? 'green' : 'tx'}
+              value={
+                liveFinalized === null
+                  ? '—'
+                  : lag === 0
+                  ? `#${liveFinalized.toLocaleString()}`
+                  : `#${liveFinalized.toLocaleString()}`
+              }
+              sub={lag !== null && lag > 0 ? `${lag} blk behind` : lag === 0 ? 'in sync' : undefined}
+              tone={lag === 0 ? 'green' : lag !== null && lag > 30 ? 'gold' : 'tx'}
             />
             <Stat
               label="Validators"
@@ -115,12 +122,16 @@ export default function NetworkCard() {
   );
 }
 
-function Stat({ label, value, tone = 'tx' }: { label: string; value: string; tone?: 'tx' | 'green' }) {
-  const color = tone === 'green' ? 'var(--green)' : 'var(--tx)';
+function Stat({ label, value, sub, tone = 'tx' }: { label: string; value: string; sub?: string; tone?: 'tx' | 'green' | 'gold' }) {
+  const color =
+    tone === 'green' ? 'var(--green)' :
+    tone === 'gold'  ? 'var(--gold)'  :
+                       'var(--tx)';
   return (
     <div>
       <p className="text-[11px] text-[var(--tx-m)] mb-1">{label}</p>
       <p className="text-[14px] font-semibold tab-num" style={{ color }}>{value}</p>
+      {sub && <p className="text-[10px] text-[var(--tx-d)] mt-0.5 tab-num">{sub}</p>}
     </div>
   );
 }

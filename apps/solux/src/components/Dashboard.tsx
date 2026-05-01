@@ -381,12 +381,13 @@ export default function Dashboard() {
             variant="ghost"
             icon={<ArrowLeftRight className="w-5 h-5" />}
             label="Swap"
-            onClick={() => setComingSoon({
-              feature: 'Token swaps',
-              description: 'Cross-asset swaps will land once a Sentrix DEX goes live. Until then, you can trade SRX on partner exchanges.',
-              eta: 'Q2 2026',
-            })}
-            soon
+            onClick={() => {
+              // SentrixV2 DEX deployed 2026-05-01. Solux doesn't have its own
+              // swap UI yet — bounce to the dedicated dex app for now.
+              if (typeof window !== 'undefined') {
+                window.open('https://dex.sentrixchain.com', '_blank', 'noopener,noreferrer');
+              }
+            }}
           />
         </div>
 
