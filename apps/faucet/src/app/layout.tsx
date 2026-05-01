@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
-import { SentrixPrivyProvider } from '@sentriscloud/wallet-config'
+import { PrivyProviderDynamic } from './_components/privy-provider-dynamic'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -43,9 +43,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className="antialiased min-h-screen">
-        <SentrixPrivyProvider>
+        <PrivyProviderDynamic>
           {children}
-        </SentrixPrivyProvider>
+        </PrivyProviderDynamic>
         {turnstileEnabled && (
           <Script
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"
