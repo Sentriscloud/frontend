@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SentrixWalletProvider } from '@sentriscloud/wallet-config'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -19,11 +20,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className="antialiased min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 relative z-[1]">
-          {children}
-        </main>
-        <Footer />
+        <SentrixWalletProvider
+          appName="CoinBlast"
+          appDescription="Launch your coin in seconds. Fair for everyone."
+          appUrl="https://coinblast.sentrixchain.com"
+          mainnetOnly
+        >
+          <Header />
+          <main className="flex-1 relative z-[1]">
+            {children}
+          </main>
+          <Footer />
+        </SentrixWalletProvider>
       </body>
     </html>
   )

@@ -10,6 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@rainbow-me/rainbowkit": "^2.2.0",
+    "@sentriscloud/wallet-config": "workspace:*",
+    "@tanstack/react-query": "^5.62.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "ethers": "^6.16.0",
@@ -20,6 +23,8 @@
     "react-dom": "19.1.0",
     "recharts": "^3.8.1",
     "tailwind-merge": "^3.5.0",
+    "viem": "^2.21.0",
+    "wagmi": "^2.14.0",
     "zustand": "^5.0.12"
   },
   "devDependencies": {

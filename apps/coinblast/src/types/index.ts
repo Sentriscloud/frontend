@@ -12,6 +12,12 @@ export interface Token {
   isGraduated: boolean
   isWarned: boolean
   isVerified: boolean
+  /**
+   * On-chain CoinBlastCurve contract address — present when this token has a
+   * deployed bonding-curve contract. Absent for mock data + pre-deploy state;
+   * BuySellWidget falls back to the local TS estimator when null.
+   */
+  curveAddress?: `0x${string}`
   // social links (all optional)
   website?: string
   twitter?: string
