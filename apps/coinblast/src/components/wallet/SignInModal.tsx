@@ -122,11 +122,16 @@ export function SignInModal({ open, onClose, namespace, onSoluxConnect, isSoluxC
             {/* Secondary: real wallet */}
             <button
               onClick={() => {
+                // Synchronous order matters: openConnectModal MUST run
+                // inside the same user-gesture as the click, or browsers
+                // refuse to let RainbowKit subsequently call
+                // eth_requestAccounts (which is what actually pops
+                // MetaMask / Rabby / OKX). The earlier setTimeout(50ms)
+                // bridge broke the gesture chain — MetaMask never
+                // opened because the wallet-pop call landed in an async
+                // tick. Open RainbowKit first, close ours after.
+                openConnectModal?.()
                 onClose()
-                // RainbowKit's modal needs a tick to mount cleanly after
-                // ours unmounts — without the timeout the open call
-                // sometimes loses to its own backdrop fade.
-                setTimeout(() => openConnectModal?.(), 50)
               }}
               className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[var(--sf2)] hover:bg-[var(--sf3)] border border-[var(--brd)] hover:border-[var(--brd2)] transition-colors text-left"
             >

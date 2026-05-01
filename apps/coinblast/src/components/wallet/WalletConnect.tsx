@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { SignInModal } from './SignInModal'
 import { formatAddress } from '@/lib/utils'
 import { Wallet, ChevronDown, LogOut, Copy, Eye } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useEffectiveAddress, useSoluxConnect } from '@sentriscloud/wallet-config'
 
 export function WalletConnect() {
@@ -18,6 +18,16 @@ export function WalletConnect() {
   // would unmount the moment the user clicks Solux (we close the
   // modal in the same tick) and the popup's reply would never land.
   const { connect: connectSolux, isConnecting: isSoluxConnecting } = useSoluxConnect('coinblast')
+
+  // Auto-close the sign-in modal as soon as ANY connect path resolves
+  // (real wallet via RainbowKit, or Solux address landing in manual
+  // mode). Without this the modal would stay open in the layer below
+  // RainbowKit's confirm-dialog and the user has to dismiss it twice.
+  useEffect(() => {
+    if (signInOpen && (isConnected || (addrSource === 'manual' && manualAddress))) {
+      setSignInOpen(false)
+    }
+  }, [signInOpen, isConnected, addrSource, manualAddress])
 
   const copyAddress = async () => {
     if (!address) return

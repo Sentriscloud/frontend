@@ -27,6 +27,18 @@ export function isAddress(value: string): value is `0x${string}` {
  * Read + write the manually-entered address for `namespace`. Falls back to
  * `null` when nothing is stored or the stored value is malformed.
  */
+// Custom event so multiple useManualAddress instances in the same
+// component tree (e.g. useSoluxConnect calling setAddress + a
+// sibling useEffectiveAddress reading) stay in sync. localStorage's
+// native 'storage' event only fires *cross-window*, so same-window
+// updates need this synthetic broadcast.
+const SYNC_EVENT = "sentrix:manual-address:changed";
+
+interface SyncDetail {
+  key: string;
+  value: `0x${string}` | null;
+}
+
 export function useManualAddress(namespace: string): {
   address: `0x${string}` | null;
   setAddress: (next: string | null) => void;
@@ -35,27 +47,56 @@ export function useManualAddress(namespace: string): {
   const [address, _setAddress] = useState<`0x${string}` | null>(null);
 
   // Lazy hydrate from localStorage on mount — avoids SSR mismatch since
-  // the server has no localStorage.
+  // the server has no localStorage. Plus subscribe to same-window
+  // changes via the synthetic event AND cross-window changes via the
+  // native storage event.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(key);
       if (raw && isAddress(raw)) _setAddress(raw);
+      else _setAddress(null);
     } catch {
       /* SSR / private mode / quota — ignore */
     }
+
+    if (typeof window === "undefined") return;
+    function onSync(ev: Event) {
+      const detail = (ev as CustomEvent<SyncDetail>).detail;
+      if (!detail || detail.key !== key) return;
+      _setAddress(detail.value);
+    }
+    function onStorage(ev: StorageEvent) {
+      if (ev.key !== key) return;
+      const v = ev.newValue;
+      _setAddress(v && isAddress(v) ? v : null);
+    }
+    window.addEventListener(SYNC_EVENT, onSync as EventListener);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(SYNC_EVENT, onSync as EventListener);
+      window.removeEventListener("storage", onStorage);
+    };
   }, [key]);
 
   const setAddress = useCallback(
     (next: string | null) => {
       try {
+        let value: `0x${string}` | null = null;
         if (next === null) {
           localStorage.removeItem(key);
-          _setAddress(null);
-          return;
-        }
-        if (isAddress(next)) {
+        } else if (isAddress(next)) {
           localStorage.setItem(key, next);
-          _setAddress(next);
+          value = next;
+        } else {
+          return; // invalid value, ignore
+        }
+        _setAddress(value);
+        // Notify every other useManualAddress instance in this window
+        // about the change so they can re-read without remounting.
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent<SyncDetail>(SYNC_EVENT, { detail: { key, value } }),
+          );
         }
       } catch {
         /* ignore */
