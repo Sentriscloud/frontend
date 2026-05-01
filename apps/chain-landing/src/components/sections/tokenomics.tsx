@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
 import { TOKENOMICS_BARS, TOKENOMICS_CARDS } from "@/data/content";
@@ -30,14 +31,15 @@ const CARD_COLORS = [
 ];
 
 export function Tokenomics() {
+  const t = useTranslations("section.tokenomics");
   return (
     <section id="tokenomics" className="tknm-section py-[120px] px-6 md:px-[60px] border-t border-b border-[var(--brd)]">
       <Reveal>
         <SectionHeader
-          tag="Tokenomics"
-          title="Supply"
-          titleEm="distribution."
-          subtitle="Hard-capped at 315 million SRX. Transparent allocation with built-in deflation and halving schedule."
+          tag={t("tag")}
+          title={t("title")}
+          titleEm={t("titleEm")}
+          subtitle={t("subtitle")}
         />
       </Reveal>
 

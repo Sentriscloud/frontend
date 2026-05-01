@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { SectionHeader } from "./section-header";
 import { Reveal } from "@/components/ui/reveal";
 import { SECURITY_CARDS } from "@/data/content";
@@ -35,14 +36,15 @@ const cardVariants = {
 };
 
 export function Security() {
+  const t = useTranslations("section.security");
   return (
     <section id="security" className="py-[120px] px-6 md:px-[60px]">
       <Reveal>
         <SectionHeader
-          tag="Cryptographic Stack"
-          title="Security"
-          titleEm="first."
-          subtitle="Every layer of Sentrix is protected by industry-standard cryptographic primitives. Zero compromises."
+          tag={t("tag")}
+          title={t("title")}
+          titleEm={t("titleEm")}
+          subtitle={t("subtitle")}
         />
       </Reveal>
 

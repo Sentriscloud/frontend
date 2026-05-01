@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
 
@@ -34,10 +35,11 @@ const SRC20_FEATURES = [
 ];
 
 export function SRC20() {
+  const t = useTranslations("section.src20");
   return (
     <section id="src20" className="src20-section py-[120px] px-6 md:px-[60px] border-t border-b border-[var(--brd)]">
       <Reveal>
-        <SectionHeader tag="Token Standard" title="SRC-20" titleEm="." subtitle="The Sentrix token standard. Deploy your own token on Sentrix Chain — permissionless, instant, and gas-efficient." />
+        <SectionHeader tag={t("tag")} title={t("title")} titleEm={t("titleEm")} subtitle={t("subtitle")} />
       </Reveal>
 
       <Reveal delay={0.15}>

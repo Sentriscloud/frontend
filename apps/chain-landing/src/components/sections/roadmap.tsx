@@ -1,18 +1,20 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
 import { ROADMAP } from "@/data/content";
 
 export function Roadmap() {
+  const t = useTranslations("section.roadmap");
   return (
     <section id="roadmap" className="py-[120px] px-6 md:px-[60px]">
       <Reveal>
       <SectionHeader
-        tag="Roadmap"
-        title="The path"
-        titleEm="forward."
-        subtitle="From permissioned PoA to fully decentralized public chain. Progressive decentralization done right."
+        tag={t("tag")}
+        title={t("title")}
+        titleEm={t("titleEm")}
+        subtitle={t("subtitle")}
       />
       </Reveal>
 

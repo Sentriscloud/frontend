@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { GlowCard } from "@/components/ui/glow-card";
 import { GradientBlur } from "@/components/ui/grid-bg";
@@ -40,15 +41,16 @@ const cardVariants = {
 };
 
 export function Features() {
+  const t = useTranslations("section.features");
   return (
     <section id="features" className="relative py-[120px] px-6 md:px-[60px]">
       <GradientBlur />
       <Reveal>
         <SectionHeader
-          tag="Why Sentrix"
-          title="Engineered for"
-          titleEm="performance."
-          subtitle="Every component built from scratch in Rust. Zero unsafe code. No forks, no shortcuts."
+          tag={t("tag")}
+          title={t("title")}
+          titleEm={t("titleEm")}
+          subtitle={t("subtitle")}
         />
       </Reveal>
 

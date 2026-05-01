@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
 import { ECOSYSTEM } from "@/data/content";
@@ -25,14 +26,15 @@ const cardVariants = {
 };
 
 export function Ecosystem() {
+  const t = useTranslations("section.ecosystem");
   return (
     <section id="ecosystem" className="py-[120px] px-6 md:px-[60px]">
       <Reveal>
         <SectionHeader
-          tag="Ecosystem"
-          title="Powering real"
-          titleEm="applications."
-          subtitle="Every product in the SentrisCloud suite runs on Sentrix Chain — creating organic, sustained demand for SRX."
+          tag={t("tag")}
+          title={t("title")}
+          titleEm={t("titleEm")}
+          subtitle={t("subtitle")}
         />
       </Reveal>
 

@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "title": "Sentrix Chain — L1 sumber-terbuka, dibangun dengan Rust",
+    "description": "L1 sumber-terbuka kompatibel-EVM, dibangun dengan Rust. Blok 1-detik, finalitas BFT instan, SRX deflasioner. Chain ID 7119."
+  },
+  "nav": {
+    "about": "Tentang",
+    "features": "Fitur",
+    "tokens": "Token",
+    "ecosystem": "Ekosistem",
+    "roadmap": "Roadmap",
+    "validators": "Validator",
+    "docs": "Dokumentasi",
+    "community": "Komunitas",
+    "explorer": "Explorer",
+    "menu": "Menu"
+  },
+  "locale": {
+    "switchLabel": "Bahasa",
+    "en": "EN",
+    "id": "ID"
+  },
+  "hero": {
+    "tagline": "L1 sumber-terbuka kompatibel-EVM, dibangun dengan Rust.",
+    "body": "Chain nyata, blok nyata, kode nyata.",
+    "ctaExplore": "Jelajahi Chain",
+    "ctaBuild": "Mulai Membangun",
+    "ctaCommunity": "Gabung Komunitas →"
+  },
+  "founder": {
+    "line": "Dibangun oleh satu developer di Indonesia. Tanpa VC, tanpa tim. Hanya Rust, dirilis setiap hari."
+  },
+  "cta": {
+    "tag": "Mulai Sekarang",
+    "headingLine1": "Miliki masa depan.",
+    "headingLine2": "Pegang SRX.",
+    "subheading": "Bergabunglah dengan ekosistem Sentrix. Deploy token, jalankan node validator, atau bangun aplikasi berikutnya di atas chain yang dirancang untuk bertahan.",
+    "exploreChain": "Jelajahi Chain",
+    "viewSource": "Lihat Source",
+    "linkExplorer": "Explorer",
+    "linkApi": "API",
+    "linkRpc": "RPC",
+    "linkGithub": "GitHub"
+  },
+  "footer": {
+    "ecosystem": "Ekosistem",
+    "build": "Bangun",
+    "community": "Komunitas",
+    "explorer": "Explorer",
+    "faucet": "Faucet",
+    "soluxWallet": "Dompet Solux",
+    "coinblast": "CoinBlast",
+    "docs": "Dokumentasi",
+    "whitepaper": "Whitepaper",
+    "rpc": "RPC",
+    "testnetRpc": "RPC Testnet",
+    "github": "GitHub",
+    "releases": "Rilis",
+    "brandKit": "Brand kit",
+    "telegram": "Telegram",
+    "twitter": "Twitter",
+    "security": "Keamanan",
+    "copyright": "© 2026 Sentrix Labs. Hak cipta dilindungi."
+  },
+  "section": {
+    "about": {
+      "tag": "Tentang Sentrix",
+      "title": "Apa itu",
+      "titleEm": "Sentrix Chain.",
+      "subtitle": "Blockchain Layer-1 yang dirancang untuk uang sehat dan settlement yang dapat diprogram. Kelangkaan ala Bitcoin bertemu tooling kompatibel-Ethereum."
+    },
+    "features": {
+      "tag": "Mengapa Sentrix",
+      "title": "Dirancang untuk",
+      "titleEm": "performa.",
+      "subtitle": "Setiap komponen dibangun dari nol dengan Rust. Tanpa unsafe code. Tanpa fork, tanpa jalan pintas."
+    },
+    "tokens": {
+      "tag": "Ekonomi Token",
+      "title": "Satu token.",
+      "titleEm": "Tiga peran.",
+      "subtitle": "SRX adalah satu-satunya token protokol. Membayar gas, mengamankan chain melalui staking, dan menyelaraskan insentif ekonomi di seluruh jaringan."
+    },
+    "tokenomics": {
+      "tag": "Tokenomics",
+      "title": "Distribusi",
+      "titleEm": "supply.",
+      "subtitle": "Hard cap di 315 juta SRX. Alokasi transparan dengan deflasi bawaan dan jadwal halving."
+    },
+    "ecosystem": {
+      "tag": "Ekosistem",
+      "title": "Menggerakkan",
+      "titleEm": "aplikasi nyata.",
+      "subtitle": "Setiap produk dalam suite SentrisCloud berjalan di Sentrix Chain — menciptakan permintaan SRX yang organik dan berkelanjutan."
+    },
+    "src20": {
+      "tag": "Standar Token",
+      "title": "SRC-20",
+      "titleEm": ".",
+      "subtitle": "Standar token Sentrix. Deploy token Anda sendiri di Sentrix Chain — tanpa izin, instan, dan hemat gas."
+    },
+    "architecture": {
+      "tag": "Di Balik Layar",
+      "title": "Arsitektur",
+      "titleEm": "sistem.",
+      "subtitle": "Arsitektur berlapis dan modular yang sepenuhnya dibangun dengan Rust. Setiap komponen punya peran spesifik dan dapat diuji secara independen."
+    },
+    "api": {
+      "tag": "Tiga Lapisan API",
+      "title": "Satu port,",
+      "titleEm": "akses penuh.",
+      "subtitle": "REST, JSON-RPC 2.0, dan Block Explorer — semua di port 8545. Endpoint POST membutuhkan header X-API-Key."
+    },
+    "security": {
+      "tag": "Stack Kriptografi",
+      "title": "Keamanan",
+      "titleEm": "yang utama.",
+      "subtitle": "Setiap lapisan Sentrix dilindungi oleh primitif kriptografi standar industri. Tanpa kompromi."
+    },
+    "roadmap": {
+      "tag": "Roadmap",
+      "title": "Jalan",
+      "titleEm": "ke depan.",
+      "subtitle": "Dari PoA berizin menuju public chain yang sepenuhnya terdesentralisasi. Desentralisasi progresif yang dilakukan dengan benar."
+    },
+    "validators": {
+      "tag": "Jalankan Node",
+      "title": "Untuk",
+      "titleEm": "validator.",
+      "subtitle": "4 validator produksi dengan konsensus DPoS+BFT. Amankan jaringan, dapatkan reward, ikut menentukan arah chain."
+    },
+    "developers": {
+      "tag": "Bangun di Sentrix",
+      "title": "Mulai",
+      "titleEm": "membangun.",
+      "subtitle": "Dua permukaan, satu chain. Deploy kontrak Solidity via EVM, atau gunakan CLI Sentrix native untuk token kelas-utama."
+    }
+  },
+  "developerTabs": {
+    "tabEvm": "EVM (Solidity)",
+    "tabNative": "Native (CLI)",
+    "evmContractCaption": "Kontrak token ERC-20 — pakai OpenZeppelin langsung",
+    "evmDeployCaption": "Deploy dengan ethers.js",
+    "nativeCaption": "Deploy token dengan CLI Sentrix — tanpa langkah kompilasi",
+    "fullDocs": "Dokumentasi lengkap →"
+  }
+}

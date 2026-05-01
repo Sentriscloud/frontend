@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
 import { METAMASK_CONFIG, SITE } from "@/data/content";
@@ -12,14 +13,15 @@ const ARCH_MODULES = [
 ];
 
 export function Architecture() {
+  const t = useTranslations("section.architecture");
   return (
     <section id="architecture" className="py-[120px] px-6 md:px-[60px]">
       <Reveal>
         <SectionHeader
-          tag="Under The Hood"
-          title="System"
-          titleEm="architecture."
-          subtitle="A modular, layered architecture built entirely in Rust. Every component is purpose-built and independently testable."
+          tag={t("tag")}
+          title={t("title")}
+          titleEm={t("titleEm")}
+          subtitle={t("subtitle")}
         />
       </Reveal>
 

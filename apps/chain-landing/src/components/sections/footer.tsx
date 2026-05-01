@@ -1,37 +1,38 @@
+import { useTranslations } from "next-intl";
 import { SentrixLogo } from "@/components/ui/logo";
 import { SITE } from "@/data/content";
 
-const COLUMNS = [
+const COLUMN_DEFS = [
   {
-    heading: "Ecosystem",
+    headingKey: "ecosystem",
     links: [
-      { label: "Explorer",     href: SITE.explorer },
-      { label: "Faucet",       href: SITE.faucet },
-      { label: "Solux Wallet", href: SITE.solux },
-      { label: "CoinBlast",    href: SITE.coinblast },
+      { labelKey: "explorer",     href: SITE.explorer },
+      { labelKey: "faucet",       href: SITE.faucet },
+      { labelKey: "soluxWallet",  href: SITE.solux },
+      { labelKey: "coinblast",    href: SITE.coinblast },
     ],
   },
   {
-    heading: "Build",
+    headingKey: "build",
     links: [
-      { label: "Docs",       href: SITE.docs },
-      { label: "Whitepaper", href: SITE.whitepaper },
-      { label: "RPC",        href: SITE.rpc },
-      { label: "Testnet RPC", href: SITE.testnetRpc },
-      { label: "GitHub",     href: SITE.github },
-      { label: "Releases",   href: SITE.releases },
-      { label: "Brand kit",  href: SITE.brandKit },
+      { labelKey: "docs",        href: SITE.docs },
+      { labelKey: "whitepaper",  href: SITE.whitepaper },
+      { labelKey: "rpc",         href: SITE.rpc },
+      { labelKey: "testnetRpc",  href: SITE.testnetRpc },
+      { labelKey: "github",      href: SITE.github },
+      { labelKey: "releases",    href: SITE.releases },
+      { labelKey: "brandKit",    href: SITE.brandKit },
     ],
   },
   {
-    heading: "Community",
+    headingKey: "community",
     links: [
-      { label: "Telegram", href: SITE.telegram },
-      { label: "Twitter",  href: SITE.twitter },
-      { label: "Security", href: `mailto:${SITE.email}` },
+      { labelKey: "telegram", href: SITE.telegram },
+      { labelKey: "twitter",  href: SITE.twitter },
+      { labelKey: "security", href: `mailto:${SITE.email}` },
     ],
   },
-];
+] as const;
 
 const SOCIALS = [
   {
@@ -64,6 +65,7 @@ const SOCIALS = [
 ];
 
 export function Footer() {
+  const t = useTranslations("footer");
   return (
     <footer className="border-t border-[var(--brd)] bg-[var(--sf)]">
 
@@ -94,21 +96,21 @@ export function Footer() {
 
       {/* ── 3-column link grid ──────────────────────────────── */}
       <div className="px-6 md:px-[60px] pb-12 grid grid-cols-1 sm:grid-cols-3 gap-8">
-        {COLUMNS.map((col) => (
-          <div key={col.heading}>
+        {COLUMN_DEFS.map((col) => (
+          <div key={col.headingKey}>
             <p className="text-[11px] font-medium tracking-[.12em] uppercase text-[var(--tx-m)] mb-4">
-              {col.heading}
+              {t(col.headingKey)}
             </p>
             <ul className="flex flex-col gap-3">
               {col.links.map((link) => (
-                <li key={link.label}>
+                <li key={link.labelKey}>
                   <a
                     href={link.href}
                     target={link.href.startsWith("http") ? "_blank" : undefined}
                     rel="noopener noreferrer"
                     className="text-[13px] font-light text-[var(--tx-d)] hover:text-[var(--gold)] transition-colors"
                   >
-                    {link.label}
+                    {t(link.labelKey)}
                   </a>
                 </li>
               ))}
@@ -120,7 +122,7 @@ export function Footer() {
       {/* ── Copyright bar ───────────────────────────────────── */}
       <div className="border-t border-[var(--brd)] px-6 md:px-[60px] py-5">
         <span className="text-[11px] text-[var(--tx-d)] font-light">
-          &copy; 2026 Sentrix Labs. All rights reserved.
+          {t("copyright")}
         </span>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
 import { API_CARDS } from "@/data/content";
@@ -22,14 +23,15 @@ const cardVariants = {
 };
 
 export function Api() {
+  const t = useTranslations("section.api");
   return (
     <section id="api" className="py-[120px] px-6 md:px-[60px]">
       <Reveal>
         <SectionHeader
-          tag="Three API Layers"
-          title="One port,"
-          titleEm="full access."
-          subtitle="REST, JSON-RPC 2.0, and Block Explorer — all on port 8545. POST endpoints require X-API-Key header."
+          tag={t("tag")}
+          title={t("title")}
+          titleEm={t("titleEm")}
+          subtitle={t("subtitle")}
         />
       </Reveal>
 

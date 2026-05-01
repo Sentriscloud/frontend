@@ -1,21 +1,24 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { SentrixLogo } from "@/components/ui/logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { LocaleToggle } from "@/components/ui/locale-toggle";
 
 const NAV_LINKS = [
-  { href: "#about", label: "About" },
-  { href: "#features", label: "Features" },
-  { href: "#tokens", label: "Tokens" },
-  { href: "#ecosystem", label: "Ecosystem" },
-  { href: "#roadmap", label: "Roadmap" },
-  { href: "#validators", label: "Validators" },
-  { href: "https://docs.sentrixchain.com", label: "Docs" },
-  { href: "https://t.me/SentrixChain", label: "Community" },
-];
+  { href: "#about", labelKey: "about" },
+  { href: "#features", labelKey: "features" },
+  { href: "#tokens", labelKey: "tokens" },
+  { href: "#ecosystem", labelKey: "ecosystem" },
+  { href: "#roadmap", labelKey: "roadmap" },
+  { href: "#validators", labelKey: "validators" },
+  { href: "https://docs.sentrixchain.com", labelKey: "docs" },
+  { href: "https://t.me/SentrixChain", labelKey: "community" },
+] as const;
 
 export function Navbar() {
+  const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("");
   const [scrolled, setScrolled] = useState(false);
@@ -59,12 +62,6 @@ export function Navbar() {
           ? "border-b border-[var(--brd)] bg-[var(--bk)]/90 shadow-[0_1px_20px_rgba(0,0,0,.3)]"
           : "border-b border-transparent bg-transparent shadow-none"
       }`}>
-        {/* Logo — pearl-dots mark + SENTRIX wordmark, visually balanced.
-            Mark slightly larger than wordmark cap-height (32 vs ~16) so
-            pearl dots stay legible and the mark holds visual weight
-            against the serif wordmark. items-center aligns visual mass
-            centers — both diamond and "SENTRIX" caps are vertically
-            symmetric, so visual center alignment reads as "in line". */}
         <a href="#" className="flex items-center gap-2.5 text-[var(--gold)] shrink-0">
           <SentrixLogo size={32} />
           <span className="font-serif text-[22px] font-light tracking-[.04em] uppercase text-[var(--gold)] leading-none">
@@ -72,7 +69,6 @@ export function Navbar() {
           </span>
         </a>
 
-        {/* Nav links — center */}
         <div className="hidden xl:flex items-center gap-7">
           {NAV_LINKS.map((l) => {
             const id = l.href.replace("#", "");
@@ -89,19 +85,19 @@ export function Navbar() {
                     : "text-[var(--tx-d)] hover:text-[var(--gold)] border border-transparent"
                 }`}
               >
-                {l.label}
+                {t(l.labelKey)}
               </a>
             );
           })}
         </div>
 
-        {/* Right side */}
         <div className="flex items-center gap-3 shrink-0">
+          <LocaleToggle />
           <ThemeToggle />
           <a href="https://scan.sentrixchain.com" target="_blank" rel="noopener noreferrer" className="hidden md:inline-block border border-[var(--brd2)] text-[var(--gold)] px-5 py-2 text-[10px] font-normal tracking-[.12em] uppercase font-sans rounded-full hover:bg-[rgba(200,168,74,.08)] transition-colors">
-            Explorer
+            {t("explorer")}
           </a>
-          <button onClick={() => setOpen(!open)} className="xl:hidden" aria-label="Menu">
+          <button onClick={() => setOpen(!open)} className="xl:hidden" aria-label={t("menu")}>
             <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth={1.5}>
               <line x1="3" y1="7" x2="21" y2="7" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="17" x2="21" y2="17" />
             </svg>
@@ -109,7 +105,6 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile menu */}
       {open && (
         <div className="fixed top-[68px] inset-x-0 bottom-0 bg-[var(--bk)]/97 backdrop-blur-[30px] z-99 flex flex-col p-8 xl:hidden animate-[fade-up_.4s_cubic-bezier(.25,1,.5,1)_both]">
           {NAV_LINKS.map((l) => {
@@ -127,7 +122,7 @@ export function Navbar() {
                 }`}
               >
                 {isActive && <span className="inline-block w-2 h-px bg-[var(--gold)] mr-3" />}
-                {l.label}
+                {t(l.labelKey)}
               </a>
             );
           })}

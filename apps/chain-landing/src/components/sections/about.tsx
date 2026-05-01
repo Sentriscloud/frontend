@@ -2,11 +2,13 @@
 
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { ABOUT_POINTS } from "@/data/content";
 
 const AboutCoin = dynamic(() => import("@/components/3d/about-coin").then((m) => m.AboutCoin), { ssr: false });
 
 export function About() {
+  const t = useTranslations("section.about");
   return (
     <section
       id="about"
@@ -21,11 +23,11 @@ export function About() {
       <div className="flex flex-col gap-7">
         <div className="font-mono text-[10px] text-[var(--gold)] tracking-[.25em] uppercase flex items-center gap-3">
           <span className="w-7 h-px bg-[var(--gold)]" />
-          About SRX
+          {t("tag")}
         </div>
         <h2 className="font-serif text-[clamp(36px,5vw,68px)] font-light tracking-[.02em] leading-none mb-2">
-          Scarce by<br />
-          <em className="not-italic text-[var(--gold)]">design.</em>
+          {t("title")}<br />
+          <em className="not-italic text-[var(--gold)]">{t("titleEm")}</em>
         </h2>
 
         {ABOUT_POINTS.map((p, i) => (

@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "title": "Sentrix Chain — Open source L1 built in Rust",
+    "description": "Open source, EVM-compatible L1 built in Rust. 1-second blocks, instant BFT finality, deflationary SRX. Chain ID 7119."
+  },
+  "nav": {
+    "about": "About",
+    "features": "Features",
+    "tokens": "Tokens",
+    "ecosystem": "Ecosystem",
+    "roadmap": "Roadmap",
+    "validators": "Validators",
+    "docs": "Docs",
+    "community": "Community",
+    "explorer": "Explorer",
+    "menu": "Menu"
+  },
+  "locale": {
+    "switchLabel": "Language",
+    "en": "EN",
+    "id": "ID"
+  },
+  "hero": {
+    "tagline": "Open source, EVM-compatible L1 built in Rust.",
+    "body": "Real chain, real blocks, real code.",
+    "ctaExplore": "Explore Chain",
+    "ctaBuild": "Start Building",
+    "ctaCommunity": "Join Community →"
+  },
+  "founder": {
+    "line": "Built by one developer in Indonesia. No VC, no team. Just Rust, shipped daily."
+  },
+  "cta": {
+    "tag": "Get Started",
+    "headingLine1": "Own the future.",
+    "headingLine2": "Hold SRX.",
+    "subheading": "Join the Sentrix ecosystem. Deploy tokens, run a validator node, or build your next app on a chain that's built to last.",
+    "exploreChain": "Explore Chain",
+    "viewSource": "View Source",
+    "linkExplorer": "Explorer",
+    "linkApi": "API",
+    "linkRpc": "RPC",
+    "linkGithub": "GitHub"
+  },
+  "footer": {
+    "ecosystem": "Ecosystem",
+    "build": "Build",
+    "community": "Community",
+    "explorer": "Explorer",
+    "faucet": "Faucet",
+    "soluxWallet": "Solux Wallet",
+    "coinblast": "CoinBlast",
+    "docs": "Docs",
+    "whitepaper": "Whitepaper",
+    "rpc": "RPC",
+    "testnetRpc": "Testnet RPC",
+    "github": "GitHub",
+    "releases": "Releases",
+    "brandKit": "Brand kit",
+    "telegram": "Telegram",
+    "twitter": "Twitter",
+    "security": "Security",
+    "copyright": "© 2026 Sentrix Labs. All rights reserved."
+  },
+  "section": {
+    "about": {
+      "tag": "About Sentrix",
+      "title": "What is",
+      "titleEm": "Sentrix Chain.",
+      "subtitle": "A Layer-1 blockchain engineered for sound money and programmable settlement. Bitcoin-style scarcity meets Ethereum-compatible tooling."
+    },
+    "features": {
+      "tag": "Why Sentrix",
+      "title": "Engineered for",
+      "titleEm": "performance.",
+      "subtitle": "Every component built from scratch in Rust. Zero unsafe code. No forks, no shortcuts."
+    },
+    "tokens": {
+      "tag": "Token Economy",
+      "title": "One token.",
+      "titleEm": "Three roles.",
+      "subtitle": "SRX is the only protocol token. It pays for gas, secures the chain via staking, and aligns economic incentives across the network."
+    },
+    "tokenomics": {
+      "tag": "Tokenomics",
+      "title": "Supply",
+      "titleEm": "distribution.",
+      "subtitle": "Hard-capped at 315 million SRX. Transparent allocation with built-in deflation and halving schedule."
+    },
+    "ecosystem": {
+      "tag": "Ecosystem",
+      "title": "Powering real",
+      "titleEm": "applications.",
+      "subtitle": "Every product in the SentrisCloud suite runs on Sentrix Chain — creating organic, sustained demand for SRX."
+    },
+    "src20": {
+      "tag": "Token Standard",
+      "title": "SRC-20",
+      "titleEm": ".",
+      "subtitle": "The Sentrix token standard. Deploy your own token on Sentrix Chain — permissionless, instant, and gas-efficient."
+    },
+    "architecture": {
+      "tag": "Under The Hood",
+      "title": "System",
+      "titleEm": "architecture.",
+      "subtitle": "A modular, layered architecture built entirely in Rust. Every component is purpose-built and independently testable."
+    },
+    "api": {
+      "tag": "Three API Layers",
+      "title": "One port,",
+      "titleEm": "full access.",
+      "subtitle": "REST, JSON-RPC 2.0, and Block Explorer — all on port 8545. POST endpoints require X-API-Key header."
+    },
+    "security": {
+      "tag": "Cryptographic Stack",
+      "title": "Security",
+      "titleEm": "first.",
+      "subtitle": "Every layer of Sentrix is protected by industry-standard cryptographic primitives. Zero compromises."
+    },
+    "roadmap": {
+      "tag": "Roadmap",
+      "title": "The path",
+      "titleEm": "forward.",
+      "subtitle": "From permissioned PoA to fully decentralized public chain. Progressive decentralization done right."
+    },
+    "validators": {
+      "tag": "Run a Node",
+      "title": "For",
+      "titleEm": "validators.",
+      "subtitle": "4 production validators with DPoS+BFT consensus. Secure the network, earn rewards, shape the chain's future."
+    },
+    "developers": {
+      "tag": "Build on Sentrix",
+      "title": "Start",
+      "titleEm": "building.",
+      "subtitle": "Two surfaces, one chain. Deploy Solidity contracts via the EVM, or use the native Sentrix CLI for first-class tokens."
+    }
+  },
+  "developerTabs": {
+    "tabEvm": "EVM (Solidity)",
+    "tabNative": "Native (CLI)",
+    "evmContractCaption": "ERC-20 token contract — drop-in OpenZeppelin",
+    "evmDeployCaption": "Deploy with ethers.js",
+    "nativeCaption": "Deploy a token with the Sentrix CLI — no compilation step",
+    "fullDocs": "Full docs →"
+  }
+}

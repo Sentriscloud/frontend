@@ -19,6 +19,7 @@ import { Roadmap } from "@/components/sections/roadmap";
 import { Validators } from "@/components/sections/validators";
 import { Developers } from "@/components/sections/developers";
 import { CTA } from "@/components/sections/cta";
+import { Founder } from "@/components/sections/founder";
 import { Footer } from "@/components/sections/footer";
 import { Divider } from "@/components/sections/section-header";
 
@@ -52,6 +53,7 @@ export default function Home() {
       <Developers />
       <Divider />
       <CTA />
+      <Founder />
       <Footer />
     </div>
   );

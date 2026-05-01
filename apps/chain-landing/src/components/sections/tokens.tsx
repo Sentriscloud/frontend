@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
 import { TOKENS } from "@/data/content";
@@ -26,14 +27,15 @@ const cardVariants = {
 };
 
 export function Tokens() {
+  const t = useTranslations("section.tokens");
   return (
     <section id="tokens" className="py-[120px] px-6 md:px-[60px]">
       <Reveal>
         <SectionHeader
-          tag="Token Economy"
-          title="One token."
-          titleEm="Three roles."
-          subtitle="SRX is the only protocol token. It pays for gas, secures the chain via staking, and aligns economic incentives across the network."
+          tag={t("tag")}
+          title={t("title")}
+          titleEm={t("titleEm")}
+          subtitle={t("subtitle")}
         />
       </Reveal>
 

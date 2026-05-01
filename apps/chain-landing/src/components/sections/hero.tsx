@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { Spotlight } from "@/components/ui/spotlight";
 import { TextGenerate } from "@/components/ui/text-generate";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { DotGrid } from "@/components/ui/grid-bg";
 const HeroScene = dynamic(() => import("@/components/3d/hero-scene").then(m => m.HeroScene), { ssr: false });
 
 export function Hero() {
+  const t = useTranslations("hero");
   return (
     <Spotlight className="relative min-h-screen overflow-hidden">
       <HeroScene />
@@ -44,18 +46,18 @@ export function Hero() {
         </h1>
 
         <p className="font-serif italic text-[clamp(18px,2.4vw,28px)] font-light text-[var(--tx)] mb-7 anim-hero-3 opacity-0 max-w-[640px] leading-[1.3]">
-          Open source, EVM-compatible L1 built in Rust.
+          {t("tagline")}
         </p>
 
         <TextGenerate
-          text="Real chain, real blocks, real code."
+          text={t("body")}
           className="text-base text-[var(--tx-m)] max-w-[560px] leading-[1.7] font-light mb-11"
         />
 
         <div className="flex gap-4 flex-wrap anim-hero-4 opacity-0">
-          <Button href="https://scan.sentrixchain.com" target="_blank">Explore Chain</Button>
-          <Button href="#developers" variant="secondary">Start Building</Button>
-          <Button href="https://t.me/SentrixChain" variant="secondary">Join Community →</Button>
+          <Button href="https://scan.sentrixchain.com" target="_blank">{t("ctaExplore")}</Button>
+          <Button href="#developers" variant="secondary">{t("ctaBuild")}</Button>
+          <Button href="https://t.me/SentrixChain" variant="secondary">{t("ctaCommunity")}</Button>
         </div>
       </div>
     </Spotlight>

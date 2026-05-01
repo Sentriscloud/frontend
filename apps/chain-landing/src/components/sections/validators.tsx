@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
 
@@ -70,14 +71,15 @@ const ICONS: Record<string, React.ReactNode> = {
 };
 
 export function Validators() {
+  const t = useTranslations("section.validators");
   return (
     <section id="validators" className="py-[120px] px-6 md:px-[60px]">
       <Reveal>
         <SectionHeader
-          tag="Run a Node"
-          title="For"
-          titleEm="validators."
-          subtitle="4 production validators with DPoS+BFT consensus. Secure the network, earn rewards, shape the chain's future."
+          tag={t("tag")}
+          title={t("title")}
+          titleEm={t("titleEm")}
+          subtitle={t("subtitle")}
         />
       </Reveal>
 
