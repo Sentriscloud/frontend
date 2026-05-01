@@ -12,7 +12,7 @@ import {
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { formatUnits, parseUnits } from "viem";
 import { ArrowDown, Loader, ExternalLink } from "lucide-react";
-import { useEffectiveAddress } from "@sentriscloud/wallet-config";
+import { useEffectiveAddress, useSoluxSigner } from "@sentriscloud/wallet-config";
 import { DEX, TOKENS, ROUTER_ABI, ERC20_ABI, type Token } from "@/lib/contracts";
 
 // Choose chain config + token list dynamically — wagmi tells us which
@@ -25,7 +25,14 @@ function netFromChainId(chainId: number | undefined): "mainnet" | "testnet" {
 export function SwapWidget() {
   const chainId = useChainId();
   const { address: account, isConnected } = useAccount();
-  const { source: addrSource } = useEffectiveAddress("dex");
+  const { source: addrSource, manualAddress } = useEffectiveAddress("dex");
+  // "Effective" address for balance / allowance reads. Real-wallet path
+  // wins when isConnected; Solux/manual path fills in when the user has
+  // connected only a view-only address. The submit path branches on the
+  // source (wagmi writeContract vs Solux popup signer) further down.
+  const effectiveAddress: `0x${string}` | undefined = isConnected
+    ? (account as `0x${string}` | undefined)
+    : (manualAddress as `0x${string}` | undefined) ?? undefined;
   const net = netFromChainId(chainId);
   const cfg = DEX[net];
   const tokens = TOKENS[net];
@@ -79,14 +86,19 @@ export function SwapWidget() {
     return amountOutWei - (amountOutWei * bps) / 10_000n;
   }, [amountOutWei, slippage]);
 
-  // Native + token balances (only when a wallet is connected)
-  const nativeBal = useBalance({ address: account, chainId, query: { enabled: isConnected } });
+  // Native + token balances. Reads track effectiveAddress so a user
+  // connected only via Solux still sees their balance + max button.
+  const nativeBal = useBalance({
+    address: effectiveAddress,
+    chainId,
+    query: { enabled: !!effectiveAddress },
+  });
   const tokenBal = useReadContract({
     abi: ERC20_ABI,
     address: tokenIn.address !== "native" ? (tokenIn.address as `0x${string}`) : undefined,
     functionName: "balanceOf",
-    args: account ? [account] : undefined,
-    query: { enabled: isConnected && tokenIn.address !== "native" },
+    args: effectiveAddress ? [effectiveAddress] : undefined,
+    query: { enabled: !!effectiveAddress && tokenIn.address !== "native" },
   });
   const balanceWei: bigint =
     tokenIn.address === "native"
@@ -94,21 +106,40 @@ export function SwapWidget() {
       : ((tokenBal.data as bigint | undefined) ?? 0n);
   const balanceDisplay = formatUnits(balanceWei, tokenIn.decimals);
 
-  // For ERC-20 input, we need allowance ≥ amountIn before swap. Native
-  // input skips this entirely (msg.value path).
+  // ERC-20 allowance against router. Read for whichever address would
+  // be msg.sender of the swap call (real wallet OR Solux account).
   const allowance = useReadContract({
     abi: ERC20_ABI,
     address: tokenIn.address !== "native" ? (tokenIn.address as `0x${string}`) : undefined,
     functionName: "allowance",
-    args: account ? [account, cfg.router] : undefined,
-    query: { enabled: isConnected && tokenIn.address !== "native" },
+    args: effectiveAddress ? [effectiveAddress, cfg.router] : undefined,
+    query: { enabled: !!effectiveAddress && tokenIn.address !== "native" },
   });
   const allowanceWei = (allowance.data as bigint | undefined) ?? 0n;
   const needsApproval = tokenIn.address !== "native" && amountInWei > allowanceWei;
 
-  // Tx hooks
-  const { writeContract, data: txHash, isPending, error: txError, reset } = useWriteContract();
+  // Tx hooks (real wallet path).
+  const { writeContract, data: wagmiTxHash, isPending: isWagmiPending, error: wagmiError, reset: resetWagmi } = useWriteContract();
+  // Solux popup-based signer (manual-mode signing path). Only consulted
+  // when the user has no real wallet connected and a Solux address sits
+  // in the manual store. signAndSend opens the Solux /sign popup, the
+  // user reviews + signs, and the raw signed tx is broadcast via the
+  // wagmi public client. Returns the broadcast tx hash.
+  const soluxSigner = useSoluxSigner({
+    chainId: chainId ?? 7119,
+    from: effectiveAddress ?? "0x0000000000000000000000000000000000000000",
+  });
+  const [soluxTxHash, setSoluxTxHash] = useState<`0x${string}` | undefined>();
+  const txHash = wagmiTxHash ?? soluxTxHash;
+  const isPending = isWagmiPending || soluxSigner.isSigning;
+  const txError = wagmiError ?? (soluxSigner.error ? new Error(soluxSigner.error) : null);
   const { isLoading: isMining, isSuccess: isMined } = useWaitForTransactionReceipt({ hash: txHash });
+
+  function reset() {
+    resetWagmi();
+    setSoluxTxHash(undefined);
+    soluxSigner.reset();
+  }
 
   function flip() {
     setTokenIn(tokenOut);
@@ -118,41 +149,102 @@ export function SwapWidget() {
   }
 
   function handleSwap() {
-    if (!account || amountInWei === 0n || path.length !== 2) return;
+    if (!effectiveAddress || amountInWei === 0n || path.length !== 2) return;
     reset();
     const deadline = BigInt(Math.floor(Date.now() / 1000) + 1800);
+    const useSoluxPath = !isConnected && addrSource === "manual";
+
+    // ── Approve branch (ERC-20 input only) ──────────────────────────
     if (needsApproval) {
-      // Approve first; user re-clicks Swap after approval lands.
-      writeContract({
-        abi: ERC20_ABI,
-        address: tokenIn.address as `0x${string}`,
-        functionName: "approve",
-        args: [cfg.router, amountInWei],
-      });
+      if (useSoluxPath) {
+        soluxSigner
+          .signAndSend({
+            to: tokenIn.address as `0x${string}`,
+            abi: ERC20_ABI,
+            functionName: "approve",
+            args: [cfg.router, amountInWei],
+            label: `Approve ${tokenIn.symbol} for SentrixV2 Router`,
+          })
+          .then(setSoluxTxHash)
+          .catch(() => { /* error already in soluxSigner.error */ });
+      } else {
+        writeContract({
+          abi: ERC20_ABI,
+          address: tokenIn.address as `0x${string}`,
+          functionName: "approve",
+          args: [cfg.router, amountInWei],
+        });
+      }
       return;
     }
+
+    // ── Swap branch ─────────────────────────────────────────────────
+    const swapLabel = `Swap ${tokenIn.symbol} → ${tokenOut.symbol}`;
     if (tokenIn.address === "native") {
-      writeContract({
-        abi: ROUTER_ABI,
-        address: cfg.router,
-        functionName: "swapExactSRXForTokens",
-        args: [amountOutMin, path, account, deadline],
-        value: amountInWei,
-      });
+      const args = [amountOutMin, path, effectiveAddress, deadline] as const;
+      if (useSoluxPath) {
+        soluxSigner
+          .signAndSend({
+            to: cfg.router,
+            abi: ROUTER_ABI,
+            functionName: "swapExactSRXForTokens",
+            args,
+            value: amountInWei,
+            label: swapLabel,
+          })
+          .then(setSoluxTxHash)
+          .catch(() => {});
+      } else {
+        writeContract({
+          abi: ROUTER_ABI,
+          address: cfg.router,
+          functionName: "swapExactSRXForTokens",
+          args,
+          value: amountInWei,
+        });
+      }
     } else if (tokenOut.address === "native") {
-      writeContract({
-        abi: ROUTER_ABI,
-        address: cfg.router,
-        functionName: "swapExactTokensForSRX",
-        args: [amountInWei, amountOutMin, path, account, deadline],
-      });
+      const args = [amountInWei, amountOutMin, path, effectiveAddress, deadline] as const;
+      if (useSoluxPath) {
+        soluxSigner
+          .signAndSend({
+            to: cfg.router,
+            abi: ROUTER_ABI,
+            functionName: "swapExactTokensForSRX",
+            args,
+            label: swapLabel,
+          })
+          .then(setSoluxTxHash)
+          .catch(() => {});
+      } else {
+        writeContract({
+          abi: ROUTER_ABI,
+          address: cfg.router,
+          functionName: "swapExactTokensForSRX",
+          args,
+        });
+      }
     } else {
-      writeContract({
-        abi: ROUTER_ABI,
-        address: cfg.router,
-        functionName: "swapExactTokensForTokens",
-        args: [amountInWei, amountOutMin, path, account, deadline],
-      });
+      const args = [amountInWei, amountOutMin, path, effectiveAddress, deadline] as const;
+      if (useSoluxPath) {
+        soluxSigner
+          .signAndSend({
+            to: cfg.router,
+            abi: ROUTER_ABI,
+            functionName: "swapExactTokensForTokens",
+            args,
+            label: swapLabel,
+          })
+          .then(setSoluxTxHash)
+          .catch(() => {});
+      } else {
+        writeContract({
+          abi: ROUTER_ABI,
+          address: cfg.router,
+          functionName: "swapExactTokensForTokens",
+          args,
+        });
+      }
     }
   }
 
@@ -222,16 +314,40 @@ export function SwapWidget() {
         </span>
       </div>
 
-      {!isConnected ? (
+      {!isConnected && addrSource !== "manual" ? (
         <div className="flex flex-col items-center gap-2">
           <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
-          {addrSource === "manual" && (
-            <p className="text-[11px] text-amber-300/80 leading-snug text-center max-w-xs">
-              Solux is view-only on this surface. Swap needs a signing wallet (MetaMask, Rabby, etc.) — your
-              Solux address will keep showing balances either way.
-            </p>
-          )}
         </div>
+      ) : !isConnected && addrSource === "manual" ? (
+        // Solux signing path — popup-based signer instead of injected wallet.
+        isPending ? (
+          <button disabled className="w-full py-3 rounded-xl bg-[var(--gold)]/30 text-[var(--bk)] font-semibold text-sm flex items-center justify-center gap-2">
+            <Loader className="w-4 h-4 animate-spin" /> Sign in Solux popup…
+          </button>
+        ) : isMining ? (
+          <a
+            href={`${explorerBase}/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-3 rounded-xl bg-[var(--gold)]/30 text-[var(--bk)] font-semibold text-sm flex items-center justify-center gap-2"
+          >
+            <Loader className="w-4 h-4 animate-spin" /> Mining…
+          </a>
+        ) : (
+          <button
+            onClick={handleSwap}
+            disabled={amountInWei === 0n || amountInWei > balanceWei}
+            className="w-full py-3 rounded-xl bg-[var(--gold)] text-[var(--bk)] font-semibold text-sm hover:bg-[var(--gold-l)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {amountInWei === 0n
+              ? "Enter an amount"
+              : amountInWei > balanceWei
+              ? `Insufficient ${tokenIn.symbol}`
+              : needsApproval
+              ? `Approve ${tokenIn.symbol} (Solux)`
+              : `Swap with Solux ⌬`}
+          </button>
+        )
       ) : isPending ? (
         <button disabled className="w-full py-3 rounded-xl bg-[var(--gold)]/30 text-[var(--bk)] font-semibold text-sm flex items-center justify-center gap-2">
           <Loader className="w-4 h-4 animate-spin" /> Confirm in wallet…

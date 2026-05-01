@@ -12,3 +12,4 @@ export {
   isAddress,
 } from "./manual-address";
 export { SoluxConnectButton, useSoluxConnect } from "./solux-connect";
+export { useSoluxSigner, type UseSoluxSignerReturn, type SoluxSignAndSendArgs } from "./solux-signer";
