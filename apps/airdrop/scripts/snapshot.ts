@@ -72,10 +72,30 @@ interface RawBlockTx {
   blockNumber?: string;
 }
 
+// Block transactions can come back two ways:
+//   1. Standard EVM (verbose=true): array of full tx objects
+//   2. Sentrix RPC (verified 2026-04-30): always array of tx-hash strings,
+//      verbose flag ignored. Need a follow-up eth_getTransactionByHash for
+//      each hash to recover from/to.
 interface RawBlock {
   number?: string;
   hash?: string;
-  transactions?: RawBlockTx[];
+  transactions?: Array<RawBlockTx | string>;
+}
+
+// Sentrix's eth_getTransactionByHash returns this hybrid shape (a wrapper
+// envelope around the actual tx). The from_address is "COINBASE" (literal
+// string) for system block-reward txs, otherwise a normal "0x..." address.
+interface SentrixTxEnvelope {
+  block_hash?: string;
+  block_index?: number;
+  block_timestamp?: number;
+  transaction?: {
+    from_address?: string;
+    to_address?: string;
+    txid?: string;
+    [k: string]: unknown;
+  };
 }
 
 interface WalletAccumulator {
@@ -200,7 +220,41 @@ async function main() {
 
     for (const block of blocks) {
       const blockNum = hexToInt(block.number);
-      for (const tx of block.transactions ?? []) {
+      // Sentrix RPC quirk: eth_getBlockByNumber(_, true) returns
+      // transactions as plain hash strings even when verbose=true. Detect
+      // that case and re-fetch each tx via eth_getTransactionByHash. Fall
+      // through cleanly when the RPC honours verbose (other EVMs / a
+      // fixed Sentrix release).
+      const rawTxs = block.transactions ?? [];
+      let txs: RawBlockTx[];
+      if (rawTxs.length > 0 && typeof rawTxs[0] === "string") {
+        const hashes = rawTxs as string[];
+        const calls = hashes.map((h) => ({
+          method: "eth_getTransactionByHash",
+          params: [h],
+        }));
+        let envelopes: SentrixTxEnvelope[] = [];
+        try {
+          envelopes = await rpcBatch<SentrixTxEnvelope>(calls);
+        } catch {
+          envelopes = [];
+        }
+        txs = envelopes.map((env) => {
+          const t = env?.transaction ?? {};
+          // Coinbase txs in Sentrix carry literal "COINBASE" as
+          // from_address. Filter further down via the length check on
+          // `from`, but still surface the to_address so contract-deploy
+          // detection works.
+          return {
+            from: t.from_address,
+            to: t.to_address,
+          };
+        });
+      } else {
+        txs = rawTxs as RawBlockTx[];
+      }
+
+      for (const tx of txs) {
         const from = (tx.from ?? "").toLowerCase();
         if (!from || from === "0x" || from.length !== 42) continue;
         if (EXCLUSION_LIST.has(from)) continue;
