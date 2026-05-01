@@ -305,19 +305,23 @@ export default function TokenDetailPage({ params }: Props) {
             </div>
           )}
 
-          {/* Fee info */}
-          <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4 text-xs space-y-2 text-[var(--tx-d)]">
-            <p className="font-semibold text-[var(--tx)] text-sm mb-3">Fee Structure</p>
-            <div className="flex justify-between">
-              <span>Trading fee</span><span className="text-[var(--tx)]">1%</span>
+          {/* Fee info — only meaningful for tokens with a real curve.
+              Bare ERC-20s have no curve fee + no graduation, so the
+              panel would just print misleading numbers. */}
+          {token.curveAddress && (
+            <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4 text-xs space-y-2 text-[var(--tx-d)]">
+              <p className="font-semibold text-[var(--tx)] text-sm mb-3">Fee Structure</p>
+              <div className="flex justify-between">
+                <span>Trading fee</span><span className="text-[var(--tx)]">1%</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Fee distribution</span><span className="text-[var(--tx)]">100% to Ecosystem Fund</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Graduation threshold</span><span className="text-[var(--gold)]">{formatNumber(gradThreshold)} {gradLabel}</span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span>Fee distribution</span><span className="text-[var(--tx)]">100% to Ecosystem Fund</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Graduation threshold</span><span className="text-[var(--gold)]">{formatNumber(gradThreshold)} {gradLabel}</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
