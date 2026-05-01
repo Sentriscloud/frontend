@@ -16,7 +16,18 @@
 
 import { ReactNode, useState } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
-import { WagmiProvider, createConfig } from "@privy-io/wagmi";
+// Import WagmiProvider from `wagmi` directly (NOT `@privy-io/wagmi`).
+// pnpm resolves `@privy-io/wagmi`'s wagmi peer to a different instance
+// than the one apps consume directly, so a WagmiProvider exported from
+// `@privy-io/wagmi` sets context on a different wagmi instance — apps
+// calling `useAccount` from `wagmi` then can't find that context and
+// throw `WagmiProviderNotFoundError`. Importing WagmiProvider directly
+// from `wagmi` puts the context on the same instance the apps use.
+// `createConfig` from `@privy-io/wagmi` is still needed for the Privy
+// connector wiring; the config object itself is plain data and crosses
+// the instance boundary fine.
+import { WagmiProvider } from "wagmi";
+import { createConfig } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http } from "viem";
 import { SENTRIX_MAINNET, SENTRIX_TESTNET } from "./chain";
