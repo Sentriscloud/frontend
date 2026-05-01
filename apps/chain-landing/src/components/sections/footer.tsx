@@ -120,7 +120,7 @@ export function Footer() {
       {/* ── Copyright bar ───────────────────────────────────── */}
       <div className="border-t border-[var(--brd)] px-6 md:px-[60px] py-5">
         <span className="text-[11px] text-[var(--tx-d)] font-light">
-          &copy; 2026 SentrisCloud. All rights reserved.
+          &copy; 2026 Sentrix Labs. All rights reserved.
         </span>
       </div>
 

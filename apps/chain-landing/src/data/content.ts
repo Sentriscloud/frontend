@@ -93,8 +93,8 @@ export const FEATURES = [
   },
   {
     icon: "lock",
-    title: "Military-Grade Crypto",
-    desc: "ECDSA secp256k1 (SEC 2), AES-256-GCM (NIST SP 800-38D), Argon2id KDF for keystores. Private keys zeroized on drop. 11 audit rounds, pentest 6/6 passed on live network.",
+    title: "Standard Cryptographic Stack",
+    desc: "ECDSA secp256k1 (SEC 2), AES-256-GCM (NIST SP 800-38D), Argon2id KDF for keystores. Private keys zeroized on drop.",
   },
   {
     icon: "mempool",
@@ -224,7 +224,7 @@ export const SECURITY_CARDS = [
   { icon: "shield", title: "Binary Sparse Merkle Tree", desc: "State commitments via BLAKE3 + SHA-256 sparse trees. Proofs are short, verifiable, and stable across rebuilds. Reorg-immune by BFT finality.", mono: "BLAKE3 + SHA-256 · proofs" },
   { icon: "arrow", title: "Keccak-256 Addresses", desc: "Ethereum-compatible address derivation (FIPS 202). Uncompressed pubkey → Keccak-256 → last 20 bytes → 0x prefix. Identical address space to Ethereum.", mono: "FIPS 202 · crate: sha3" },
   { icon: "check", title: "Atomic Validation", desc: "Dry run all transactions against working state copy. If any tx fails, entire block rejected. Commit only on full pass.", mono: "checked_add / checked_sub" },
-  { icon: "shieldCheck", title: "Replay Protection + 11 Audits", desc: "chain_id (7119) embedded in signing payload — prevents cross-chain replay. 11 audit rounds completed (116 findings, 78+ fixed). Pentest 6/6 passed on live mainnet.", mono: "chain_id: 7119 · 11 audits" },
+  { icon: "shieldCheck", title: "Replay Protection", desc: "chain_id (7119) embedded in signing payload — prevents cross-chain replay across Ethereum-compatible networks.", mono: "chain_id: 7119" },
 ];
 
 export const ROADMAP = [
@@ -259,7 +259,7 @@ export const ROADMAP = [
 ];
 
 export const TICKER_ITEMS = [
-  "SRX|$0.00", "CHAIN ID|7119 (0x1bcf)", "HARD CAP|315,000,000", "BURN|50% per tx",
+  "CHAIN ID|7119 (0x1bcf)", "HARD CAP|315,000,000", "BURN|50% per tx",
   "BLOCK TIME|1s", "FINALITY|Instant (BFT 2/3+1)", "CONSENSUS|DPoS + BFT", "UNIT|1 sentri = 10⁻⁸ SRX",
   "TOKEN STD|SRC-20", "MIN FEE|0.0001 SRX", "MAX TX/BLOCK|5,000", "P2P|libp2p",
   "STORAGE|libmdbx", "STATUS|● MAINNET LIVE",

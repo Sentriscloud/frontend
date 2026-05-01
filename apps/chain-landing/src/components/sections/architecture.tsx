@@ -49,7 +49,7 @@ export function Architecture() {
    ┌───────────────────┼───────────────────┐
    │                   │                   │
 `}<span className="text-[var(--gold)]">Wallet</span>{`            `}<span className="text-[var(--gold)]">Storage</span>{`           `}<span className="text-[var(--gold)]">P2P Node</span>{`
-ECDSA + AES-GCM   sled DB          TCP broadcast
+ECDSA + AES-GCM   libmdbx          TCP broadcast
 Keccak-256 addr   per-block        chain sync`}
         </pre>
       </div>

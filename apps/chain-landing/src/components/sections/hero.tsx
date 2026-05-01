@@ -43,20 +43,18 @@ export function Hero() {
           SENTRI<span className="text-[var(--gold-l)] font-normal">X</span>
         </h1>
 
-        {/* Brand tagline — positioning lock-in 2026-04-26.
-            Reads as the wallet-mark's single-line promise. */}
         <p className="font-serif italic text-[clamp(18px,2.4vw,28px)] font-light text-[var(--tx)] mb-7 anim-hero-3 opacity-0 max-w-[640px] leading-[1.3]">
-          Where real assets live.
+          Open source, EVM-compatible L1 built in Rust.
         </p>
 
         <TextGenerate
-          text="Financial infrastructure for the real economy — Indonesia first, then the world. Layer-1 settlement built in Rust: 1-second blocks, instant BFT finality, deflationary SRX economy, Ethereum-compatible tooling."
+          text="Real chain, real blocks, real code."
           className="text-base text-[var(--tx-m)] max-w-[560px] leading-[1.7] font-light mb-11"
         />
 
         <div className="flex gap-4 flex-wrap anim-hero-4 opacity-0">
-          <Button href="#developers">Start Building</Button>
-          <Button href="https://scan.sentrixchain.com" variant="secondary" target="_blank">Explore Chain</Button>
+          <Button href="https://scan.sentrixchain.com" target="_blank">Explore Chain</Button>
+          <Button href="#developers" variant="secondary">Start Building</Button>
           <Button href="https://t.me/SentrixChain" variant="secondary">Join Community →</Button>
         </div>
       </div>
