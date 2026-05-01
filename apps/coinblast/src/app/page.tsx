@@ -6,6 +6,7 @@ import { TokenCard } from '@/components/token/TokenCard'
 import { DotGrid, GradientBlur } from '@/components/ui/GridBg'
 import { MOCK_TOKENS, PLATFORM_STATS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
+import { useDeployedCurves } from '@/lib/useDeployedCurves'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import { formatNumber } from '@/lib/utils'
 import { Rocket, TrendingUp } from 'lucide-react'
@@ -54,11 +55,12 @@ function getTabTokens(tokens: Token[], tab: Tab): Token[] {
 export default function HomePage() {
   const [tab, setTab] = useState<Tab>('hot')
   const [visible, setVisible] = useState(8)
-  const { tokens: deployed, isLoading } = useDeployedTokens()
+  const { tokens: deployed } = useDeployedTokens()
+  const { curves } = useDeployedCurves()
 
   const merged = useMemo(
-    () => mergeStaticAndDeployed(MOCK_TOKENS, deployed),
-    [deployed],
+    () => mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves),
+    [deployed, curves],
   )
   const allTokens = getTabTokens(merged, tab)
   const shown = allTokens.slice(0, visible)

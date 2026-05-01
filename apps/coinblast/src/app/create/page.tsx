@@ -1,13 +1,14 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useDeployContract, useWaitForTransactionReceipt, useAccount, useChainId } from 'wagmi'
+import { useDeployContract, useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from 'wagmi'
 import { parseUnits } from 'viem'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useWalletStore } from '@/store/wallet'
 import { formatNumber } from '@/lib/utils'
 import { COINBLAST_CURVE_ABI, COINBLAST_CURVE_BYTECODE } from '@/lib/coinblast-curve-bytecode'
+import { COINBLAST_FACTORY_ABI, COINBLAST_FACTORY_ADDRESSES } from '@/lib/coinblast-factory'
 import { recordLocalLaunch } from '@/lib/local-launches'
 import { Rocket, AlertTriangle, Globe, Send, MessageSquare, ChevronDown, Upload, Settings2, ExternalLink, Copy, Check, Loader } from 'lucide-react'
 
@@ -96,17 +97,39 @@ export default function CreatePage() {
   const net = NETWORKS[chainId === 7120 ? 7120 : 7119]
 
   // ── On-chain deploy state ─────────────────────────────────────────
-  // useDeployContract sends a CREATE tx with the constructor args. The
-  // wagmi receipt's `contractAddress` field is unreliable on Sentrix
-  // RPC (alloy schema mismatch), so we derive the curve address from
-  // the FactoryToken's mint Transfer event in the receipt logs.
+  // Two paths depending on chain — preferred: factory.createCurve so
+  // every launch fires CurveCreated and shows up in cross-device
+  // discovery via useDeployedCurves. Fallback (testnet, no factory
+  // deployed yet): direct CoinBlastCurve CREATE via useDeployContract.
+  // Either way, we derive curve+token from receipt logs (Sentrix RPC's
+  // contractAddress field is unreliable on alloy-backed clients).
+  const factoryAddr = COINBLAST_FACTORY_ADDRESSES[chainId === 7120 ? 7120 : 7119]
+  const useFactory = !!factoryAddr
+
+  const {
+    writeContract,
+    data: factoryTxHash,
+    isPending: isFactoryWriting,
+    error: factoryError,
+    reset: resetFactory,
+  } = useWriteContract()
+
   const {
     deployContract,
-    data: deployTxHash,
-    isPending: isWriting,
-    error: writeError,
-    reset: resetWrite,
+    data: directTxHash,
+    isPending: isDirectWriting,
+    error: directError,
+    reset: resetDirect,
   } = useDeployContract()
+
+  const deployTxHash = useFactory ? factoryTxHash : directTxHash
+  const isWriting = useFactory ? isFactoryWriting : isDirectWriting
+  const writeError = useFactory ? factoryError : directError
+  const resetWrite = () => {
+    resetFactory()
+    resetDirect()
+  }
+
   const {
     data: receipt,
     isLoading: isMining,
@@ -209,11 +232,24 @@ export default function CreatePage() {
       wsrx: net.wsrx,
     }
 
-    deployContract({
-      abi: COINBLAST_CURVE_ABI,
-      bytecode: COINBLAST_CURVE_BYTECODE,
-      args: [initParams],
-    })
+    if (useFactory && factoryAddr) {
+      // Canonical path — factory.createCurve(initParams). Fires the
+      // CurveCreated event that useDeployedCurves picks up, so other
+      // visitors see this launch without a cache reload.
+      writeContract({
+        abi: COINBLAST_FACTORY_ABI,
+        address: factoryAddr,
+        functionName: 'createCurve',
+        args: [initParams],
+      })
+    } else {
+      // Fallback (testnet pre-factory): direct CREATE.
+      deployContract({
+        abi: COINBLAST_CURVE_ABI,
+        bytecode: COINBLAST_CURVE_BYTECODE,
+        args: [initParams],
+      })
+    }
     setSubmitted(true)
   }
 

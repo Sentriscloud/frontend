@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { use } from 'react'
 import { MOCK_TOKENS, MOCK_HOLDERS, MOCK_TRADES } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
+import { useDeployedCurves } from '@/lib/useDeployedCurves'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import { Badge } from '@/components/ui/Badge'
 import { Progress } from '@/components/ui/Progress'
@@ -23,8 +24,10 @@ export default function TokenDetailPage({ params }: Props) {
   // We unwrap params with React's use() hook + merge live-from-chain
   // tokens with the static seed list.
   const { address } = use(params)
-  const { tokens: deployed, isLoading } = useDeployedTokens()
-  const merged = mergeStaticAndDeployed(MOCK_TOKENS, deployed)
+  const { tokens: deployed, isLoading: tokensLoading } = useDeployedTokens()
+  const { curves, isLoading: curvesLoading } = useDeployedCurves()
+  const isLoading = tokensLoading || curvesLoading
+  const merged = mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves)
   const token = merged.find((t) => t.address.toLowerCase() === address.toLowerCase())
 
   if (!token) {

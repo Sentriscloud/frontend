@@ -10,32 +10,66 @@
 
 import type { Token } from "@/types";
 import type { DeployedToken } from "./useDeployedTokens";
+import type { DeployedCurve } from "./useDeployedCurves";
 import { listLocalLaunches, localLaunchToToken } from "./local-launches";
 
 export function mergeStaticAndDeployed(
   staticTokens: Token[],
   deployed: DeployedToken[],
   chainId = 7119,
+  curves: DeployedCurve[] = [],
 ): Token[] {
   const seen = new Map<string, Token>();
-  // Static wins first — rich metadata.
+  // Static wins first — rich metadata (description, image, socials).
   for (const t of staticTokens) seen.set(t.address.toLowerCase(), t);
-  // Local launches next — these are the user's own CoinBlastCurve
-  // deployments, captured at /create submit time so they surface
-  // before the chain-scan picks them up.
+  // Cross-device factory curves next — every CoinBlastFactory.createCurve
+  // call. These have the curve address, threshold, and the on-chain owner.
+  for (const c of curves) {
+    const key = c.tokenAddress.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.set(key, deployedCurveToToken(c));
+  }
+  // Local launches — the user's own deployments, captured at /create
+  // submit so they show even before the factory event scan completes.
   for (const l of listLocalLaunches(chainId)) {
     const key = l.tokenAddress.toLowerCase();
     if (seen.has(key)) continue;
     seen.set(key, localLaunchToToken(l));
   }
-  // TokenFactory live registry last — covers third-party launches
-  // already on chain.
+  // TokenFactory live registry last — covers bare ERC-20 deploys via
+  // the older /create flow (no curve attached). Kept for back-compat
+  // until those tokens age out.
   for (const d of deployed) {
     const key = d.address.toLowerCase();
     if (seen.has(key)) continue;
     seen.set(key, deployedToToken(d));
   }
   return Array.from(seen.values());
+}
+
+function deployedCurveToToken(c: DeployedCurve): Token {
+  const totalSupply = Number(c.curveSupply / 10n ** 18n);
+  const gradSrx = Number(c.graduationSrxThreshold / 10n ** 18n);
+  return {
+    address: c.tokenAddress,
+    curveAddress: c.curveAddress,
+    name: c.name || "Unnamed",
+    symbol: c.symbol || "—",
+    description: "",
+    imageUrl: "",
+    creator: c.owner,
+    totalSupply,
+    tokensSold: 0,
+    createdAt: 0,
+    volume24h: 0,
+    isGraduated: false,
+    isWarned: false,
+    isVerified: false,
+    price: 0.0001,
+    marketCap: 0,
+    progress: 0,
+    graduationThresholdSrx: gradSrx,
+  };
 }
 
 function deployedToToken(d: DeployedToken): Token {

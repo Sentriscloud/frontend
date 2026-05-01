@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react'
 import { TokenCard } from '@/components/token/TokenCard'
 import { MOCK_TOKENS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
+import { useDeployedCurves } from '@/lib/useDeployedCurves'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import type { Token } from '@/types'
 import { Search } from 'lucide-react'
@@ -31,7 +32,8 @@ export default function ExplorePage() {
   const [search, setSearch] = useState('')
 
   const { tokens: deployed } = useDeployedTokens()
-  const merged = useMemo(() => mergeStaticAndDeployed(MOCK_TOKENS, deployed), [deployed])
+  const { curves } = useDeployedCurves()
+  const merged = useMemo(() => mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves), [deployed, curves])
 
   const tokens = useMemo(() => {
     let list: Token[] = [...merged]
