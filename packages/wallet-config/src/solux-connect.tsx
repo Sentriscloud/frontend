@@ -13,7 +13,7 @@
 // pretending to be more than it is.
 
 import { useEffect, useRef, useState } from "react";
-import { useManualAddress, useEffectiveAddress, isAddress } from "./manual-address";
+import { useManualAddress, isAddress } from "./manual-address";
 
 const SOLUX_ORIGIN = "https://solux.sentriscloud.com";
 const POPUP_FEATURES = "width=420,height=560,popup=yes,noopener=no,noreferrer=no";
@@ -108,19 +108,21 @@ export function useSoluxConnect(namespace: string): {
 /**
  * Drop-in button. Apps with a small connect-affordance area can render
  * this directly; apps with custom-styled connect rows should call
- * `useSoluxConnect()` directly. Renders three states:
- *  - not connected (RainbowKit) and no Solux address → "Connect Solux (view-only)"
- *  - Solux address persisted in manual mode → pill showing "Solux 0x12…ab · disconnect"
- *  - RainbowKit wallet already connected → hidden (real wallet wins; the
- *    Solux pill would only confuse the affordance)
+ * `useSoluxConnect()` directly. Renders two states:
+ *  - no Solux address persisted → "Connect Solux (view-only)"
+ *  - Solux address persisted → pill showing "Solux 0x12…ab · disconnect"
+ *
+ * Deliberately does NOT consult wagmi here — wallet-config's
+ * useEffectiveAddress reads useAccount, and wagmi v2 throws if a
+ * WagmiProvider hasn't mounted yet (statically-rendered pages hit that
+ * path during hydration). Consumers that want to hide the Solux button
+ * once a real wallet is connected should gate at the call site, e.g.
+ *   `{!isConnected && <SoluxConnectButton namespace="..." />}`.
  */
 export function SoluxConnectButton(props: { namespace: string; className?: string }) {
   const { connect, isConnecting, error } = useSoluxConnect(props.namespace);
-  const { source, manualAddress, setManualAddress, isConnected } = useEffectiveAddress(props.namespace);
-
-  if (isConnected) return null;
-
-  const soluxConnected = source === "manual" && manualAddress !== null;
+  const { address: manualAddress, setAddress: setManualAddress } = useManualAddress(props.namespace);
+  const soluxConnected = manualAddress !== null;
 
   return (
     <div className={props.className}>

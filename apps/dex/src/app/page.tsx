@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
 import { ManualAddressInput, SoluxConnectButton, useEffectiveAddress } from "@sentriscloud/wallet-config";
 import { SwapWidget } from "./SwapWidget";
 
 export default function HomePage() {
   const [showManual, setShowManual] = useState(false);
   const { source, manualAddress, setManualAddress } = useEffectiveAddress("dex");
+  const { isConnected } = useAccount();
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -20,7 +22,7 @@ export default function HomePage() {
         </div>
         <div className="flex flex-col items-end gap-1.5 relative">
           <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
-          <SoluxConnectButton namespace="dex" />
+          {!isConnected && <SoluxConnectButton namespace="dex" />}
           <button
             onClick={() => setShowManual(!showManual)}
             className="text-[10px] text-[var(--tx-d)] hover:text-[var(--tx-m)] underline underline-offset-2"

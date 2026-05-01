@@ -216,9 +216,11 @@ export function ClaimWidget() {
       <div className="mb-2 flex justify-center">
         <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
       </div>
-      <div className="mb-4 flex justify-center">
-        <SoluxConnectButton namespace="airdrop" />
-      </div>
+      {!isConnected && (
+        <div className="mb-4 flex justify-center">
+          <SoluxConnectButton namespace="airdrop" />
+        </div>
+      )}
       <div className="mb-4">
         <details className="text-[11px] text-[var(--tx-m)]">
           <summary className="cursor-pointer hover:text-[var(--tx-2)] select-none">
