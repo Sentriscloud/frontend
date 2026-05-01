@@ -18,7 +18,7 @@
 import { useEffect, useState } from "react";
 import { useWalletStore } from "@/lib/store";
 import SrxMark from "@/components/SrxMark";
-import { ShieldCheck, X } from "lucide-react";
+import { ShieldCheck, X, ArrowUpRight, Wallet } from "lucide-react";
 
 interface PendingMessage {
   type: "sentrix:connect-result";
@@ -134,6 +134,61 @@ export default function ConnectPage() {
     );
   }
 
+  // No wallet branch — completely separate UX. Showing Approve/Deny
+  // when there's nothing to approve was confusing (the previous UI
+  // grayed out Approve and stuck a tiny "Open /wallet" link inside an
+  // amber banner — most testers walked away). New flow: clear "set
+  // up first" headline + one big CTA that opens /wallet in a new tab
+  // so this popup stays put. Once the user has a wallet, they re-
+  // trigger connect from the requesting app.
+  if (!hydrated || !address) {
+    return (
+      <Shell>
+        <div className="text-center mb-5">
+          <div className="w-14 h-14 mx-auto mb-3 opacity-90">
+            <SrxMark className="w-full h-full" />
+          </div>
+          <h1 className="text-lg font-semibold text-[var(--tx)] mb-1">
+            {hydrated ? "Solux wallet not set up" : "Loading Solux…"}
+          </h1>
+          {hydrated && (
+            <p className="text-xs text-[var(--tx-m)] leading-relaxed">
+              <span className="font-mono">{origin.replace(/^https?:\/\//, "")}</span>
+              {" "}wants to connect to Solux, but there&apos;s no Solux wallet on this browser
+              yet. Set one up first — takes 30 seconds, your keys never leave your device.
+            </p>
+          )}
+        </div>
+
+        {hydrated && (
+          <div className="space-y-2">
+            <a
+              href="/wallet"
+              target="_blank"
+              rel="noopener"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-[var(--gold)] text-[var(--bk)] hover:bg-[var(--gold-l)] text-sm font-semibold transition-colors"
+            >
+              <Wallet className="w-4 h-4" />
+              Set up Solux wallet
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </a>
+            <p className="text-[10px] text-center text-[var(--tx-d)] leading-snug">
+              Opens in a new tab. After your wallet is ready, click <span className="text-[var(--tx-m)]">Sign in → Solux</span>{" "}
+              again on{" "}
+              <span className="font-mono text-[var(--tx-m)]">{origin.replace(/^https?:\/\//, "")}</span>.
+            </p>
+            <button
+              onClick={() => window.close()}
+              className="w-full py-2 mt-1 rounded-lg border border-[var(--brd)] text-[var(--tx-m)] hover:text-[var(--tx)] hover:bg-[var(--sf-2)] text-xs font-medium transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </Shell>
+    );
+  }
+
   return (
     <Shell>
       <div className="text-center mb-5">
@@ -148,21 +203,12 @@ export default function ConnectPage() {
         </p>
       </div>
 
-      {address ? (
-        <div className="rounded-xl border border-[var(--brd)] bg-[var(--sf-2)] p-3 mb-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-[var(--tx-m)] mb-1">Active account</p>
-          <p className="text-sm font-mono text-[var(--tx)]">
-            {address.slice(0, 8)}…{address.slice(-6)}
-          </p>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/8 p-3 mb-4 text-center">
-          <p className="text-xs text-amber-300/90 leading-snug">
-            No Solux wallet found. Open <a className="underline" href="/wallet">/wallet</a> to set
-            one up first, then come back.
-          </p>
-        </div>
-      )}
+      <div className="rounded-xl border border-[var(--brd)] bg-[var(--sf-2)] p-3 mb-4 text-center">
+        <p className="text-[10px] uppercase tracking-widest text-[var(--tx-m)] mb-1">Active account</p>
+        <p className="text-sm font-mono text-[var(--tx)]">
+          {address.slice(0, 8)}…{address.slice(-6)}
+        </p>
+      </div>
 
       <div className="grid grid-cols-2 gap-2">
         <button
@@ -173,8 +219,7 @@ export default function ConnectPage() {
         </button>
         <button
           onClick={handleApprove}
-          disabled={!address}
-          className="py-2 rounded-lg bg-[var(--gold)] text-[var(--bk)] hover:bg-[var(--gold-l)] text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="py-2 rounded-lg bg-[var(--gold)] text-[var(--bk)] hover:bg-[var(--gold-l)] text-sm font-semibold transition-colors"
         >
           Approve
         </button>
