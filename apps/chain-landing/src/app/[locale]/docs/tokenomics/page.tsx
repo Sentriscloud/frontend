@@ -3,11 +3,26 @@ import Link from "next/link";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 
-export const metadata: Metadata = {
-  title: "Sentrix Tokenomics — 315M cap, 4-year halving, 50% fee burn",
-  description:
-    "SRX tokenomics: 315M hard cap, 63M premine (20%), 252M mining (80%) over a BTC-parity 4-year halving schedule. 50% native fee burn. Full breakdown of premine allocation, vesting, airdrops, and listing roadmap.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: "Sentrix Tokenomics — 315M cap, 4-year halving, 50% fee burn",
+    description:
+      "SRX tokenomics: 315M hard cap, 63M premine (20%), 252M mining (80%) over a BTC-parity 4-year halving schedule. 50% native fee burn. Full breakdown of premine allocation, vesting, airdrops, and listing roadmap.",
+    alternates: {
+      canonical: `/${locale}/docs/tokenomics`,
+      languages: {
+        en: "/en/docs/tokenomics",
+        id: "/id/docs/tokenomics",
+        "x-default": "/en/docs/tokenomics",
+      },
+    },
+  };
+}
 
 export default function TokenomicsDocsPage() {
   return (

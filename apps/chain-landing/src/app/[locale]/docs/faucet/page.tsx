@@ -3,11 +3,26 @@ import Link from "next/link";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 
-export const metadata: Metadata = {
-  title: "Sentrix Faucet — How to use",
-  description:
-    "How to claim free SRX from the Sentrix Faucet. Testnet for builders, mainnet for new-wallet onboarding. Rate limits, captcha, troubleshooting.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: "Sentrix Faucet — How to use",
+    description:
+      "How to claim free SRX from the Sentrix Faucet. Testnet for builders, mainnet for new-wallet onboarding. Rate limits, captcha, troubleshooting.",
+    alternates: {
+      canonical: `/${locale}/docs/faucet`,
+      languages: {
+        en: "/en/docs/faucet",
+        id: "/id/docs/faucet",
+        "x-default": "/en/docs/faucet",
+      },
+    },
+  };
+}
 
 export default function FaucetDocsPage() {
   return (

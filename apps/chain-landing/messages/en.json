@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Sentrix Chain — Open source L1 built in Rust",
-    "description": "Open source, EVM-compatible L1 built in Rust. 1-second blocks, instant BFT finality, deflationary SRX. Chain ID 7119."
+    "title": "Sentrix Chain — Real chain, real blocks, real code.",
+    "description": "Open source, EVM-compatible L1 built in Rust. Mainnet live on Chain ID 7119."
   },
   "nav": {
     "about": "About",

@@ -20,6 +20,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.8,
     })
+    entries.push({
+      url: `${BASE_URL}/${locale}/docs/tokenomics`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    })
   }
 
   return entries

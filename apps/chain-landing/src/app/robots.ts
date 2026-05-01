@@ -9,6 +9,5 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: 'https://sentrixchain.com/sitemap.xml',
-    host: 'https://sentrixchain.com',
   }
 }

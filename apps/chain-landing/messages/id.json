@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Sentrix Chain — L1 sumber-terbuka, dibangun dengan Rust",
-    "description": "L1 sumber-terbuka kompatibel-EVM, dibangun dengan Rust. Blok 1-detik, finalitas BFT instan, SRX deflasioner. Chain ID 7119."
+    "title": "Sentrix Chain — Chain nyata, blok nyata, kode nyata.",
+    "description": "L1 sumber-terbuka kompatibel-EVM, dibangun dengan Rust. Mainnet aktif di Chain ID 7119."
   },
   "nav": {
     "about": "Tentang",

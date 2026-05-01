@@ -22,6 +22,14 @@ export async function generateMetadata({
     title: t("title"),
     description: t("description"),
     keywords: ["sentrix", "sentrix chain", "blockchain", "layer-1", "L1", "EVM", "rust blockchain", "SRX", "DPoS", "BFT", "chain id 7119"],
+    alternates: {
+      canonical: `/${locale}`,
+      languages: {
+        en: "/en",
+        id: "/id",
+        "x-default": "/en",
+      },
+    },
     icons: {
       icon: [
         { url: "/favicon.ico", sizes: "any" },
@@ -60,9 +68,28 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
+  const t = await getTranslations({ locale, namespace: "meta" });
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Sentrix Chain",
+    url: "https://sentrixchain.com",
+    description: t("description"),
+    inLanguage: ["en", "id"],
+    publisher: {
+      "@type": "Organization",
+      name: "Sentrix Labs",
+      url: "https://sentrixchain.com",
+    },
+  };
+
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className="min-h-screen font-sans antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         <NextIntlClientProvider>
           <ThemeProvider>
             <SmoothScroll />
