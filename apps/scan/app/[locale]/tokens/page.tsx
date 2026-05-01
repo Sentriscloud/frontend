@@ -109,7 +109,15 @@ export default function TokensPage() {
                             </span>
                             <span className="flex flex-col">
                               <span className="font-medium text-sm text-primary hover:underline">{token.name}</span>
-                              <span className="text-muted-foreground text-xs">{token.symbol}</span>
+                              <span className="text-muted-foreground text-xs flex items-center gap-1.5">
+                                {token.symbol}
+                                {token.standard === "evm" && (
+                                  <span className="px-1 py-px rounded bg-[var(--gold)]/15 text-[10px] uppercase tracking-wide text-[var(--gold)] font-mono">EVM</span>
+                                )}
+                                {token.standard === "tokenop" && (
+                                  <span className="px-1 py-px rounded bg-emerald-500/15 text-[10px] uppercase tracking-wide text-emerald-400 font-mono">Native</span>
+                                )}
+                              </span>
                             </span>
                           </Link>
                         </td>

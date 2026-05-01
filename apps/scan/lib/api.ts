@@ -134,6 +134,15 @@ export interface TokenData {
   owner: string;
   holders?: number;
   transfers?: number;
+  /**
+   * Standard the token is deployed under. `tokenop` = native Sentrix
+   * SRC-20 (REST `/tokens` endpoint). `evm` = ERC-20 contract deployed
+   * via the canonical TokenFactory (read off-chain from
+   * `TokenDeployed` event logs). UI uses this to render a badge so
+   * users can distinguish "Sentrix-native vs EVM contract" — they
+   * have different audit surfaces and different transfer paths.
+   */
+  standard?: "tokenop" | "evm";
 }
 
 export interface TopHolder {
@@ -421,13 +430,193 @@ export async function fetchValidators(network: NetworkId) {
 }
 
 export async function fetchTokens(network: NetworkId) {
-  const res = await apiFetch<{ tokens: TokenData[] } | TokenData[]>(network, "/tokens");
-  if (!res) return [];
-  return Array.isArray(res) ? res : (res.tokens ?? []);
+  const [native, evm] = await Promise.all([
+    fetchNativeTokens(network),
+    fetchEvmTokensFromFactory(network),
+  ]);
+  // Dedupe by contract_address (lowercase). Native takes precedence
+  // for any collision because it's the chain's own ledger; EVM events
+  // could theoretically be replayed on a fork, so we trust native more.
+  const seen = new Set(native.map((t) => t.contract_address.toLowerCase()));
+  const merged: TokenData[] = [...native];
+  for (const t of evm) {
+    if (!seen.has(t.contract_address.toLowerCase())) merged.push(t);
+  }
+  return merged;
 }
 
-export function fetchToken(network: NetworkId, address: string) {
-  return apiFetch<TokenData>(network, `/tokens/${address}`);
+async function fetchNativeTokens(network: NetworkId): Promise<TokenData[]> {
+  const res = await apiFetch<{ tokens: TokenData[] } | TokenData[]>(network, "/tokens");
+  if (!res) return [];
+  const list = Array.isArray(res) ? res : (res.tokens ?? []);
+  return list.map((t) => ({ ...t, standard: "tokenop" as const }));
+}
+
+// Canonical TokenFactory v1.1.0 addresses + deploy blocks (per
+// `canonical-contracts/deployments/{7119,7120}.json`). v1.0.0 is still
+// on-chain at separate addresses; we intentionally only list v1.1.0
+// tokens here so frontends pull the audit-hardened set. Future migration
+// (e.g. v1.2.0) just needs to update this map.
+//
+// We track the deploy block so the chunked eth_getLogs walk below
+// doesn't waste range on the empty pre-factory window. Sentrix's
+// eth_getLogs caps usable range at well under 64K blocks (silently
+// returns empty above ~5K) so we walk the deploy-block → latest
+// window in 5000-block chunks. With 1B blocks/yr this caps the
+// number of round-trips at ~200K/yr, plenty fast for an explorer.
+const TOKEN_FACTORY_V1_1_0: Record<NetworkId, { addr: `0x${string}`; fromBlock: number }> = {
+  mainnet: { addr: "0x53C3838e18703c763564Bb983694CF117B33D366", fromBlock: 0x1142da },
+  testnet: { addr: "0xaE2a8512f0de635F8E90069e2877098c9e0baEc7", fromBlock: 0x17f57f },
+};
+
+const LOGS_CHUNK_SIZE = 5_000;
+
+async function fetchEvmTokensFromFactory(network: NetworkId): Promise<TokenData[]> {
+  const cfg = TOKEN_FACTORY_V1_1_0[network];
+  if (!cfg) return [];
+
+  // Get the chain tip in hex so we know when to stop.
+  const base = network === "testnet"
+    ? (process.env.NEXT_PUBLIC_TESTNET_API || "https://testnet-api.sentrixchain.com")
+    : (process.env.NEXT_PUBLIC_MAINNET_API || "https://api.sentrixchain.com");
+  let tip = 0;
+  try {
+    const r = await fetch(`${base}/rpc`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", method: "eth_blockNumber", params: [], id: 1 }),
+      cache: "no-store",
+    });
+    const body = await r.json();
+    if (body?.result) tip = parseInt(body.result, 16);
+  } catch {
+    return [];
+  }
+  if (tip === 0) return [];
+
+  const logs: EventLog[] = [];
+  for (let from = cfg.fromBlock; from <= tip; from += LOGS_CHUNK_SIZE) {
+    const to = Math.min(from + LOGS_CHUNK_SIZE - 1, tip);
+    const chunk = await fetchEventLogs(network, cfg.addr, from, to);
+    logs.push(...chunk);
+  }
+
+  const tokens: TokenData[] = [];
+  for (const log of logs) {
+    if (!log.topics || log.topics.length !== 3) continue;
+    const tokenAddr = "0x" + log.topics[1].slice(-40);
+    const ownerAddr = "0x" + log.topics[2].slice(-40);
+    // data = ABI-encoded (string name, string symbol, uint256 supply).
+    // Strings are dynamic; decode via offset/length walk.
+    const data = log.data.startsWith("0x") ? log.data.slice(2) : log.data;
+    let name = "";
+    let symbol = "";
+    let supply = 0;
+    try {
+      // Layout: offset_name (32B), offset_symbol (32B), supply (32B),
+      //         then the two string blobs at their offsets.
+      const offName = parseInt(data.slice(0, 64), 16) * 2;
+      const offSym = parseInt(data.slice(64, 128), 16) * 2;
+      const supplyHex = data.slice(128, 192);
+      supply = Number(BigInt("0x" + supplyHex)) / 1e18; // 18-decimal display
+      name = decodeAbiString(data, offName);
+      symbol = decodeAbiString(data, offSym);
+    } catch {
+      // Skip malformed event — never break the whole page render
+      continue;
+    }
+    tokens.push({
+      contract_address: tokenAddr,
+      name,
+      symbol,
+      decimals: 18,
+      total_supply: supply,
+      owner: ownerAddr,
+      standard: "evm",
+    });
+  }
+  return tokens;
+}
+
+function decodeAbiString(data: string, offset: number): string {
+  const lenHex = data.slice(offset, offset + 64);
+  const len = parseInt(lenHex, 16);
+  const start = offset + 64;
+  const end = start + len * 2;
+  const bytes = data.slice(start, end);
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 2) {
+    s += String.fromCharCode(parseInt(bytes.slice(i, i + 2), 16));
+  }
+  return s;
+}
+
+export async function fetchToken(network: NetworkId, address: string): Promise<TokenData | null> {
+  // Native first — `/tokens/{addr}` only resolves for native TokenOp.
+  const native = await apiFetch<TokenData>(network, `/tokens/${address}`);
+  if (native) return { ...native, standard: "tokenop" };
+  // Fall back to ERC-20 read-via-RPC for EVM contracts (TokenFactory-deployed
+  // or any other ERC-20). Multicall would be tighter, but per-field calls
+  // keep this readable + work without Multicall3 ABI in this file.
+  return await fetchEvmTokenFromChain(network, address);
+}
+
+async function fetchEvmTokenFromChain(network: NetworkId, address: string): Promise<TokenData | null> {
+  const base = network === "testnet"
+    ? (process.env.NEXT_PUBLIC_TESTNET_API || "https://testnet-api.sentrixchain.com")
+    : (process.env.NEXT_PUBLIC_MAINNET_API || "https://api.sentrixchain.com");
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  async function call(sig: string): Promise<string | null> {
+    try {
+      const res = await fetch(`${base}/rpc`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "eth_call",
+          params: [{ to: address, data: sig }, "latest"],
+          id: 1,
+        }),
+        signal: ctrl.signal,
+        cache: "no-store",
+      });
+      const body = await res.json();
+      return body?.result ?? null;
+    } catch {
+      return null;
+    }
+  }
+  try {
+    // ABI selectors (precomputed):
+    //   name()           = 0x06fdde03
+    //   symbol()         = 0x95d89b41
+    //   decimals()       = 0x313ce567
+    //   totalSupply()    = 0x18160ddd
+    const [nameRaw, symRaw, decRaw, supplyRaw] = await Promise.all([
+      call("0x06fdde03"),
+      call("0x95d89b41"),
+      call("0x313ce567"),
+      call("0x18160ddd"),
+    ]);
+    if (!nameRaw || !symRaw) return null;
+    const decode = (raw: string) => decodeAbiString(raw.replace(/^0x/, ""), 0);
+    const decimals = decRaw ? parseInt(decRaw, 16) : 18;
+    const supply = supplyRaw
+      ? Number(BigInt(supplyRaw)) / Math.pow(10, decimals)
+      : 0;
+    return {
+      contract_address: address,
+      name: decode(nameRaw),
+      symbol: decode(symRaw),
+      decimals,
+      total_supply: supply,
+      owner: "",
+      standard: "evm",
+    };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ── New endpoints wired from existing backend routes ──────────────────────
