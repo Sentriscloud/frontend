@@ -5,7 +5,7 @@ import { SignInModal } from './SignInModal'
 import { formatAddress } from '@/lib/utils'
 import { Wallet, ChevronDown, LogOut, Copy, Eye } from 'lucide-react'
 import { useState } from 'react'
-import { useEffectiveAddress } from '@sentriscloud/wallet-config'
+import { useEffectiveAddress, useSoluxConnect } from '@sentriscloud/wallet-config'
 
 export function WalletConnect() {
   const { address, isConnected, error, disconnect } = useWalletStore()
@@ -13,6 +13,11 @@ export function WalletConnect() {
   const [copied, setCopied] = useState(false)
   const [signInOpen, setSignInOpen] = useState(false)
   const { source: addrSource, manualAddress, setManualAddress } = useEffectiveAddress('coinblast')
+  // Hook lives at this stable parent so the postMessage listener
+  // survives the SignInModal opening + closing. Inside the modal it
+  // would unmount the moment the user clicks Solux (we close the
+  // modal in the same tick) and the popup's reply would never land.
+  const { connect: connectSolux, isConnecting: isSoluxConnecting } = useSoluxConnect('coinblast')
 
   const copyAddress = async () => {
     if (!address) return
@@ -30,6 +35,8 @@ export function WalletConnect() {
       open={signInOpen}
       onClose={() => setSignInOpen(false)}
       namespace="coinblast"
+      onSoluxConnect={connectSolux}
+      isSoluxConnecting={isSoluxConnecting}
     />
   )
 

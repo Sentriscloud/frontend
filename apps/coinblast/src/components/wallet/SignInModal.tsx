@@ -20,20 +20,25 @@
 
 import { useEffect, useState } from 'react'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
-import { ManualAddressInput, useSoluxConnect } from '@sentriscloud/wallet-config'
+import { ManualAddressInput } from '@sentriscloud/wallet-config'
 import { X, Wallet, Eye, ChevronRight, ArrowLeft } from 'lucide-react'
 
 interface SignInModalProps {
   open: boolean
   onClose: () => void
   namespace: string
+  // Hoisted from the parent — owning useSoluxConnect here would
+  // unmount the popup-message listener the moment the modal closes,
+  // and the postMessage from /connect would land in nothing. The
+  // parent (WalletConnect) keeps the hook alive across modal opens.
+  onSoluxConnect: () => void
+  isSoluxConnecting: boolean
 }
 
 type View = 'menu' | 'watch'
 
-export function SignInModal({ open, onClose, namespace }: SignInModalProps) {
+export function SignInModal({ open, onClose, namespace, onSoluxConnect, isSoluxConnecting }: SignInModalProps) {
   const { openConnectModal } = useConnectModal()
-  const { connect: connectSolux, isConnecting: isSoluxConnecting } = useSoluxConnect(namespace)
   const [view, setView] = useState<View>('menu')
 
   // Reset to menu view on every open so the user doesn't get stuck on
@@ -92,7 +97,7 @@ export function SignInModal({ open, onClose, namespace }: SignInModalProps) {
             {/* Primary: Solux */}
             <button
               onClick={() => {
-                connectSolux()
+                onSoluxConnect()
                 onClose()
               }}
               disabled={isSoluxConnecting}
