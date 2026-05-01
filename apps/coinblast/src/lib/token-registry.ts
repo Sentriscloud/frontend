@@ -10,21 +10,32 @@
 
 import type { Token } from "@/types";
 import type { DeployedToken } from "./useDeployedTokens";
+import { listLocalLaunches, localLaunchToToken } from "./local-launches";
 
 export function mergeStaticAndDeployed(
   staticTokens: Token[],
   deployed: DeployedToken[],
+  chainId = 7119,
 ): Token[] {
-  const staticByAddress = new Map<string, Token>();
-  for (const t of staticTokens) staticByAddress.set(t.address.toLowerCase(), t);
-
-  const merged: Token[] = [...staticTokens];
+  const seen = new Map<string, Token>();
+  // Static wins first — rich metadata.
+  for (const t of staticTokens) seen.set(t.address.toLowerCase(), t);
+  // Local launches next — these are the user's own CoinBlastCurve
+  // deployments, captured at /create submit time so they surface
+  // before the chain-scan picks them up.
+  for (const l of listLocalLaunches(chainId)) {
+    const key = l.tokenAddress.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.set(key, localLaunchToToken(l));
+  }
+  // TokenFactory live registry last — covers third-party launches
+  // already on chain.
   for (const d of deployed) {
     const key = d.address.toLowerCase();
-    if (staticByAddress.has(key)) continue; // static wins
-    merged.push(deployedToToken(d));
+    if (seen.has(key)) continue;
+    seen.set(key, deployedToToken(d));
   }
-  return merged;
+  return Array.from(seen.values());
 }
 
 function deployedToToken(d: DeployedToken): Token {

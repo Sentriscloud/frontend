@@ -1,12 +1,14 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from 'wagmi'
+import { useRouter } from 'next/navigation'
+import { useDeployContract, useWaitForTransactionReceipt, useAccount, useChainId } from 'wagmi'
 import { parseUnits } from 'viem'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useWalletStore } from '@/store/wallet'
 import { formatNumber } from '@/lib/utils'
-import { TOKEN_FACTORY_ADDRESSES, TOKEN_FACTORY_ABI, extractDeployedTokenAddress } from '@/lib/token-factory'
+import { COINBLAST_CURVE_ABI, COINBLAST_CURVE_BYTECODE } from '@/lib/coinblast-curve-bytecode'
+import { recordLocalLaunch } from '@/lib/local-launches'
 import { Rocket, AlertTriangle, Globe, Send, MessageSquare, ChevronDown, Upload, Settings2, ExternalLink, Copy, Check, Loader } from 'lucide-react'
 
 interface FormData {
@@ -16,13 +18,57 @@ interface FormData {
   imageUrl: string
   totalSupply: string
   kParam: number
+  graduationSrx: string
   website: string
   twitter: string
   telegram: string
   discord: string
 }
 
+// Per-network DEX addresses + treasury for the curve constructor.
+// Deploying through CoinBlastCurve means each launch ships with a real
+// bonding curve, fee accrual to the Ecosystem Fund, and an automatic
+// graduation path into a SentrixV2 DEX pair (LP burnt to 0xdEaD).
+const NETWORKS = {
+  7119: {
+    label: 'Sentrix Mainnet',
+    explorerBase: 'https://scan.sentrixchain.com',
+    feeRecipient: '0xeb70fdefd00fdb768dec06c478f450c351499f14' as `0x${string}`,
+    router: '0xAb67E171c0DE0Cd6dD6fE87E5E399C091F9c9dE8' as `0x${string}`,
+    wsrx: '0x4693b113e523A196d9579333c4ab8358e2656553' as `0x${string}`,
+  },
+  7120: {
+    label: 'Sentrix Testnet',
+    explorerBase: 'https://scan.sentrixchain.com/?network=testnet',
+    feeRecipient: '0xeb70fdefd00fdb768dec06c478f450c351499f14' as `0x${string}`,
+    router: '0x2bF73491733c3b87D72b16d4f7151dA294b55cB0' as `0x${string}`,
+    wsrx: '0x85d5E7694AF31C2Edd0a7e66b7c6c92C59fF949A' as `0x${string}`,
+  },
+} as const
+
+const ZERO_TO_ZERO_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+const ZERO_PADDED_ADDRESS = '0x0000000000000000000000000000000000000000000000000000000000000000'
+
+/**
+ * The CoinBlastCurve constructor spawns a new FactoryToken inside it and
+ * mints the entire supply to itself. The Transfer(from=0x0, to=curve)
+ * event fires from the *token* address, with the curve address in the
+ * `to` topic. Walk receipt logs for that signature and decode the curve.
+ */
+function extractCurveAndTokenFromReceipt(logs: readonly { address: string; topics: readonly string[] }[]): { curve: `0x${string}`; token: `0x${string}` } | null {
+  for (const log of logs) {
+    if (log.topics[0]?.toLowerCase() !== ZERO_TO_ZERO_TOPIC) continue
+    if (log.topics[1]?.toLowerCase() !== ZERO_PADDED_ADDRESS) continue
+    const toTopic = log.topics[2]
+    if (!toTopic) continue
+    const curve = ('0x' + toTopic.slice(-40)) as `0x${string}`
+    return { curve, token: log.address as `0x${string}` }
+  }
+  return null
+}
+
 export default function CreatePage() {
+  const router = useRouter()
   const { isConnected, connect } = useWalletStore()
   const { address } = useAccount()
   const chainId = useChainId()
@@ -38,6 +84,7 @@ export default function CreatePage() {
     imageUrl: '',
     totalSupply: '1000000000',
     kParam: 0.5,
+    graduationSrx: '1000',
     website: '',
     twitter: '',
     telegram: '',
@@ -46,39 +93,51 @@ export default function CreatePage() {
   const [submitted, setSubmitted] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
 
-  // ── On-chain deploy state ─────────────────────────────────────
-  const factoryAddr =
-    chainId === 7120
-      ? TOKEN_FACTORY_ADDRESSES.testnet
-      : TOKEN_FACTORY_ADDRESSES.mainnet
-  const explorerBase =
-    chainId === 7120
-      ? 'https://scan.sentrixchain.com/?network=testnet'
-      : 'https://scan.sentrixchain.com'
+  const net = NETWORKS[chainId === 7120 ? 7120 : 7119]
+
+  // ── On-chain deploy state ─────────────────────────────────────────
+  // useDeployContract sends a CREATE tx with the constructor args. The
+  // wagmi receipt's `contractAddress` field is unreliable on Sentrix
+  // RPC (alloy schema mismatch), so we derive the curve address from
+  // the FactoryToken's mint Transfer event in the receipt logs.
   const {
-    writeContract,
+    deployContract,
     data: deployTxHash,
     isPending: isWriting,
     error: writeError,
     reset: resetWrite,
-  } = useWriteContract()
+  } = useDeployContract()
   const {
     data: receipt,
     isLoading: isMining,
     isSuccess: isMined,
   } = useWaitForTransactionReceipt({ hash: deployTxHash })
-  const [deployedAddress, setDeployedAddress] = useState<`0x${string}` | null>(null)
+
+  const [deployed, setDeployed] = useState<{ curve: `0x${string}`; token: `0x${string}` } | null>(null)
   const [copied, setCopied] = useState(false)
 
-  // When the receipt arrives, parse the TokenDeployed event for the new
-  // contract address. Indexer + frontend list pages can pick it up via
-  // factory.tokensOf(connected) on next load.
   useEffect(() => {
-    if (isMined && receipt && !deployedAddress) {
-      const addr = extractDeployedTokenAddress(receipt.logs, factoryAddr)
-      if (addr) setDeployedAddress(addr)
+    if (isMined && receipt && !deployed) {
+      const found = extractCurveAndTokenFromReceipt(receipt.logs)
+      if (found) {
+        setDeployed(found)
+        // Persist the launch metadata locally so the user's own
+        // launches surface in the explore list immediately, even
+        // before the chain-scan picks them up. Multi-user discovery
+        // still relies on TokenDeployed-style events; until the
+        // CoinBlastFactory ships, this is the per-browser shortcut.
+        recordLocalLaunch({
+          curveAddress: found.curve,
+          tokenAddress: found.token,
+          name: form.name,
+          symbol: form.symbol.toUpperCase(),
+          owner: (address ?? '0x0000000000000000000000000000000000000000') as `0x${string}`,
+          chainId: chainId === 7120 ? 7120 : 7119,
+          createdAt: Math.floor(Date.now() / 1000),
+        })
+      }
     }
-  }, [isMined, receipt, deployedAddress, factoryAddr])
+  }, [isMined, receipt, deployed, form.name, form.symbol, address, chainId])
 
   const set = (key: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [key]: e.target.value }))
@@ -111,6 +170,9 @@ export default function CreatePage() {
       const supply = parseInt(form.totalSupply)
       if (!supply || supply < 1_000 || supply > 1_000_000_000_000)
         errs.totalSupply = 'Between 1,000 and 1,000,000,000,000'
+      const grad = parseFloat(form.graduationSrx)
+      if (!grad || grad < 10 || grad > 100_000)
+        errs.graduationSrx = 'Between 10 and 100,000 SRX'
     }
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -120,14 +182,37 @@ export default function CreatePage() {
     if (!isConnected || !address) { connect(); return }
     if (!validate()) return
     resetWrite()
-    setDeployedAddress(null)
-    // 18 decimals — matches FactoryToken's `uint8 public constant decimals = 18`.
+    setDeployed(null)
+
+    // Build CoinBlastCurve.InitParams. Defaults match the production
+    // CBLAST launch params (1B × 1e18 supply, 0.0001 SRX/whole-token
+    // base, K = 0.5, threshold 1000 SRX, 1% fee).
     const supplyWei = parseUnits(form.totalSupply || '1000000000', 18)
-    writeContract({
-      abi: TOKEN_FACTORY_ABI,
-      address: factoryAddr,
-      functionName: 'deployToken',
-      args: [form.name, form.symbol.toUpperCase(), supplyWei],
+    const gradSrxWei = parseUnits(form.graduationSrx || '1000', 18)
+    // K = kNum/kDen. User picks K as a decimal slider, store as int/100
+    // so we keep precision through to the contract.
+    const kNum = BigInt(Math.round(form.kParam * 100))
+    const kDen = 100n
+
+    const initParams = {
+      name: form.name,
+      symbol: form.symbol.toUpperCase(),
+      curveSupply: supplyWei,
+      basePriceNum: 1n,
+      basePriceDen: 10000n, // P0 = 1/10000 SRX-wei per token-wei = 0.0001 SRX/whole
+      kNum,
+      kDen,
+      graduationSrxThreshold: gradSrxWei,
+      feeRecipient: net.feeRecipient,
+      feeBps: 100n, // 1%
+      router: net.router,
+      wsrx: net.wsrx,
+    }
+
+    deployContract({
+      abi: COINBLAST_CURVE_ABI,
+      bytecode: COINBLAST_CURVE_BYTECODE,
+      args: [initParams],
     })
     setSubmitted(true)
   }
@@ -144,7 +229,7 @@ export default function CreatePage() {
 
     const reset = () => {
       setSubmitted(false)
-      setDeployedAddress(null)
+      setDeployed(null)
       resetWrite()
     }
 
@@ -157,9 +242,9 @@ export default function CreatePage() {
             </div>
             <h2 className="text-3xl font-black text-[var(--tx)] mb-3">Confirm in your wallet</h2>
             <p className="text-[var(--tx-m)] leading-relaxed">
-              Approve the deploy tx for{' '}
+              Approve the CoinBlast curve deploy for{' '}
               <span className="text-[var(--tx)] font-semibold">{form.name} ({form.symbol.toUpperCase()})</span>{' '}
-              in MetaMask / Rabby / your wallet. Cancel to come back to the form.
+              in MetaMask / Rabby / your wallet.
             </p>
           </>
         )}
@@ -171,11 +256,11 @@ export default function CreatePage() {
             </div>
             <h2 className="text-3xl font-black text-[var(--tx)] mb-3">Mining…</h2>
             <p className="text-[var(--tx-m)] mb-3 leading-relaxed">
-              Tx broadcast — waiting for finality (~3 blocks, &lt;5s).
+              Curve deploy broadcast — finality &lt;5s.
             </p>
             {deployTxHash && (
               <a
-                href={`${explorerBase}/tx/${deployTxHash}`}
+                href={`${net.explorerBase}/tx/${deployTxHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-xs font-mono text-[var(--gold)] hover:text-[var(--gold-l)]"
@@ -191,44 +276,53 @@ export default function CreatePage() {
             <div className="w-20 h-20 bg-[var(--gold)]/15 border border-[var(--brd2)] rounded-full flex items-center justify-center mx-auto mb-6 animate-glow-pulse">
               <Rocket className="w-10 h-10 text-[var(--gold)]" />
             </div>
-            <h2 className="text-3xl font-black text-[var(--tx)] mb-3">Launched 🚀</h2>
+            <h2 className="text-3xl font-black text-[var(--tx)] mb-3">Curve live 🚀</h2>
             <p className="text-[var(--tx-m)] mb-6 leading-relaxed">
               <span className="text-[var(--tx)] font-semibold">{form.name} ({form.symbol.toUpperCase()})</span>{' '}
-              is live on chain {chainId === 7120 ? '7120 (testnet)' : '7119'}. Full supply
-              minted to your wallet — share away.
+              has a real bonding curve now. Anyone can buy from it; sells go back along the curve.
+              At {form.graduationSrx} SRX raised, the curve auto-graduates to a SentrixV2 DEX pair.
             </p>
             <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5 text-left mb-6 space-y-2 text-sm">
               <div className="flex justify-between items-center">
-                <span className="text-[var(--tx-d)]">Contract</span>
-                {deployedAddress ? (
+                <span className="text-[var(--tx-d)]">Curve contract</span>
+                {deployed ? (
                   <button
                     onClick={async () => {
-                      await navigator.clipboard.writeText(deployedAddress)
+                      await navigator.clipboard.writeText(deployed.curve)
                       setCopied(true)
                       setTimeout(() => setCopied(false), 1500)
                     }}
                     className="font-mono text-xs text-[var(--gold)] hover:text-[var(--gold-l)] inline-flex items-center gap-1"
                   >
-                    {deployedAddress.slice(0, 10)}…{deployedAddress.slice(-8)}
+                    {deployed.curve.slice(0, 10)}…{deployed.curve.slice(-8)}
                     {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                   </button>
                 ) : (
                   <span className="text-[var(--tx-d)] text-xs">parsing receipt…</span>
                 )}
               </div>
-              <div className="flex justify-between"><span className="text-[var(--tx-d)]">Symbol</span><span className="text-[var(--tx)] font-mono">{form.symbol.toUpperCase()}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--tx-d)]">Token (ERC-20)</span>{deployed ? <span className="font-mono text-xs text-[var(--tx)]">{deployed.token.slice(0, 10)}…{deployed.token.slice(-8)}</span> : <span className="text-[var(--tx-d)] text-xs">…</span>}</div>
               <div className="flex justify-between"><span className="text-[var(--tx-d)]">Supply</span><span className="text-[var(--tx)]">{formatNumber(supply, 0)} {form.symbol.toUpperCase()}</span></div>
-              <div className="flex justify-between"><span className="text-[var(--tx-d)]">Holder</span><span className="font-mono text-xs text-[var(--tx)]">{address?.slice(0, 8)}…{address?.slice(-6)}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--tx-d)]">Curve K</span><span className="text-[var(--tx)] font-mono">{form.kParam.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--tx-d)]">Graduation</span><span className="text-[var(--tx)]">{form.graduationSrx} SRX raised</span></div>
             </div>
-            <div className="flex gap-2 justify-center">
-              {deployedAddress && (
+            <div className="flex gap-2 justify-center flex-wrap">
+              {deployed && (
+                <Button
+                  variant="gold"
+                  onClick={() => router.push(`/token/${deployed.token}`)}
+                >
+                  Open token page →
+                </Button>
+              )}
+              {deployed && (
                 <a
-                  href={`${explorerBase}/address/${deployedAddress}`}
+                  href={`${net.explorerBase}/address/${deployed.curve}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-[var(--gold)] text-[var(--bk)] text-sm font-semibold hover:bg-[var(--gold-l)] transition-colors"
+                  className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-[var(--sf)] border border-[var(--brd)] text-sm text-[var(--tx-m)] hover:text-[var(--tx)] hover:border-[var(--brd2)] transition-colors"
                 >
-                  View on Scan <ExternalLink className="w-3.5 h-3.5" />
+                  Curve on Scan <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               )}
               <Button variant="secondary" onClick={reset}>Launch another</Button>
@@ -258,7 +352,7 @@ export default function CreatePage() {
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-black text-[var(--tx)]">Launch a Coin</h1>
         <p className="text-[var(--tx-m)] mt-1 text-sm">
-          Fill the form · sign once · coin goes live instantly
+          Real bonding curve · live trading from block 1 · graduates to DEX
         </p>
       </div>
 
@@ -388,6 +482,15 @@ export default function CreatePage() {
                 hint="Default: 1,000,000,000 — range: 1K to 1T"
               />
 
+              <Input
+                label="Graduation threshold (SRX raised)"
+                placeholder="1000"
+                value={form.graduationSrx}
+                onChange={set('graduationSrx')}
+                error={errors.graduationSrx}
+                hint="Once this much SRX has been raised, the curve auto-migrates to a DEX pair (LP burnt). Default 1000 SRX. Lower = faster graduation, higher = more capital trapped pre-grad."
+              />
+
               {/* Bonding curve K slider */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -418,14 +521,22 @@ export default function CreatePage() {
         </div>
 
         {/* Fee summary */}
-        <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4 flex items-center justify-between text-sm">
-          <div className="space-y-0.5">
-            <p className="text-[var(--tx)] font-semibold">Network fee</p>
-            <p className="text-xs text-[var(--tx-d)]">~0.0001 SRX gas (paid by your wallet)</p>
+        <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4 space-y-1.5 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-[var(--tx)] font-semibold">Network</span>
+            <span className="text-xs text-[var(--tx-m)]">{net.label} (chain {chainId === 7120 ? 7120 : 7119})</span>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-[var(--tx-d)]">via TokenFactory v1.1.0</p>
-            <p className="text-xs text-[var(--tx-d)]">Trade later on dex.sentrixchain.com</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[var(--tx-d)] text-xs">Trading fee</span>
+            <span className="text-xs text-[var(--tx-m)]">1% to Ecosystem Fund</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[var(--tx-d)] text-xs">Gas</span>
+            <span className="text-xs text-[var(--tx-m)]">Pay your wallet&apos;s gas estimate</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[var(--tx-d)] text-xs">After {form.graduationSrx} SRX raised</span>
+            <span className="text-xs text-[var(--tx-m)]">Auto-list on SentrixV2 DEX</span>
           </div>
         </div>
 
