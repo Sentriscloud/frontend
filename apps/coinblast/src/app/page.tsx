@@ -21,16 +21,12 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'graduated', label: '✅ Graduated' },
 ]
 
-// Live activity feed reads from the chain (CoinBlastCurve Buy/Sell/Graduated
-// events) once the launchpad ships. For now the launchpad has zero on-chain
-// curves so the feed renders empty.
-const RECENT_ACTIVITY: Array<{
-  type: 'buy' | 'sell' | 'launch'
+interface ActivityRow {
+  type: 'launch'
   symbol: string
-  srx: number
-  addr: string
-  ts: number
-}> = []
+  curve: `0x${string}`
+  ts: number // pseudo — block-derived timestamp not fetched, just used for ordering
+}
 
 function getTabTokens(tokens: Token[], tab: Tab): Token[] {
   switch (tab) {
@@ -61,6 +57,20 @@ export default function HomePage() {
   const merged = useMemo(
     () => mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves),
     [deployed, curves],
+  )
+
+  // Live Activity feed — derived from the same CurveCreated events
+  // useDeployedCurves consumes. Newest first, capped at 8. Block
+  // numbers stand in for timestamps (no extra eth_getBlock fetch).
+  const activity: ActivityRow[] = useMemo(
+    () =>
+      curves.slice(0, 8).map((c) => ({
+        type: 'launch' as const,
+        symbol: c.symbol || c.tokenAddress.slice(0, 6),
+        curve: c.curveAddress,
+        ts: Number(c.blockNumber),
+      })),
+    [curves],
   )
   const allTokens = getTabTokens(merged, tab)
   const shown = allTokens.slice(0, visible)
@@ -172,27 +182,25 @@ export default function HomePage() {
           <div className="lg:w-[260px] shrink-0">
             <h2 className="text-lg font-bold text-[var(--tx)] mb-5">Live Activity</h2>
             <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl overflow-hidden">
-              {RECENT_ACTIVITY.length === 0 ? (
+              {activity.length === 0 ? (
                 <div className="px-3 py-6 text-center text-xs text-[var(--tx-d)]">
                   No on-chain activity yet — be the first to launch.
                 </div>
               ) : (
-                RECENT_ACTIVITY.map((a, i) => (
-                  <div key={i} className="flex items-center gap-2.5 px-3 py-2.5 border-b border-[var(--brd)] last:border-0 hover:bg-[var(--sf2)] transition-colors">
-                    <span className={`text-xs font-bold w-12 shrink-0 ${
-                      a.type === 'buy' ? 'text-emerald-400' :
-                      a.type === 'sell' ? 'text-red-400' :
-                      'text-[var(--gold)]'
-                    }`}>
-                      {a.type === 'buy' ? '▲ BUY' : a.type === 'sell' ? '▼ SELL' : '🚀 NEW'}
+                activity.map((a) => (
+                  <Link
+                    key={a.curve}
+                    href={`/token/${a.curve}`}
+                    className="flex items-center gap-2.5 px-3 py-2.5 border-b border-[var(--brd)] last:border-0 hover:bg-[var(--sf2)] transition-colors"
+                  >
+                    <span className="text-xs font-bold w-12 shrink-0 text-[var(--gold)]">
+                      🚀 NEW
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-[var(--tx)] font-medium truncate">{a.symbol}</p>
                     </div>
-                    {a.srx > 0 && (
-                      <span className="text-xs text-[var(--tx-m)] shrink-0">{formatNumber(a.srx, 0)} SRX</span>
-                    )}
-                  </div>
+                    <span className="text-xs text-[var(--tx-m)] shrink-0">#{a.ts}</span>
+                  </Link>
                 ))
               )}
             </div>

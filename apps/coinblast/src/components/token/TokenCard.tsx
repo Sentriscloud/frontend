@@ -1,3 +1,4 @@
+'use client'
 import Link from 'next/link'
 import type { Token } from '@/types'
 import { Progress } from '@/components/ui/Progress'
@@ -5,6 +6,8 @@ import { TokenAvatar } from '@/components/ui/TokenAvatar'
 import { formatNumber, formatPrice, formatAddress } from '@/lib/utils'
 import { ShieldCheck, AlertTriangle, TrendingUp } from 'lucide-react'
 import { GRADUATION_THRESHOLD as GRADUATION_THRESHOLD_FALLBACK } from '@/lib/bonding-curve'
+import { useCurveState } from '@/lib/useCoinBlastCurve'
+import { formatEther } from 'viem'
 
 interface TokenCardProps {
   token: Token
@@ -13,7 +16,23 @@ interface TokenCardProps {
 export function TokenCard({ token }: TokenCardProps) {
   const hasCurve = !!token.curveAddress
   const gradThreshold = token.graduationThresholdSrx ?? GRADUATION_THRESHOLD_FALLBACK
-  const toGrad = Math.max(0, gradThreshold - token.marketCap)
+
+  // Live curve state — only fetches when curveAddress is set (the hook
+  // gates on the address being defined). For bare ERC-20s this is a
+  // no-op, no RPC traffic. wagmi/react-query dedupes across cards.
+  const live = useCurveState(token.curveAddress)
+  const liveSrxRaised = live.srxRaised !== undefined ? Number(formatEther(live.srxRaised)) : null
+  const liveTokensSold = live.tokensSold !== undefined ? Number(formatEther(live.tokensSold)) : null
+  const liveCurveSupply = live.curveSupply !== undefined ? Number(formatEther(live.curveSupply)) : null
+
+  const srxRaised = liveSrxRaised ?? token.marketCap
+  const liveProgress = liveSrxRaised !== null
+    ? Math.min(100, (liveSrxRaised / gradThreshold) * 100)
+    : token.progress
+  const toGrad = Math.max(0, gradThreshold - srxRaised)
+  const soldPct = liveTokensSold !== null && liveCurveSupply
+    ? (liveTokensSold / liveCurveSupply) * 100
+    : null
 
   return (
     <Link
@@ -26,8 +45,8 @@ export function TokenCard({ token }: TokenCardProps) {
           address={token.address}
           symbol={token.symbol}
           imageUrl={token.imageUrl}
-          size={400}
-          className="w-full h-full !rounded-none"
+          fluid
+          className="!rounded-none"
         />
         {/* Badge overlays */}
         <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
@@ -62,10 +81,12 @@ export function TokenCard({ token }: TokenCardProps) {
         {/* Creator */}
         <p className="text-[10px] text-[var(--tx-d)] -mt-1">by {formatAddress(token.creator)}</p>
 
-        {/* Market cap hero + price */}
+        {/* SRX raised (live, when curve attached) + price */}
         <div className="flex items-baseline justify-between gap-1">
           <span className="text-base font-black text-[var(--gold)] leading-none">
-            {formatNumber(token.marketCap)} SRX
+            {hasCurve && liveSrxRaised !== null
+              ? `${liveSrxRaised < 1 ? liveSrxRaised.toFixed(3) : formatNumber(liveSrxRaised)} SRX`
+              : `${formatNumber(token.marketCap)} SRX`}
           </span>
           <span className="text-[10px] text-[var(--tx-d)] shrink-0">{formatPrice(token.price)}</span>
         </div>
@@ -76,9 +97,9 @@ export function TokenCard({ token }: TokenCardProps) {
             meaningless for them). */}
         {!token.isGraduated && hasCurve ? (
           <div className="space-y-1">
-            <Progress value={token.progress} color="gold" />
+            <Progress value={liveProgress} color="gold" />
             <p className="text-[10px] text-[var(--tx-d)]">
-              {formatNumber(toGrad)} SRX to grad
+              {toGrad < 1 ? toGrad.toFixed(3) : formatNumber(toGrad)} SRX to grad
             </p>
           </div>
         ) : token.isGraduated ? (

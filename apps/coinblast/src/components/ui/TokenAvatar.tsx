@@ -16,6 +16,13 @@ interface TokenAvatarProps {
   symbol: string
   imageUrl?: string
   size?: number
+  /**
+   * Fluid mode — fills the parent container instead of pinning to a
+   * fixed pixel `size`. Used by TokenCard (where the avatar fills the
+   * card's aspect-square frame) so the grid layout doesn't break under
+   * an inline 400px width/height.
+   */
+  fluid?: boolean
   className?: string
 }
 
@@ -28,7 +35,7 @@ function hashAddress(addr: string): number {
   return h >>> 0
 }
 
-export function TokenAvatar({ address, symbol, imageUrl, size = 64, className = '' }: TokenAvatarProps) {
+export function TokenAvatar({ address, symbol, imageUrl, size = 64, fluid = false, className = '' }: TokenAvatarProps) {
   const [imgFailed, setImgFailed] = useState(false)
   const hasImage = !!imageUrl && !imgFailed
 
@@ -40,30 +47,34 @@ export function TokenAvatar({ address, symbol, imageUrl, size = 64, className = 
   const bg = `linear-gradient(135deg, hsl(${hue1} ${saturation}% ${lightness}%) 0%, hsl(${hue2} ${saturation}% ${lightness - 8}%) 100%)`
 
   const initials = (symbol || '??').slice(0, 4).toUpperCase()
-  const fontSize = Math.max(10, Math.floor(size / (initials.length > 2 ? 3.2 : 2.4)))
+  // Fluid font sizing — viewport-relative so the initials scale with
+  // the card. 18% of width works well for 2-letter, 13% for 4-letter.
+  const fluidFontSize = `${initials.length > 2 ? 13 : 18}%`
+  const fixedFontSize = Math.max(10, Math.floor(size / (initials.length > 2 ? 3.2 : 2.4)))
+  const sizeStyle = fluid ? {} : { width: size, height: size }
+  const fluidImgClass = fluid ? 'w-full h-full' : ''
 
   if (hasImage) {
     return (
       <img
         src={imageUrl}
         alt={symbol}
-        width={size}
-        height={size}
+        width={fluid ? undefined : size}
+        height={fluid ? undefined : size}
         onError={() => setImgFailed(true)}
-        className={`object-cover rounded-xl bg-[var(--sf2)] ${className}`}
-        style={{ width: size, height: size }}
+        className={`object-cover rounded-xl bg-[var(--sf2)] ${fluidImgClass} ${className}`}
+        style={sizeStyle}
       />
     )
   }
 
   return (
     <div
-      className={`rounded-xl flex items-center justify-center font-black text-white tracking-wider select-none ${className}`}
+      className={`rounded-xl flex items-center justify-center font-black text-white tracking-wider select-none ${fluidImgClass} ${className}`}
       style={{
-        width: size,
-        height: size,
+        ...sizeStyle,
         background: bg,
-        fontSize,
+        fontSize: fluid ? fluidFontSize : fixedFontSize,
         textShadow: '0 1px 2px rgba(0,0,0,0.4)',
       }}
       aria-label={symbol}
