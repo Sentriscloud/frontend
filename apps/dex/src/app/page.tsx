@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ManualAddressInput, useEffectiveAddress } from "@sentriscloud/wallet-config";
+import { SwapWidget } from "./SwapWidget";
 
 export default function HomePage() {
   const [showManual, setShowManual] = useState(false);
@@ -10,7 +11,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <header className="flex items-center justify-between px-8 py-6 border-b border-[var(--brd)]">
+      <header className="flex items-center justify-between px-6 py-5 border-b border-[var(--brd)]">
         <div className="flex items-center gap-3">
           <span className="text-2xl font-semibold tracking-tight" style={{ color: "var(--gold)" }}>
             Sentrix DEX
@@ -30,14 +31,13 @@ export default function HomePage() {
           {showManual && (
             <div className="absolute right-0 top-full mt-2 z-50 w-72 bg-[var(--sf)] border border-[var(--brd)] rounded-xl shadow-xl p-3">
               <p className="text-[10px] uppercase tracking-widest text-[var(--tx-m)] mb-2">Watch any address</p>
-              <ManualAddressInput
-                namespace="dex"
-                placeholder="0x… address"
-                onAccept={() => setShowManual(false)}
-              />
+              <ManualAddressInput namespace="dex" placeholder="0x… address" onAccept={() => setShowManual(false)} />
               {source === "manual" && (
                 <button
-                  onClick={() => { setManualAddress(null); setShowManual(false); }}
+                  onClick={() => {
+                    setManualAddress(null);
+                    setShowManual(false);
+                  }}
                   className="mt-2 text-[11px] text-red-400 hover:text-red-300 underline"
                 >
                   Stop watching
@@ -51,30 +51,38 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="flex-1 flex items-center justify-center px-6 py-16">
-        <div className="max-w-xl w-full text-center space-y-6">
+      <section className="flex-1 flex flex-col items-center justify-start px-6 py-12 gap-8">
+        <div className="text-center max-w-xl">
           <h1
-            className="text-4xl md:text-5xl font-semibold tracking-tight"
+            className="text-3xl md:text-4xl font-semibold tracking-tight mb-3"
             style={{ fontFamily: "Playfair Display, serif" }}
           >
-            Native swap is launching soon.
+            Native swap on Sentrix Chain.
           </h1>
-          <p className="text-lg text-[var(--tx-2)] leading-relaxed">
-            Sentrix V2 brings UniswapV2-equivalent constant-product AMM contracts to Sentrix
-            Chain. WSRX/stable pools seed the canonical price-discovery layer for SRX.
+          <p className="text-[var(--tx-2)] leading-relaxed text-sm">
+            UniswapV2-equivalent constant-product AMM. 0.30% LP fee per swap. SGC/SRX is the
+            first listed pair — more open as people launch + seed.
           </p>
-          <div className="grid grid-cols-3 gap-4 pt-6 text-sm">
-            <Stat label="LP fee" value="0.30%" />
-            <Stat label="Chain" value="7119" />
-            <Stat label="Symbol" value="SRX" />
-          </div>
-          <div className="pt-8 text-sm text-[var(--tx-m)]">
-            Mainnet deploy gated on the audit + first-pool seed. Connect your wallet to be ready.
-          </div>
         </div>
+
+        <SwapWidget />
+
+        <div className="grid grid-cols-3 gap-3 w-full max-w-md text-xs">
+          <Stat label="LP fee" value="0.30%" />
+          <Stat label="Chain" value="7119" />
+          <Stat label="Native token" value="SRX" />
+        </div>
+
+        <p className="text-center text-[11px] text-[var(--tx-d)] max-w-md leading-snug">
+          Want to launch your own token? Visit{" "}
+          <a className="text-[var(--gold)] hover:text-[var(--gold-l)]" href="https://coinblast.sentriscloud.com">
+            coinblast.sentriscloud.com
+          </a>{" "}
+          — pay gas, mint a SRC-20, list it here.
+        </p>
       </section>
 
-      <footer className="px-8 py-6 border-t border-[var(--brd)] text-xs text-[var(--tx-m)] flex justify-between">
+      <footer className="px-6 py-5 border-t border-[var(--brd)] text-xs text-[var(--tx-m)] flex justify-between">
         <span>© Sentrix Labs</span>
         <a href="https://scan.sentrixchain.com" className="hover:text-[var(--gold)] transition-colors">
           scan.sentrixchain.com
@@ -86,9 +94,9 @@ export default function HomePage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-[var(--brd)] bg-[var(--sf)] px-4 py-3">
-      <div className="text-xs uppercase tracking-widest text-[var(--tx-m)] mb-1">{label}</div>
-      <div className="text-base font-medium" style={{ color: "var(--gold)" }}>
+    <div className="rounded-lg border border-[var(--brd)] bg-[var(--sf)] px-3 py-2 text-center">
+      <div className="text-[10px] uppercase tracking-widest text-[var(--tx-m)] mb-0.5">{label}</div>
+      <div className="text-sm font-medium" style={{ color: "var(--gold)" }}>
         {value}
       </div>
     </div>
