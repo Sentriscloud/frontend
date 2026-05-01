@@ -1,4 +1,4 @@
-import { FaucetForm } from '../_components/faucet-form'
+import { FaucetFormDynamic as FaucetForm } from '../_components/faucet-form-dynamic'
 
 export const metadata = {
   title: 'Sentrix Faucet — Mainnet (Chain 7119)',

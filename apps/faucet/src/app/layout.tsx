@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
-import { SentrixWalletProvider } from '@sentriscloud/wallet-config'
+import { SentrixPrivyProvider } from '@sentriscloud/wallet-config'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -43,13 +43,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className="antialiased min-h-screen">
-        <SentrixWalletProvider
-          appName="Sentrix Faucet"
-          appDescription="Free SRX for builders and new wallets."
-          appUrl="https://faucet.sentrixchain.com"
-        >
+        <SentrixPrivyProvider>
           {children}
-        </SentrixWalletProvider>
+        </SentrixPrivyProvider>
         {turnstileEnabled && (
           <Script
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"

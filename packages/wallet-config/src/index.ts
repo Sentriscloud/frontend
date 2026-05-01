@@ -7,6 +7,10 @@ export {
 } from "./wagmi";
 export { SentrixWalletProvider } from "./provider";
 export {
+  SentrixPrivyProvider,
+  type SentrixPrivyProviderOptions,
+} from "./privy-provider";
+export {
   ManualAddressInput,
   useEffectiveAddress,
   useManualAddress,

@@ -6,6 +6,7 @@ import { formatAddress } from '@/lib/utils'
 import { Wallet, ChevronDown, LogOut, Copy, Eye } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useEffectiveAddress, useSoluxConnect } from '@sentriscloud/wallet-config'
+import { usePrivy } from '@privy-io/react-auth'
 
 export function WalletConnect() {
   const { address, isConnected, error, disconnect } = useWalletStore()
@@ -18,6 +19,10 @@ export function WalletConnect() {
   // would unmount the moment the user clicks Solux (we close the
   // modal in the same tick) and the popup's reply would never land.
   const { connect: connectSolux, isConnecting: isSoluxConnecting } = useSoluxConnect('coinblast')
+  // Privy login trigger lives here for the same reason — we want
+  // login() called from a stable React subtree, not from the modal
+  // which we close in the same tick the button is clicked.
+  const { ready: isPrivyReady, login: privyLogin } = usePrivy()
 
   // Auto-close the sign-in modal as soon as ANY connect path resolves
   // (real wallet via RainbowKit, or Solux address landing in manual
@@ -47,6 +52,8 @@ export function WalletConnect() {
       namespace="coinblast"
       onSoluxConnect={connectSolux}
       isSoluxConnecting={isSoluxConnecting}
+      onPrivyLogin={privyLogin}
+      isPrivyReady={isPrivyReady}
     />
   )
 

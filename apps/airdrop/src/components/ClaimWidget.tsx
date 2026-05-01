@@ -1,37 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle, AlertCircle, Loader, ExternalLink } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader, ExternalLink, Wallet } from "lucide-react";
 import { formatEther } from "viem";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSwitchChain, WagmiProvider } from "wagmi";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from "wagmi";
+import { usePrivy } from "@privy-io/react-auth";
 import {
   SENTRIX_MAINNET,
   ManualAddressInput,
   SoluxConnectButton,
   useEffectiveAddress,
-  getSingletonMainnetConfig,
 } from "@sentriscloud/wallet-config";
 
-// Singleton wagmi config — passed explicitly to every wagmi hook below
-// AND used to wrap a fresh WagmiProvider/RainbowKitProvider INSIDE the
-// dynamic chunk. The outer SentrixWalletProvider in layout.tsx mounts
-// in the static layout chunk and its WagmiProvider context doesn't
-// reach across the dynamic({ssr:false}) boundary that wraps
-// ClaimWidget — so we re-mount a local copy here using the SAME
-// config singleton (no double WC init, same connectors). RainbowKit
-// ConnectButton + every wagmi hook in the tree below find context.
-const wagmiConfig = getSingletonMainnetConfig();
-const sharedQueryClient = new QueryClient();
-const sharedTheme = darkTheme({
-  accentColor: "#f4c75e",
-  accentColorForeground: "#3a2a0e",
-  borderRadius: "medium",
-  fontStack: "system",
-  overlayBlur: "small",
-});
 import { AIRDROP_CONTRACT_ADDRESS } from "@/lib/chain";
 import { MERKLE_AIRDROP_ABI } from "@/lib/airdrop-abi";
 import { EMPTY_BUNDLE, fetchProofsClient, lookupEntry, type ProofsBundle } from "@/lib/proofs";
@@ -54,30 +34,17 @@ function shortAddr(addr: string) {
 }
 
 export function ClaimWidget() {
-  return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={sharedQueryClient}>
-        <RainbowKitProvider theme={sharedTheme} modalSize="compact">
-          <ClaimWidgetInner />
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
-  );
-}
-
-function ClaimWidgetInner() {
   const [bundle, setBundle] = useState<ProofsBundle>(EMPTY_BUNDLE);
   const [status, setStatus] = useState<Status>("loading-proofs");
 
-  // Hydration guard — wagmi's useAccount throws if it runs server-side
-  // (no WagmiProvider context during SSR even with `force-dynamic`).
-  // Render a skeleton until the client picks up.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  // ── Wallet state from wagmi ──────────────────────────────
-  const { address: account, isConnected, chainId } = useAccount({ config: wagmiConfig });
-  const { switchChain } = useSwitchChain({ config: wagmiConfig });
+  // ── Privy login trigger + Sentrix wallet state ────────────
+  // The outer SentrixPrivyProvider (in app/layout.tsx) mounts both Privy
+  // and Privy's wagmi adapter, so wagmi context is available all the
+  // way down. No more local WagmiProvider hack — this widget is a
+  // plain consumer now.
+  const { ready: isPrivyReady, authenticated, login } = usePrivy();
+  const { address: account, isConnected, chainId } = useAccount();
+  const { switchChain } = useSwitchChain();
 
   // Manual-address mode: a visitor can paste a 0x… into the box and check
   // eligibility WITHOUT connecting a wallet. `viewAddress` is what drives
@@ -95,7 +62,6 @@ function ClaimWidgetInner() {
   // already claimed without needing a connected wallet.
   const contractEnabled = Boolean(AIRDROP_CONTRACT_ADDRESS) && Boolean(viewAddress);
   const { data: contractClaimed } = useReadContract({
-    config: wagmiConfig,
     address: AIRDROP_CONTRACT_ADDRESS as `0x${string}` | undefined,
     abi: MERKLE_AIRDROP_ABI,
     functionName: "claimed",
@@ -103,14 +69,12 @@ function ClaimWidgetInner() {
     query: { enabled: contractEnabled },
   });
   const { data: contractDeadline } = useReadContract({
-    config: wagmiConfig,
     address: AIRDROP_CONTRACT_ADDRESS as `0x${string}` | undefined,
     abi: MERKLE_AIRDROP_ABI,
     functionName: "claimDeadline",
     query: { enabled: contractEnabled },
   });
   const { data: contractSwept } = useReadContract({
-    config: wagmiConfig,
     address: AIRDROP_CONTRACT_ADDRESS as `0x${string}` | undefined,
     abi: MERKLE_AIRDROP_ABI,
     functionName: "swept",
@@ -125,9 +89,8 @@ function ClaimWidgetInner() {
 
   // ── Claim tx hooks ───────────────────────────────────────
   const { writeContract, data: txHash, error: writeError, isPending: isWriting, reset: resetWrite } =
-    useWriteContract({ config: wagmiConfig });
+    useWriteContract();
   const { isLoading: isMining, isSuccess: isMined } = useWaitForTransactionReceipt({
-    config: wagmiConfig,
     hash: txHash,
   });
 
@@ -245,13 +208,26 @@ function ClaimWidgetInner() {
         </div>
       )}
 
-      {/* Connect button is always visible at the top — RainbowKit handles
-          its own state for connected / disconnected / wrong-network. Below
-          it we offer a manual-address input so visitors can check
-          eligibility for any address WITHOUT installing a wallet plugin.
-          Claiming still needs a real connection (msg.sender must match). */}
+      {/* Privy login covers email + Google + Twitter + external wallets.
+          Solux stays as a peer button for users who want the Sentrix-
+          native popup wallet. Manual-address input below is unchanged —
+          a visitor can check eligibility for any 0x… without signing in.
+          Claim itself still needs a real connection (msg.sender check). */}
       <div className="mb-2 flex justify-center">
-        <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
+        {isConnected && account ? (
+          <span className="px-3 py-1.5 rounded-full bg-[var(--bk-2)] border border-[var(--brd)] text-[var(--tx)] font-mono text-[12px]">
+            {shortAddr(account)}
+          </span>
+        ) : (
+          <button
+            onClick={() => isPrivyReady && login()}
+            disabled={!isPrivyReady}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--gold)] text-[#3a2a0e] hover:bg-[var(--gold-l)] text-[13px] font-semibold disabled:opacity-50"
+          >
+            <Wallet className="w-3.5 h-3.5" />
+            {authenticated ? "Continue" : "Sign in"}
+          </button>
+        )}
       </div>
       {!isConnected && (
         <div className="mb-4 flex justify-center">

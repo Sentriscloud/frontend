@@ -1,17 +1,16 @@
 'use client'
 
-// Originally a zustand store with hand-rolled MetaMask connect logic. Now a
-// thin React hook that delegates to wagmi (via the SentrixWalletProvider in
-// the root layout) and surfaces the same shape every existing call site
-// already expects — `address / isConnected / isConnecting / connect /
-// disconnect / clearError / error`.
+// Wallet hook for CoinBlast — wraps wagmi's address state and Privy's
+// login/logout so every existing call site (WalletConnect, BuySellWidget,
+// portfolio, create) sees the same shape we used pre-Privy. The four
+// consumers don't need changes.
 //
-// Keeping the name `useWalletStore` so the four existing consumers
-// (WalletConnect.tsx, BuySellWidget.tsx, portfolio/page.tsx, create/page.tsx)
-// don't need to change. Migration done in one place instead of four.
+// Wagmi reads/writes are unchanged: the Privy wagmi adapter registers
+// connected wallets (external + embedded) as wagmi connectors, so
+// useAccount / useReadContract / useWriteContract continue to work.
 
-import { useAccount, useDisconnect } from 'wagmi'
-import { useConnectModal } from '@rainbow-me/rainbowkit'
+import { useAccount } from 'wagmi'
+import { usePrivy } from '@privy-io/react-auth'
 
 interface WalletStore {
   address: string | null
@@ -25,20 +24,23 @@ interface WalletStore {
 
 export function useWalletStore(): WalletStore {
   const { address, isConnected, isConnecting } = useAccount()
-  const { openConnectModal } = useConnectModal()
-  const { disconnect } = useDisconnect()
+  const { ready, authenticated, login, logout } = usePrivy()
 
   return {
     address: address ?? null,
     isConnecting: !!isConnecting,
     isConnected: !!isConnected,
-    error: null, // RainbowKit shows its own error UI inside the modal
+    error: null, // Privy renders auth errors inside its own modal
     connect: () => {
-      // openConnectModal is only set once the WagmiProvider has settled;
-      // before that the user clicked too early — nothing to do.
-      if (openConnectModal) openConnectModal()
+      // login() is a no-op until Privy has booted. ready=false on the
+      // very first paint; user clicking too early simply waits.
+      if (ready) login()
     },
-    disconnect: () => disconnect(),
+    disconnect: () => {
+      // Privy's logout tears down both the auth session and any wagmi
+      // connector it had injected; we don't need a separate wagmi call.
+      if (authenticated) logout()
+    },
     clearError: () => {},
   }
 }

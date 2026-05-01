@@ -1,25 +1,22 @@
 'use client'
 
-// Pump.fun-style unified sign-in modal. One "Sign in" CTA in the
-// header opens this; the modal lists every way to authenticate side
-// by side with clear hierarchy:
+// Pump.fun-style unified sign-in modal — three peer entry points:
 //
-//   1. Solux  — Sentrix-native, no extension required (popup-based).
-//   2. Wallet — RainbowKit modal: MetaMask, Rabby, Phantom, OKX, Trust,
-//               Coinbase Wallet, generic injected. The wallets that
-//               actually sign txs.
-//   3. Watch  — paste any 0x… for view-only browsing. View-only,
-//               can't sign trades, but useful for portfolio peeking.
+//   1. Privy ("Sign in / Create account") — Google, Twitter, email,
+//      MetaMask / Rabby / Brave / WalletConnect. One modal, one flow.
+//   2. Solux — Sentrix-native popup wallet, no extension required.
+//   3. Watch any address — paste a 0x… for view-only browsing.
 //
-// The previous pattern (three independent buttons stacked under the
-// Connect Wallet primary) confused users into thinking each was a
-// separate site, and the Solux button looked like a sub-option of
-// the wallet button. Promoting it to a peer in the same modal makes
-// the trade-off explicit ("Solux for fast onboarding without an
-// extension; MetaMask/Rabby for full signing power").
+// Solux stays a peer (not inside Privy's modal) because Privy's connector
+// list is curated and doesn't know about Sentrix-native popup wallets;
+// the postMessage bridge we already shipped lives outside Privy.
+//
+// The previous version had a third "Sign in with a wallet" button that
+// kicked RainbowKit's modal — Privy's wallet login covers the same
+// ground (MetaMask / Rabby / Brave / WC) and fronts social login on
+// top, so we collapsed it.
 
 import { useEffect, useState } from 'react'
-import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { ManualAddressInput } from '@sentriscloud/wallet-config'
 import { X, Wallet, Eye, ChevronRight, ArrowLeft } from 'lucide-react'
 
@@ -33,12 +30,23 @@ interface SignInModalProps {
   // parent (WalletConnect) keeps the hook alive across modal opens.
   onSoluxConnect: () => void
   isSoluxConnecting: boolean
+  // Privy login trigger from the parent so the modal has nothing to
+  // know about Privy's lifecycle — same hoist rationale as Solux.
+  onPrivyLogin: () => void
+  isPrivyReady: boolean
 }
 
 type View = 'menu' | 'watch'
 
-export function SignInModal({ open, onClose, namespace, onSoluxConnect, isSoluxConnecting }: SignInModalProps) {
-  const { openConnectModal } = useConnectModal()
+export function SignInModal({
+  open,
+  onClose,
+  namespace,
+  onSoluxConnect,
+  isSoluxConnecting,
+  onPrivyLogin,
+  isPrivyReady,
+}: SignInModalProps) {
   const [view, setView] = useState<View>('menu')
 
   // Reset to menu view on every open so the user doesn't get stuck on
@@ -90,11 +98,41 @@ export function SignInModal({ open, onClose, namespace, onSoluxConnect, isSoluxC
               </div>
               <h2 className="text-lg font-bold text-[var(--tx)] mb-1">Sign in</h2>
               <p className="text-xs text-[var(--tx-m)]">
-                Connect with Solux, a wallet, or watch any address.
+                Email, Google, Twitter, a wallet, or Solux.
               </p>
             </div>
 
-            {/* Primary: Solux */}
+            {/* Primary: Privy — covers email/Google/Twitter and external
+                wallets in a single Privy-managed modal. */}
+            <button
+              onClick={() => {
+                onPrivyLogin()
+                onClose()
+              }}
+              disabled={!isPrivyReady}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[var(--sf2)] hover:bg-[var(--sf3)] border border-[var(--brd)] hover:border-[var(--gold)]/60 transition-colors text-left disabled:opacity-50"
+            >
+              <span className="w-9 h-9 rounded-lg bg-[var(--bk)] flex items-center justify-center">
+                <Wallet className="w-4 h-4 text-[var(--tx)]" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-[var(--tx)]">Sign in or create account</p>
+                <p className="text-[11px] text-[var(--tx-m)] leading-snug">
+                  Email · Google · Twitter · MetaMask · Rabby · Brave · WC
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-[var(--tx-d)]" />
+            </button>
+
+            <div className="flex items-center gap-3 my-4 text-[10px] uppercase tracking-widest text-[var(--tx-d)]">
+              <div className="flex-1 h-px bg-[var(--brd)]" />
+              <span>or</span>
+              <div className="flex-1 h-px bg-[var(--brd)]" />
+            </div>
+
+            {/* Peer: Solux — Sentrix-native popup wallet. Lives outside
+                Privy's modal because Privy's connector list is curated
+                and doesn't know about us. */}
             <button
               onClick={() => {
                 onSoluxConnect()
@@ -108,40 +146,6 @@ export function SignInModal({ open, onClose, namespace, onSoluxConnect, isSoluxC
                 <p className="text-sm font-semibold text-[var(--tx)]">Solux</p>
                 <p className="text-[11px] text-[var(--tx-m)] leading-snug">
                   {isSoluxConnecting ? 'Waiting for Solux popup…' : 'Sentrix-native — no extension needed'}
-                </p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-[var(--tx-d)]" />
-            </button>
-
-            <div className="flex items-center gap-3 my-4 text-[10px] uppercase tracking-widest text-[var(--tx-d)]">
-              <div className="flex-1 h-px bg-[var(--brd)]" />
-              <span>or</span>
-              <div className="flex-1 h-px bg-[var(--brd)]" />
-            </div>
-
-            {/* Secondary: real wallet */}
-            <button
-              onClick={() => {
-                // Synchronous order matters: openConnectModal MUST run
-                // inside the same user-gesture as the click, or browsers
-                // refuse to let RainbowKit subsequently call
-                // eth_requestAccounts (which is what actually pops
-                // MetaMask / Rabby / OKX). The earlier setTimeout(50ms)
-                // bridge broke the gesture chain — MetaMask never
-                // opened because the wallet-pop call landed in an async
-                // tick. Open RainbowKit first, close ours after.
-                openConnectModal?.()
-                onClose()
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[var(--sf2)] hover:bg-[var(--sf3)] border border-[var(--brd)] hover:border-[var(--brd2)] transition-colors text-left"
-            >
-              <span className="w-9 h-9 rounded-lg bg-[var(--bk)] flex items-center justify-center">
-                <Wallet className="w-4 h-4 text-[var(--tx)]" />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[var(--tx)]">Sign in with a wallet</p>
-                <p className="text-[11px] text-[var(--tx-m)] leading-snug">
-                  MetaMask, Rabby, Phantom, OKX, Trust, Coinbase
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-[var(--tx-d)]" />
@@ -178,7 +182,7 @@ export function SignInModal({ open, onClose, namespace, onSoluxConnect, isSoluxC
             <p className="text-xs text-[var(--tx-m)] mb-4 leading-relaxed">
               Paste a 0x… address to browse the launchpad with that wallet&apos;s
               context. View-only — to trade you&apos;ll need to come back and
-              sign in with a wallet or Solux.
+              sign in with a wallet, social, or Solux.
             </p>
             <ManualAddressInput
               namespace={namespace}

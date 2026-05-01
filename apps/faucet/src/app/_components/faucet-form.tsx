@@ -4,31 +4,19 @@ import {
   CheckCircle, AlertCircle, Clock,
   ExternalLink, Loader,
 } from 'lucide-react'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
+import { usePrivy } from '@privy-io/react-auth'
 import { useSoluxConnect, useEffectiveAddress } from '@sentriscloud/wallet-config'
 import { FaucetMark } from './faucet-mark'
 import { AnimatedNumber } from './animated-number'
 import { NetworkCard } from './network-card'
 import { useLatestFinalized } from '@/lib/ws'
 
+// window.turnstile is now declared by @marsidev/react-turnstile (pulled
+// in transitively via Privy). We just augment the onTurnstileLoad
+// callback we attach for the Cloudflare script's `?onload=` query param.
 declare global {
   interface Window {
-    turnstile?: {
-      render: (
-        el: HTMLElement,
-        opts: {
-          sitekey: string
-          callback?: (token: string) => void
-          'error-callback'?: () => void
-          'expired-callback'?: () => void
-          theme?: 'light' | 'dark' | 'auto'
-          size?: 'normal' | 'flexible' | 'compact'
-        },
-      ) => string
-      reset: (id?: string) => void
-      getResponse: (id?: string) => string | undefined
-    }
     onTurnstileLoad?: () => void
   }
 }
@@ -118,12 +106,13 @@ export function FaucetForm({
   const [message, setMessage] = useState('')
   const [txHash, setTxHash] = useState('')
 
-  // RainbowKit-driven autofill — when a wallet is connected, surface a
-  // "Use connected wallet" pill that one-click fills the manual input.
-  // The user can still type/paste any other address; we don't override
-  // their typed value automatically (that'd be confusing if they're
-  // requesting SRX for a different recipient).
+  // Privy-driven autofill — when a wallet is connected (external or
+  // Privy embedded), surface a "Use connected wallet" pill that one-
+  // click fills the manual input. The user can still type/paste any
+  // other address; we don't override their typed value automatically
+  // (that'd be confusing if they're requesting SRX for someone else).
   const { address: connectedAddr, isConnected } = useAccount()
+  const { ready: isPrivyReady, login: privyLogin } = usePrivy()
 
   // Solux cross-app connect (view-only). Stashes the returned address
   // in the wallet-config manual store; we read it back via
@@ -188,7 +177,7 @@ export function FaucetForm({
         callback: (token) => setCaptchaToken(token),
         'expired-callback': () => setCaptchaToken(null),
         'error-callback': () => setCaptchaToken(null),
-      })
+      }) ?? null
       return true
     }
 
@@ -367,23 +356,20 @@ export function FaucetForm({
                   Wallet address
                 </span>
                 <div className="flex items-center gap-2">
-                  <ConnectButton.Custom>
-                    {({ account, openConnectModal }) => (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (account?.address) {
-                            setAddress(account.address)
-                          } else {
-                            openConnectModal()
-                          }
-                        }}
-                        className="text-[11px] text-[var(--gold)] hover:text-[var(--gold-l)] underline underline-offset-2"
-                      >
-                        {account?.address ? 'Use connected wallet' : 'or connect a wallet'}
-                      </button>
-                    )}
-                  </ConnectButton.Custom>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (connectedAddr) {
+                        setAddress(connectedAddr)
+                      } else if (isPrivyReady) {
+                        privyLogin()
+                      }
+                    }}
+                    disabled={!isPrivyReady && !connectedAddr}
+                    className="text-[11px] text-[var(--gold)] hover:text-[var(--gold-l)] underline underline-offset-2 disabled:opacity-50"
+                  >
+                    {connectedAddr ? 'Use connected wallet' : 'or sign in'}
+                  </button>
                   <span className="text-[var(--tx-d)] text-[11px]">·</span>
                   <button
                     type="button"
