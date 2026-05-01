@@ -1,18 +1,24 @@
 // Shared wagmi/RainbowKit configuration. Each Sentrix frontend imports
 // this and wraps its app tree with <SentrixWalletProvider>; the provider
-// component is in `./provider.tsx` (separate file because it pulls in
-// React component code that pure config consumers don't need).
+// component is in `./provider.tsx`.
 //
-// WalletConnect project ID:
-//   - Required by RainbowKit for the WalletConnect transport (covers
-//     300+ mobile wallets via QR).
-//   - Set per-app via NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID in the build
-//     env. We default to a placeholder during local dev so the page
-//     still renders; production builds MUST override.
-//   - Free to register at https://cloud.reown.com (formerly WalletConnect
-//     Cloud). One project ID can serve multiple Sentrix apps.
+// Why we don't use RainbowKit's `getDefaultConfig`:
+//   getDefaultConfig wires WalletConnect transport AND pulls in Reown's
+//   AppKit unconditionally. AppKit runs a module-level init that calls
+//   useConfig outside the React WagmiProvider tree, which throws
+//   WagmiProviderNotFoundError on hydration of statically-rendered pages
+//   (broke airdrop.sentrixchain.com — see #189). It also reaches for
+//   indexedDB at config-creation time, which doesn't exist on the
+//   server, so SSR crashed with `ReferenceError: indexedDB is not defined`.
+//
+// The fix: build the wagmi config manually with createConfig +
+// connectorsForWallets. We only list injected-style wallets (MetaMask,
+// Rabby, Phantom, Coinbase, etc.) — none of those pull AppKit. Solux
+// signing covers the "no extension" case via the popup signer in
+// solux-signer.tsx, so dropping WC scan-via-QR is acceptable until a
+// real Reown project ID lands.
 
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import {
   metaMaskWallet,
   okxWallet,
@@ -22,40 +28,20 @@ import {
   coinbaseWallet,
   injectedWallet,
 } from "@rainbow-me/rainbowkit/wallets";
-
-// walletConnectWallet pulled out 2026-05-01: pulls Reown AppKit, which
-// runs an init pass at module-load time that calls useConfig outside
-// the WagmiProvider tree. On statically-rendered pages (notably the
-// airdrop home) that throws WagmiProviderNotFoundError on hydration —
-// the page crashes with "Application error" before any wallet UI
-// renders. We don't ship a real Reown project ID anyway, so WC was
-// already non-functional (Reown rejects the placeholder origin with
-// 403 + allowlist errors). Removing it fixes airdrop without losing
-// any working capability. When a real Reown project ID lands, the
-// import + Recommended-group entry can come back together.
-import { http } from "viem";
+import { createConfig, http } from "wagmi";
 import { SENTRIX_CHAINS, SENTRIX_MAINNET, SENTRIX_TESTNET } from "./chain";
 
+// Even though we never use the WC transport, RainbowKit's wallet
+// definitions import a projectId during connectorsForWallets. They
+// won't fire any network call without an explicit user action, so a
+// placeholder is fine. Real value can land via env when needed.
 const FALLBACK_WC_PROJECT_ID = "00000000000000000000000000000000";
 
 function readProjectId(): string {
-  const id =
+  return (
     (typeof process !== "undefined" && process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID) ||
-    "";
-  if (!id) {
-    if (typeof window !== "undefined") {
-      // Surface the misconfiguration in the browser console — the app
-      // still mounts but WalletConnect QR scanning won't work until a
-      // real project ID is wired in.
-      console.warn(
-        "[wallet-config] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set; " +
-          "WalletConnect transport will run in placeholder mode. " +
-          "Get a free ID at https://cloud.reown.com.",
-      );
-    }
-    return FALLBACK_WC_PROJECT_ID;
-  }
-  return id;
+    FALLBACK_WC_PROJECT_ID
+  );
 }
 
 export interface SentrixWalletConfigOptions {
@@ -81,36 +67,34 @@ export function createSentrixWalletConfig(opts: SentrixWalletConfigOptions) {
   const projectId = opts.projectIdOverride ?? readProjectId();
   const chains = opts.mainnetOnly ? ([SENTRIX_MAINNET] as const) : SENTRIX_CHAINS;
 
-  return getDefaultConfig({
-    appName: opts.appName,
-    appDescription: opts.appDescription ?? "Sentrix Chain",
-    appUrl: opts.appUrl ?? "https://sentrixchain.com",
-    appIcon: opts.appIcon,
-    projectId,
-    // The wallet list per the spec — explicit ordering is the order
-    // they show up in the modal. RainbowKit's wallet detection auto-
-    // hides wallets that aren't installed (via `injected` group), so
-    // these all show up regardless of which extension the user has.
-    wallets: [
+  // Order = the order they show up in the modal. RainbowKit's injected-
+  // detection auto-grays wallets that aren't installed.
+  const connectors = connectorsForWallets(
+    [
       {
         groupName: "Recommended",
-        wallets: [
-          metaMaskWallet,
-          okxWallet,
-          trustWallet,
-          rabbyWallet,
-          phantomWallet,
-        ],
+        wallets: [metaMaskWallet, okxWallet, trustWallet, rabbyWallet, phantomWallet],
       },
       {
         groupName: "Other",
         wallets: [coinbaseWallet, injectedWallet],
       },
     ],
+    {
+      appName: opts.appName,
+      appDescription: opts.appDescription ?? "Sentrix Chain",
+      appUrl: opts.appUrl ?? "https://sentrixchain.com",
+      appIcon: opts.appIcon,
+      projectId,
+    },
+  );
+
+  return createConfig({
     chains: chains as unknown as readonly [
       (typeof SENTRIX_CHAINS)[number],
       ...(typeof SENTRIX_CHAINS)[number][],
     ],
+    connectors,
     transports: {
       [SENTRIX_MAINNET.id]: http(SENTRIX_MAINNET.rpcUrls.default.http[0]),
       [SENTRIX_TESTNET.id]: http(SENTRIX_TESTNET.rpcUrls.default.http[0]),
