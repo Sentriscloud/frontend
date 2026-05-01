@@ -1,8 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ManualAddressInput, useEffectiveAddress } from "@sentriscloud/wallet-config";
 
 export default function HomePage() {
+  const [showManual, setShowManual] = useState(false);
+  const { source, manualAddress, setManualAddress } = useEffectiveAddress("dex");
+
   return (
     <main className="min-h-screen flex flex-col">
       <header className="flex items-center justify-between px-8 py-6 border-b border-[var(--brd)]">
@@ -10,9 +15,40 @@ export default function HomePage() {
           <span className="text-2xl font-semibold tracking-tight" style={{ color: "var(--gold)" }}>
             Sentrix DEX
           </span>
-          <span className="text-xs uppercase tracking-widest text-[var(--tx-m)]">v2 · coming soon</span>
+          <span className="text-xs uppercase tracking-widest text-[var(--tx-m)]">v2 · live on chain 7119</span>
         </div>
-        <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
+        <div className="flex flex-col items-end gap-1.5 relative">
+          <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
+          <button
+            onClick={() => setShowManual(!showManual)}
+            className="text-[10px] text-[var(--tx-d)] hover:text-[var(--tx-m)] underline underline-offset-2"
+          >
+            {source === "manual" && manualAddress
+              ? `watching ${manualAddress.slice(0, 6)}…${manualAddress.slice(-4)} (clear)`
+              : "or watch any address"}
+          </button>
+          {showManual && (
+            <div className="absolute right-0 top-full mt-2 z-50 w-72 bg-[var(--sf)] border border-[var(--brd)] rounded-xl shadow-xl p-3">
+              <p className="text-[10px] uppercase tracking-widest text-[var(--tx-m)] mb-2">Watch any address</p>
+              <ManualAddressInput
+                namespace="dex"
+                placeholder="0x… address"
+                onAccept={() => setShowManual(false)}
+              />
+              {source === "manual" && (
+                <button
+                  onClick={() => { setManualAddress(null); setShowManual(false); }}
+                  className="mt-2 text-[11px] text-red-400 hover:text-red-300 underline"
+                >
+                  Stop watching
+                </button>
+              )}
+              <p className="text-[10px] text-[var(--tx-d)] mt-2 leading-snug">
+                View-only. To swap you still need a connected wallet.
+              </p>
+            </div>
+          )}
+        </div>
       </header>
 
       <section className="flex-1 flex items-center justify-center px-6 py-16">

@@ -4,6 +4,8 @@ import {
   CheckCircle, AlertCircle, Clock,
   ExternalLink, Loader,
 } from 'lucide-react'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useAccount } from 'wagmi'
 import { FaucetMark } from './faucet-mark'
 import { AnimatedNumber } from './animated-number'
 import { NetworkCard } from './network-card'
@@ -114,6 +116,13 @@ export function FaucetForm({
   const [status, setStatus] = useState<Status>('idle')
   const [message, setMessage] = useState('')
   const [txHash, setTxHash] = useState('')
+
+  // RainbowKit-driven autofill — when a wallet is connected, surface a
+  // "Use connected wallet" pill that one-click fills the manual input.
+  // The user can still type/paste any other address; we don't override
+  // their typed value automatically (that'd be confusing if they're
+  // requesting SRX for a different recipient).
+  const { address: connectedAddr, isConnected } = useAccount()
   const [cooldownSeconds, setCooldownSeconds] = useState(0)
   const [stats, setStats] = useState<FaucetStats | null>(null)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
@@ -345,9 +354,30 @@ export function FaucetForm({
 
           <form onSubmit={handleSubmit} className="space-y-3">
             <label className="block">
-              <span className="text-[13px] font-medium text-[var(--tx-2)]">
-                Wallet address
-              </span>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[13px] font-medium text-[var(--tx-2)]">
+                  Wallet address
+                </span>
+                <ConnectButton.Custom>
+                  {({ account, openConnectModal }) => (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (account?.address) {
+                          // Already connected → autofill
+                          setAddress(account.address)
+                        } else {
+                          // Not connected → open RainbowKit modal
+                          openConnectModal()
+                        }
+                      }}
+                      className="text-[11px] text-[var(--gold)] hover:text-[var(--gold-l)] underline underline-offset-2"
+                    >
+                      {account?.address ? 'Use connected wallet' : 'or connect a wallet'}
+                    </button>
+                  )}
+                </ConnectButton.Custom>
+              </div>
               <input
                 type="text"
                 value={address}
@@ -355,9 +385,22 @@ export function FaucetForm({
                 placeholder="0x…"
                 spellCheck={false}
                 autoComplete="off"
-                className="mt-2 w-full bg-[var(--bk-2)] border border-[var(--brd)] rounded-xl px-4 py-3.5 text-[14px] text-[var(--tx)] placeholder:text-[var(--tx-d)] font-mono focus:outline-none focus:border-[var(--gold-d)] transition-colors disabled:opacity-50"
+                className="w-full bg-[var(--bk-2)] border border-[var(--brd)] rounded-xl px-4 py-3.5 text-[14px] text-[var(--tx)] placeholder:text-[var(--tx-d)] font-mono focus:outline-none focus:border-[var(--gold-d)] transition-colors disabled:opacity-50"
                 disabled={status === 'loading'}
               />
+              {isConnected && connectedAddr && address.toLowerCase() !== connectedAddr.toLowerCase() && (
+                <p className="mt-1.5 text-[11px] text-[var(--tx-d)]">
+                  Connected: <span className="font-mono">{connectedAddr.slice(0, 6)}…{connectedAddr.slice(-4)}</span>
+                  {' · '}
+                  <button
+                    type="button"
+                    onClick={() => setAddress(connectedAddr)}
+                    className="text-[var(--gold)] hover:underline"
+                  >
+                    fill in
+                  </button>
+                </p>
+              )}
             </label>
 
             {captchaRequired && (

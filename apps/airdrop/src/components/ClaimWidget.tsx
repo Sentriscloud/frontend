@@ -5,7 +5,11 @@ import { CheckCircle, AlertCircle, Loader, ExternalLink } from "lucide-react";
 import { formatEther } from "viem";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { SENTRIX_MAINNET } from "@sentriscloud/wallet-config";
+import {
+  SENTRIX_MAINNET,
+  ManualAddressInput,
+  useEffectiveAddress,
+} from "@sentriscloud/wallet-config";
 import { AIRDROP_CONTRACT_ADDRESS } from "@/lib/chain";
 import { MERKLE_AIRDROP_ABI } from "@/lib/airdrop-abi";
 import { EMPTY_BUNDLE, fetchProofsClient, lookupEntry, type ProofsBundle } from "@/lib/proofs";
@@ -31,9 +35,21 @@ export function ClaimWidget() {
   const [bundle, setBundle] = useState<ProofsBundle>(EMPTY_BUNDLE);
   const [status, setStatus] = useState<Status>("loading-proofs");
 
+  // Hydration guard — wagmi's useAccount throws if it runs server-side
+  // (no WagmiProvider context during SSR even with `force-dynamic`).
+  // Render a skeleton until the client picks up.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   // ── Wallet state from wagmi ──────────────────────────────
   const { address: account, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
+
+  // Manual-address mode: a visitor can paste a 0x… into the box and check
+  // eligibility WITHOUT connecting a wallet. `viewAddress` is what drives
+  // the proof lookup + display state. The actual claim() tx still requires
+  // a connected wallet because msg.sender has to match the proof's address.
+  const { address: viewAddress, source: addrSource } = useEffectiveAddress("airdrop");
 
   // ── Load proofs.json on mount ────────────────────────────
   useEffect(() => {
@@ -41,12 +57,14 @@ export function ClaimWidget() {
   }, []);
 
   // ── On-chain claim state (only when contract address is set) ──
-  const contractEnabled = Boolean(AIRDROP_CONTRACT_ADDRESS) && Boolean(account);
+  // Uses `viewAddress` so manual-mode can see whether the queried address
+  // already claimed without needing a connected wallet.
+  const contractEnabled = Boolean(AIRDROP_CONTRACT_ADDRESS) && Boolean(viewAddress);
   const { data: contractClaimed } = useReadContract({
     address: AIRDROP_CONTRACT_ADDRESS as `0x${string}` | undefined,
     abi: MERKLE_AIRDROP_ABI,
     functionName: "claimed",
-    args: account ? [account] : undefined,
+    args: viewAddress ? [viewAddress] : undefined,
     query: { enabled: contractEnabled },
   });
   const { data: contractDeadline } = useReadContract({
@@ -62,8 +80,11 @@ export function ClaimWidget() {
     query: { enabled: contractEnabled },
   });
 
-  // ── Eligibility lookup (pure, derives from bundle + account) ──
-  const entry = useMemo(() => lookupEntry(bundle, account ?? ""), [bundle, account]);
+  // ── Eligibility lookup (pure, derives from bundle + view address) ──
+  const entry = useMemo(
+    () => lookupEntry(bundle, viewAddress ?? ""),
+    [bundle, viewAddress],
+  );
 
   // ── Claim tx hooks ───────────────────────────────────────
   const { writeContract, data: txHash, error: writeError, isPending: isWriting, reset: resetWrite } =
@@ -78,7 +99,27 @@ export function ClaimWidget() {
       setStatus("loading-proofs");
       return;
     }
-    if (!isConnected || !account) {
+    // No connected wallet AND no manual address → prompt to connect/enter
+    if (!isConnected && addrSource !== "manual") {
+      setStatus("not-connected");
+      return;
+    }
+    // Manually-entered address: skip wrong-network/account checks (they
+    // only apply when we have a real connected wallet that could claim).
+    if (addrSource === "manual") {
+      if (!entry) {
+        setStatus("not-eligible");
+        return;
+      }
+      if (contractClaimed === true) {
+        setStatus("already-claimed");
+        return;
+      }
+      // Otherwise just show the eligibility info (still needs connect to claim)
+      setStatus("ready");
+      return;
+    }
+    if (!account) {
       setStatus("not-connected");
       return;
     }
@@ -119,6 +160,7 @@ export function ClaimWidget() {
     bundle.eligible_count,
     isConnected,
     account,
+    addrSource,
     chainId,
     entry,
     contractClaimed,
@@ -166,10 +208,28 @@ export function ClaimWidget() {
       )}
 
       {/* Connect button is always visible at the top — RainbowKit handles
-          its own state for connected / disconnected / wrong-network. We
-          drive the claim-specific UI below via our own status reducer. */}
-      <div className="mb-4 flex justify-center">
+          its own state for connected / disconnected / wrong-network. Below
+          it we offer a manual-address input so visitors can check
+          eligibility for any address WITHOUT installing a wallet plugin.
+          Claiming still needs a real connection (msg.sender must match). */}
+      <div className="mb-3 flex justify-center">
         <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
+      </div>
+      <div className="mb-4">
+        <details className="text-[11px] text-[var(--tx-m)]">
+          <summary className="cursor-pointer hover:text-[var(--tx-2)] select-none">
+            Or check eligibility for any address (view-only)
+          </summary>
+          <div className="mt-2">
+            <ManualAddressInput namespace="airdrop" placeholder="0x… address — view-only" />
+            {addrSource === "manual" && (
+              <p className="mt-1.5 text-[10.5px] text-amber-300/80 leading-snug">
+                Showing state for the manually entered address. To <em>claim</em> you still need
+                to connect that wallet — the contract enforces <code>msg.sender</code> matches.
+              </p>
+            )}
+          </div>
+        </details>
       </div>
 
       {status === "loading-proofs" && (

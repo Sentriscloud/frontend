@@ -1,9 +1,22 @@
-import { ClaimWidget } from "@/components/ClaimWidget";
+"use client";
 
-// Skip static prerendering — ClaimWidget reads from wagmi hooks which need
-// the WagmiProvider mounted, and Next can't run that during SSG. We don't
-// gain anything from prerendering this single-page claim site anyway.
-export const dynamic = "force-dynamic";
+import dynamic from "next/dynamic";
+
+// ClaimWidget pulls in wagmi + RainbowKit, which both need a real browser
+// (window.indexedDB, the WagmiProvider context Next.js can't materialise
+// during SSR/SSG). `ssr: false` means we render a placeholder server-side
+// and hydrate the real widget after mount — same UX, no SSR crash.
+const ClaimWidget = dynamic(
+  () => import("@/components/ClaimWidget").then((m) => m.ClaimWidget),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-2xl p-6 max-w-md w-full text-center text-[12px] text-[var(--tx-m)]">
+        Loading claim widget…
+      </div>
+    ),
+  },
+);
 
 export default function HomePage() {
   return (

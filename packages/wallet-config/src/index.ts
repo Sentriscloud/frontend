@@ -5,3 +5,9 @@ export {
   type SentrixWalletConfigOptions,
 } from "./wagmi";
 export { SentrixWalletProvider } from "./provider";
+export {
+  ManualAddressInput,
+  useEffectiveAddress,
+  useManualAddress,
+  isAddress,
+} from "./manual-address";

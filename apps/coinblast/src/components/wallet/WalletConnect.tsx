@@ -2,13 +2,16 @@
 import { useWalletStore } from '@/store/wallet'
 import { Button } from '@/components/ui/Button'
 import { formatAddress } from '@/lib/utils'
-import { Wallet, ChevronDown, LogOut, Copy } from 'lucide-react'
+import { Wallet, ChevronDown, LogOut, Copy, Eye } from 'lucide-react'
 import { useState } from 'react'
+import { ManualAddressInput, useEffectiveAddress } from '@sentriscloud/wallet-config'
 
 export function WalletConnect() {
   const { address, isConnected, isConnecting, error, connect, disconnect } = useWalletStore()
   const [showMenu, setShowMenu] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showManual, setShowManual] = useState(false)
+  const { source: addrSource, manualAddress, setManualAddress } = useEffectiveAddress('coinblast')
 
   const copyAddress = async () => {
     if (!address) return
@@ -60,8 +63,46 @@ export function WalletConnect() {
     )
   }
 
+  // Manual-address mode (no wallet connected): show the watched address
+  if (addrSource === 'manual' && manualAddress) {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          className="flex items-center gap-2 px-3 py-1.5 bg-[var(--sf2)] hover:bg-[var(--sf)] rounded-full border border-[var(--brd)] transition-colors text-sm"
+          title="Watching address (view-only — connect a wallet to trade)"
+        >
+          <Eye className="w-3.5 h-3.5 text-[var(--tx-m)]" />
+          <span className="text-[var(--tx-m)] font-mono text-xs hidden sm:block">
+            {formatAddress(manualAddress)}
+          </span>
+          <ChevronDown className="w-3.5 h-3.5 text-[var(--tx-d)]" />
+        </button>
+        {showMenu && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+            <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-[var(--sf)] border border-[var(--brd)] rounded-xl shadow-xl p-3">
+              <p className="text-[10px] uppercase tracking-widest text-[var(--tx-d)] mb-2">View-only address</p>
+              <p className="text-xs font-mono text-[var(--tx)] truncate mb-3">{manualAddress}</p>
+              <Button variant="primary" size="sm" onClick={() => { setShowMenu(false); connect() }} className="w-full mb-2 gap-2">
+                <Wallet className="w-3.5 h-3.5" /> Connect a wallet to trade
+              </Button>
+              <button
+                onClick={() => { setManualAddress(null); setShowMenu(false) }}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                Stop watching
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-end gap-1.5 relative">
       <Button
         variant="primary"
         size="sm"
@@ -73,6 +114,25 @@ export function WalletConnect() {
         <span className="hidden sm:block">Connect Wallet</span>
         <span className="sm:hidden">Connect</span>
       </Button>
+      <button
+        onClick={() => setShowManual(!showManual)}
+        className="text-[10px] text-[var(--tx-d)] hover:text-[var(--tx-m)] underline underline-offset-2"
+      >
+        or watch any address
+      </button>
+      {showManual && (
+        <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-[var(--sf)] border border-[var(--brd)] rounded-xl shadow-xl p-3">
+          <p className="text-[10px] uppercase tracking-widest text-[var(--tx-d)] mb-2">Watch any address</p>
+          <ManualAddressInput
+            namespace="coinblast"
+            placeholder="0x… address"
+            onAccept={() => setShowManual(false)}
+          />
+          <p className="text-[10px] text-[var(--tx-d)] mt-2 leading-snug">
+            View-only. To trade you still need to connect a real wallet.
+          </p>
+        </div>
+      )}
       {error && (
         <p className="text-xs text-red-400 max-w-[200px] text-right">{error}</p>
       )}

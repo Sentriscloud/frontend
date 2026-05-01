@@ -12,12 +12,17 @@
   "dependencies": {
     "@noble/hashes": "^1.7.2",
     "@noble/secp256k1": "^2.2.3",
+    "@rainbow-me/rainbowkit": "^2.2.0",
+    "@sentriscloud/wallet-config": "workspace:*",
+    "@tanstack/react-query": "^5.62.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.8.0",
     "next": "15.5.15",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "viem": "^2.21.0",
+    "wagmi": "^2.14.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
