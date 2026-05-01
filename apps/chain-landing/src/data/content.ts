@@ -26,7 +26,7 @@ export const SITE = {
   coinblast: "https://coinblast.sentriscloud.com",
 
   // Community
-  telegram: "https://t.me/SentrixCommunity",
+  telegram: "https://t.me/SentrixChain",
   twitter:  "https://x.com/SentrixChain",
 };
 

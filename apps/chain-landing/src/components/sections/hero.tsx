@@ -57,7 +57,7 @@ export function Hero() {
         <div className="flex gap-4 flex-wrap anim-hero-4 opacity-0">
           <Button href="#developers">Start Building</Button>
           <Button href="https://scan.sentrixchain.com" variant="secondary" target="_blank">Explore Chain</Button>
-          <Button href="https://t.me/SentrixCommunity" variant="secondary">Join Community →</Button>
+          <Button href="https://t.me/SentrixChain" variant="secondary">Join Community →</Button>
         </div>
       </div>
     </Spotlight>

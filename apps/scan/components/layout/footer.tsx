@@ -70,7 +70,7 @@ export function Footer() {
               <a href="https://github.com/sentrix-labs" target="_blank" rel="noopener noreferrer" className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">
                 {t("github")}
               </a>
-              <a href="https://t.me/SentrixCommunity" target="_blank" rel="noopener noreferrer" className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">
+              <a href="https://t.me/SentrixChain" target="_blank" rel="noopener noreferrer" className="text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors">
                 Telegram
               </a>
             </nav>

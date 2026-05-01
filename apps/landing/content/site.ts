@@ -15,7 +15,7 @@ export const site = {
   social: {
     github: "https://github.com/Sentriscloud",
     twitter: "https://x.com/sentriscloud",
-    telegram: "https://t.me/sentriscloud",
+    telegram: "https://t.me/SentrixChain",
   },
   related: {
     chain: "https://sentrixchain.com",

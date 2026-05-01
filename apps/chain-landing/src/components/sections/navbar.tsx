@@ -12,7 +12,7 @@ const NAV_LINKS = [
   { href: "#roadmap", label: "Roadmap" },
   { href: "#validators", label: "Validators" },
   { href: "https://docs.sentrixchain.com", label: "Docs" },
-  { href: "https://t.me/SentrixCommunity", label: "Community" },
+  { href: "https://t.me/SentrixChain", label: "Community" },
 ];
 
 export function Navbar() {
