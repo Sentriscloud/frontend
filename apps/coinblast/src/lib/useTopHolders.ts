@@ -1,0 +1,129 @@
+"use client";
+
+// Per-token holder list. Reads ERC-20 Transfer events from the token
+// contract, runs a balance map (balances[to] += amount,
+// balances[from] -= amount), and returns the top N holders sorted by
+// balance descending.
+//
+// Cheap version of an indexer — works fine for tokens with low
+// transfer volume (newly-launched, < ~10k Transfer events). For
+// high-volume tokens this will get slow; the proper fix is a
+// Postgres-backed indexer (see roadmap T2-2).
+
+import { useEffect, useState } from "react";
+import { createPublicClient, http, defineChain, type Log } from "viem";
+
+const SENTRIX_MAINNET = defineChain({
+  id: 7119,
+  name: "Sentrix Chain",
+  nativeCurrency: { name: "SRX", symbol: "SRX", decimals: 18 },
+  rpcUrls: { default: { http: ["https://rpc.sentrixchain.com"] } },
+});
+
+const client = createPublicClient({
+  chain: SENTRIX_MAINNET,
+  transport: http(),
+});
+
+const CHUNK_SIZE = 5000n;
+
+const TRANSFER_EVENT = {
+  type: "event",
+  name: "Transfer",
+  inputs: [
+    { name: "from", type: "address", indexed: true },
+    { name: "to", type: "address", indexed: true },
+    { name: "value", type: "uint256", indexed: false },
+  ],
+} as const;
+
+export interface Holder {
+  address: `0x${string}`;
+  balance: bigint;
+  percentage: number;
+}
+
+export function useTopHolders(
+  tokenAddress: `0x${string}` | undefined,
+  fromBlock = 1131000n,
+  topN = 10,
+): { holders: Holder[]; totalSupply: bigint; isLoading: boolean } {
+  const [holders, setHolders] = useState<Holder[]>([]);
+  const [totalSupply, setTotalSupply] = useState<bigint>(0n);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!tokenAddress) {
+      setHolders([]);
+      setTotalSupply(0n);
+      return;
+    }
+    let cancelled = false;
+    async function load(addr: `0x${string}`) {
+      setIsLoading(true);
+      try {
+        const latest = await client.getBlockNumber();
+        if (cancelled) return;
+
+        const balances = new Map<string, bigint>();
+        let supply = 0n;
+
+        for (let from = fromBlock; from <= latest; from += CHUNK_SIZE) {
+          const to = from + CHUNK_SIZE - 1n > latest ? latest : from + CHUNK_SIZE - 1n;
+          const logs = await client.getLogs({
+            address: addr,
+            event: TRANSFER_EVENT,
+            fromBlock: from,
+            toBlock: to,
+          });
+          if (cancelled) return;
+          for (const log of logs as Array<Log<bigint, number, false, typeof TRANSFER_EVENT>>) {
+            const args = log.args;
+            if (!args.from || !args.to || args.value === undefined) continue;
+            const fromAddr = args.from.toLowerCase();
+            const toAddr = args.to.toLowerCase();
+            const value = args.value;
+            // Mint (from = 0x0) bumps total supply.
+            if (fromAddr === "0x0000000000000000000000000000000000000000") {
+              supply += value;
+            } else {
+              balances.set(fromAddr, (balances.get(fromAddr) ?? 0n) - value);
+            }
+            // Burn (to = 0x0) reduces total supply.
+            if (toAddr === "0x0000000000000000000000000000000000000000") {
+              supply -= value;
+            } else {
+              balances.set(toAddr, (balances.get(toAddr) ?? 0n) + value);
+            }
+          }
+        }
+
+        if (cancelled) return;
+
+        const sorted = Array.from(balances.entries())
+          .filter(([, bal]) => bal > 0n)
+          .sort((a, b) => (a[1] < b[1] ? 1 : a[1] > b[1] ? -1 : 0))
+          .slice(0, topN);
+
+        const list: Holder[] = sorted.map(([addr, bal]) => ({
+          address: addr as `0x${string}`,
+          balance: bal,
+          percentage: supply > 0n ? Number((bal * 10000n) / supply) / 100 : 0,
+        }));
+
+        setHolders(list);
+        setTotalSupply(supply);
+      } catch {
+        /* RPC blip — leave previous state */
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+    load(tokenAddress);
+    return () => {
+      cancelled = true;
+    };
+  }, [tokenAddress, fromBlock, topN]);
+
+  return { holders, totalSupply, isLoading };
+}

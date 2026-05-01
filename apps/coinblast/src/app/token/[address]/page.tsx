@@ -1,10 +1,12 @@
 'use client'
 import { notFound } from 'next/navigation'
 import { use } from 'react'
-import { MOCK_TOKENS, MOCK_HOLDERS, MOCK_TRADES } from '@/lib/mock-data'
+import { MOCK_TOKENS, MOCK_TRADES } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
 import { useDeployedCurves } from '@/lib/useDeployedCurves'
+import { useTopHolders } from '@/lib/useTopHolders'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
+import { formatEther } from 'viem'
 import { Badge } from '@/components/ui/Badge'
 import { Progress } from '@/components/ui/Progress'
 import { BondingCurveChart } from '@/components/token/BondingCurveChart'
@@ -29,6 +31,9 @@ export default function TokenDetailPage({ params }: Props) {
   const { curves, isLoading: curvesLoading } = useDeployedCurves()
   const isLoading = tokensLoading || curvesLoading
   const merged = mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves)
+  // Top holders — reads Transfer events for the token directly. Hook
+  // gates on undefined address so it's a no-op until the token row
+  // resolves out of the merge.
   const token = merged.find((t) => t.address.toLowerCase() === address.toLowerCase())
 
   if (!token) {
@@ -135,7 +140,7 @@ export default function TokenDetailPage({ params }: Props) {
               { label: 'Price', value: formatPrice(token.price), icon: <BarChart2 className="w-4 h-4 text-[var(--gold)]" /> },
               { label: 'Market Cap', value: formatSRX(token.marketCap), icon: <TrendingUp className="w-4 h-4 text-[var(--gold-l)]" /> },
               { label: '24h Volume', value: formatSRX(token.volume24h), icon: <BarChart2 className="w-4 h-4 text-emerald-400" /> },
-              { label: 'Holders', value: MOCK_HOLDERS.length.toString(), icon: <Users className="w-4 h-4 text-[var(--tx-m)]" /> },
+              { label: 'Holders', value: '—', icon: <Users className="w-4 h-4 text-[var(--tx-m)]" /> },
             ].map((s) => (
               <div key={s.label} className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -218,30 +223,10 @@ export default function TokenDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Holders */}
-          <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
-            <h3 className="font-semibold text-[var(--tx)] mb-4">Top Holders</h3>
-            {MOCK_HOLDERS.length === 0 ? (
-              <p className="text-xs text-[var(--tx-d)] py-4 text-center">
-                No holder data yet — needs an indexer for the FactoryToken Transfer log.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {MOCK_HOLDERS.map((holder, i) => (
-                  <div key={holder.address} className="flex items-center gap-3">
-                    <span className="text-[var(--tx-d)] text-xs w-4 text-right">{i + 1}</span>
-                    <span className="font-mono text-xs text-[var(--tx-m)] flex-1 truncate">
-                      {formatAddress(holder.address, 6)}
-                    </span>
-                    <div className="flex-1">
-                      <Progress value={holder.percentage} color="gold" />
-                    </div>
-                    <span className="text-xs text-[var(--tx-d)] w-12 text-right">{holder.percentage.toFixed(2)}%</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Holders — live from Transfer events (no indexer required) */}
+          <TopHoldersPanel tokenAddress={token.address as `0x${string}`} />
+
+          {/* Stat row pulls Holders count from the same hook below. */}
 
           {/* Recent trades */}
           <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
@@ -324,6 +309,42 @@ export default function TokenDetailPage({ params }: Props) {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function TopHoldersPanel({ tokenAddress }: { tokenAddress: `0x${string}` }) {
+  const { holders, totalSupply, isLoading } = useTopHolders(tokenAddress)
+  return (
+    <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold text-[var(--tx)]">Top Holders</h3>
+        {totalSupply > 0n && holders.length > 0 && (
+          <span className="text-xs text-[var(--tx-d)]">{holders.length} shown</span>
+        )}
+      </div>
+      {isLoading && holders.length === 0 ? (
+        <p className="text-xs text-[var(--tx-d)] py-4 text-center">Scanning Transfer events…</p>
+      ) : holders.length === 0 ? (
+        <p className="text-xs text-[var(--tx-d)] py-4 text-center">No holders yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {holders.map((holder, i) => (
+            <div key={holder.address} className="flex items-center gap-3">
+              <span className="text-[var(--tx-d)] text-xs w-4 text-right">{i + 1}</span>
+              <span className="font-mono text-xs text-[var(--tx-m)] flex-1 truncate">
+                {formatAddress(holder.address, 6)}
+              </span>
+              <div className="flex-1">
+                <Progress value={Math.min(100, holder.percentage)} color="gold" />
+              </div>
+              <span className="text-xs text-[var(--tx-d)] w-14 text-right">
+                {holder.percentage < 0.01 ? '<0.01' : holder.percentage.toFixed(2)}%
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
