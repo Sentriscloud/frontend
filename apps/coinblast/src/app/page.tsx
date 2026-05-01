@@ -4,11 +4,10 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { TokenCard } from '@/components/token/TokenCard'
 import { DotGrid, GradientBlur } from '@/components/ui/GridBg'
-import { MOCK_TOKENS, PLATFORM_STATS } from '@/lib/mock-data'
+import { MOCK_TOKENS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
 import { useDeployedCurves } from '@/lib/useDeployedCurves'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
-import { formatNumber } from '@/lib/utils'
 import { Rocket, TrendingUp } from 'lucide-react'
 import type { Token } from '@/types'
 
@@ -25,7 +24,19 @@ interface ActivityRow {
   type: 'launch'
   symbol: string
   curve: `0x${string}`
-  ts: number // pseudo — block-derived timestamp not fetched, just used for ordering
+  ts: number // block number — relative to latestBlock yields seconds-ago
+}
+
+// Sentrix mainnet runs ~1s blocks (BLOCK_TIME_SECS=1), so the gap
+// between two block numbers is approximately the gap in seconds.
+function formatBlocksAgo(latest: bigint | null, then: bigint): string {
+  if (!latest) return ''
+  const diffSec = Number(latest - then)
+  if (diffSec < 0) return 'just now'
+  if (diffSec < 60) return `${diffSec}s ago`
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`
+  return `${Math.floor(diffSec / 86400)}d ago`
 }
 
 function getTabTokens(tokens: Token[], tab: Tab): Token[] {
@@ -52,7 +63,7 @@ export default function HomePage() {
   const [tab, setTab] = useState<Tab>('hot')
   const [visible, setVisible] = useState(8)
   const { tokens: deployed } = useDeployedTokens()
-  const { curves } = useDeployedCurves()
+  const { curves, latestBlock } = useDeployedCurves()
 
   const merged = useMemo(
     () => mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves),
@@ -115,9 +126,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-8 text-sm flex-wrap">
           {[
             { label: 'coins launched', value: merged.length },
-            { label: 'SRX volume', value: `${formatNumber(PLATFORM_STATS.totalVolumeSRX)}` },
-            { label: 'SRX burned (launch fees)', value: formatNumber(PLATFORM_STATS.totalSRXBurned) },
-            { label: 'traders', value: PLATFORM_STATS.activeTraders },
+            { label: 'with bonding curve', value: merged.filter(t => t.curveAddress).length },
+            { label: 'graduated to DEX', value: merged.filter(t => t.isGraduated).length },
           ].map((s) => (
             <span key={s.label} className="text-[var(--tx-d)]">
               <span className="text-[var(--gold)] font-bold">{s.value}</span> {s.label}
@@ -199,7 +209,7 @@ export default function HomePage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-[var(--tx)] font-medium truncate">{a.symbol}</p>
                     </div>
-                    <span className="text-xs text-[var(--tx-m)] shrink-0">#{a.ts}</span>
+                    <span className="text-xs text-[var(--tx-m)] shrink-0">{formatBlocksAgo(latestBlock, BigInt(a.ts))}</span>
                   </Link>
                 ))
               )}

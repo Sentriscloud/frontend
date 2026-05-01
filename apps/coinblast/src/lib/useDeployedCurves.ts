@@ -111,9 +111,12 @@ function cacheToCurves(cache: CacheShape): DeployedCurve[] {
 /**
  * Hook: every CoinBlastCurve deployed via the canonical factory.
  * Newest first. Cached in localStorage so navigation stays snappy.
+ * Also returns the latest block number scanned-against — consumers
+ * use it to render relative timestamps without an extra RPC trip.
  */
 export function useDeployedCurves(): {
   curves: DeployedCurve[];
+  latestBlock: bigint | null;
   isLoading: boolean;
   error: string | null;
 } {
@@ -121,6 +124,7 @@ export function useDeployedCurves(): {
     const cached = loadCache();
     return cached ? cacheToCurves(cached) : [];
   });
+  const [latestBlock, setLatestBlock] = useState<bigint | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -142,6 +146,7 @@ export function useDeployedCurves(): {
           : COINBLAST_FACTORY_DEPLOY_BLOCK[7119];
         const latest = await client.getBlockNumber();
         if (cancelled) return;
+        setLatestBlock(latest);
 
         const collected: DeployedCurve[] = cached ? cacheToCurves(cached) : [];
 
@@ -213,5 +218,5 @@ export function useDeployedCurves(): {
     };
   }, []);
 
-  return { curves, isLoading, error };
+  return { curves, latestBlock, isLoading, error };
 }
