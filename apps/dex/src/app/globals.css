@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Playfair+Display:wght@500;600;700&display=swap');
+@import "tailwindcss";
+
+html, body { overflow-x: hidden; }
+
+:root {
+  --gold:        #f4c75e;
+  --gold-l:      #ffd97a;
+  --gold-d:      #d4a937;
+  --bk:          #0a0a0b;
+  --bk-2:        #111114;
+  --sf:          #18181c;
+  --sf-2:        #232328;
+  --sf-3:        #2e2e34;
+  --brd:         rgba(255, 255, 255, 0.08);
+  --brd-s:       rgba(244, 199, 94, 0.32);
+  --gold-bg:     rgba(244, 199, 94, 0.14);
+  --gold-bg-s:   rgba(244, 199, 94, 0.30);
+  --gold-glow:   rgba(244, 199, 94, 0.40);
+  --tx:          #fafafa;
+  --tx-2:        #d4d4d8;
+  --tx-m:        #9b9ba3;
+  --tx-d:        #65656d;
+}
+
+body {
+  font-family: "Geist", system-ui, -apple-system, sans-serif;
+}
