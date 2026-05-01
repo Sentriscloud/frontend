@@ -1,6 +1,11 @@
 "use client";
 
 import { Reveal } from "@/components/ui/reveal";
+import {
+  AddToWalletButton,
+  SENTRIX_MAINNET_ADD_PARAMS,
+  SENTRIX_TESTNET_ADD_PARAMS,
+} from "@/components/ui/add-to-wallet-button";
 import { SectionHeader } from "./section-header";
 
 export function Developers() {
@@ -81,6 +86,13 @@ export function Developers() {
             Chain ID: <span className="text-[var(--tx)]">7119</span> (0x1bcf)<br/>
             Explorer: <a href="https://scan.sentrixchain.com" target="_blank" rel="noopener noreferrer" className="text-[var(--cyan)] hover:underline">scan.sentrixchain.com</a>
           </p>
+          <div className="mt-4">
+            <AddToWalletButton
+              params={SENTRIX_MAINNET_ADD_PARAMS}
+              label="Add Sentrix to Wallet"
+              variant="primary"
+            />
+          </div>
         </div>
         <div className="rounded-2xl border border-[var(--brd)] bg-[var(--sf)] p-6">
           <p className="text-[10px] font-mono tracking-[.15em] text-[var(--orange)] mb-2">TESTNET</p>
@@ -90,6 +102,13 @@ export function Developers() {
             Explorer: <a href="https://scan.sentrixchain.com" target="_blank" rel="noopener noreferrer" className="text-[var(--cyan)] hover:underline">scan.sentrixchain.com</a> (toggle Testnet)<br/>
             Faucet: <a href="https://faucet.sentrixchain.com" target="_blank" rel="noopener noreferrer" className="text-[var(--cyan)] hover:underline">faucet.sentrixchain.com</a> — free tokens, no real value
           </p>
+          <div className="mt-4">
+            <AddToWalletButton
+              params={SENTRIX_TESTNET_ADD_PARAMS}
+              label="Add Testnet to Wallet"
+              variant="secondary"
+            />
+          </div>
         </div>
       </div>
       </Reveal>
