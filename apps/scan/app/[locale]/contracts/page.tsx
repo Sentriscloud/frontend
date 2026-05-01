@@ -89,9 +89,13 @@ export default function ContractsPage() {
     <div className="space-y-6">
       <PageHeader
         icon={FileCode}
-        eyebrow="VERIFIED CONTRACTS"
+        eyebrow="EVM · VERIFIED CONTRACTS"
         title={`Verified contracts — ${network === "mainnet" ? "Mainnet" : "Testnet"}`}
       />
+      <p className="text-xs text-muted-foreground -mt-3">
+        EVM rail only. Native-side primitives (SRC-20, StakingOps) run at the protocol level — see the{" "}
+        <Link href="/native" className="underline hover:text-foreground">Native dashboard</Link>.
+      </p>
 
       {/* ── Quick lookup ──────────────────────────── */}
       <DetailCard title="Check verification status">

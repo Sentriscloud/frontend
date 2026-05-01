@@ -7,6 +7,7 @@ import {
   Search, Sun, Moon, Menu, X, Globe, Check, ChevronDown,
   Users, Coins, Shield, FileCode, Fish, GitCompare,
   Home as HomeIcon, Blocks as BlocksIcon, BarChart3,
+  Cpu, Boxes, Layers, Inbox, Landmark, GitFork, TrendingUp, PieChart, Fuel,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useNetwork } from "@/lib/network-context";
@@ -36,7 +37,13 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const lbRef = useRef<HTMLDivElement>(null);
+  const evmRef = useRef<HTMLDivElement>(null);
+  const nativeRef = useRef<HTMLDivElement>(null);
+  const chainRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [evmOpen, setEvmOpen] = useState(false);
+  const [nativeOpen, setNativeOpen] = useState(false);
+  const [chainOpen, setChainOpen] = useState(false);
 
   // Scroll state for translucent → solid nav background
   useEffect(() => {
@@ -117,6 +124,9 @@ export function Header() {
       const t = e.target as Node;
       if (langRef.current && !langRef.current.contains(t)) setLangOpen(false);
       if (lbRef.current && !lbRef.current.contains(t)) setLbOpen(false);
+      if (evmRef.current && !evmRef.current.contains(t)) setEvmOpen(false);
+      if (nativeRef.current && !nativeRef.current.contains(t)) setNativeOpen(false);
+      if (chainRef.current && !chainRef.current.contains(t)) setChainOpen(false);
     }
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
@@ -157,20 +167,37 @@ export function Header() {
     setLangOpen(false);
   }
 
-  // EVM and Native are dedicated rail-focused pages (right after Home in
-  // the nav so they're impossible to miss). Sentrix runs both rails at the
-  // protocol level — splitting them out of the mixed home feed is what
-  // newcomers ask for first when they land on the explorer.
-  const NAV_LINKS: { href: "/blocks" | "/validators" | "/tokens" | "/" | "/analytics" | "/supply" | "/evm" | "/native"; key: keyof IntlMessages["nav"] }[] = [
+  // Etherscan / Solscan-style nav: short top row + dropdown groups. Sentrix
+  // runs EVM and native at the protocol level, so the two rails get their
+  // own dropdown columns of related sub-pages, mirroring how Etherscan
+  // groups "Tokens" and "Blockchain". Single direct links stay only for
+  // Home — every other destination lives inside a dropdown so the top row
+  // doesn't get crowded.
+  const NAV_LINKS: { href: "/"; key: keyof IntlMessages["nav"] }[] = [
     { href: "/", key: "home" },
-    { href: "/evm", key: "evm" },
-    { href: "/native", key: "native" },
-    { href: "/blocks", key: "blocks" },
-    { href: "/validators", key: "validators" },
-    { href: "/tokens", key: "tokens" },
-    { href: "/supply", key: "supply" },
-    { href: "/analytics", key: "analytics" },
   ];
+
+  const EVM_ITEMS = [
+    { href: "/evm" as const,        label: "EVM Dashboard", icon: Cpu,      color: "text-[var(--cyan)]",   hint: "Latest EVM-rail activity" },
+    { href: "/contracts" as const,  label: "Contracts",     icon: FileCode, color: "text-[var(--cyan)]",   hint: "Verified Solidity sources" },
+    { href: "/tokens" as const,     label: "ERC-20 Tokens", icon: Coins,    color: "text-[var(--gold)]",   hint: "Token list — filter to EVM" },
+  ] as const;
+
+  const NATIVE_ITEMS = [
+    { href: "/native" as const,     label: "Native Dashboard", icon: Boxes,    color: "text-[var(--green)]",  hint: "SRX transfers + StakingOps + SRC-20" },
+    { href: "/validators" as const, label: "Validators",       icon: Shield,   color: "text-[var(--purple)]", hint: "Active set, stake, jail state" },
+    { href: "/epochs" as const,     label: "Epochs",           icon: Layers,   color: "text-[var(--purple)]", hint: "Reward distribution + rotation" },
+    { href: "/tokens" as const,     label: "SRC-20 Tokens",    icon: Coins,    color: "text-[var(--gold)]",   hint: "Token list — filter to Native" },
+    { href: "/supply" as const,     label: "Supply",           icon: PieChart, color: "text-[var(--gold)]",   hint: "315M cap + halving curve" },
+  ] as const;
+
+  const CHAIN_ITEMS = [
+    { href: "/blocks" as const,    label: "Blocks",     icon: BlocksIcon, color: "text-[var(--gold)]",  hint: "Block-by-block tx breakdown" },
+    { href: "/mempool" as const,   label: "Mempool",    icon: Inbox,      color: "text-[var(--cyan)]",  hint: "Pending transactions" },
+    { href: "/forks" as const,     label: "Forks",      icon: GitFork,    color: "text-[var(--pink)]",  hint: "Fork-gate activations" },
+    { href: "/analytics" as const, label: "Analytics",  icon: BarChart3,  color: "text-[var(--cyan)]",  hint: "Network performance + history" },
+    { href: "/gas" as const,       label: "Gas",        icon: Fuel,       color: "text-[var(--gold)]",  hint: "Fee tracker" },
+  ] as const;
 
   const LEADERBOARD_ITEMS = [
     { href: "/leaderboard/account/holders", label: "Account",   icon: Users,      color: "text-[var(--cyan)]" },
@@ -181,6 +208,9 @@ export function Header() {
     { href: "/leaderboard/compare",         label: "Compare",   icon: GitCompare, color: "text-[var(--pink)]" },
   ] as const;
   const leaderboardActive = pathname.startsWith("/leaderboard");
+  const evmActive = pathname.startsWith("/evm") || pathname.startsWith("/contracts");
+  const nativeActive = pathname.startsWith("/native") || pathname.startsWith("/validators") || pathname.startsWith("/epochs") || pathname.startsWith("/supply");
+  const chainActive = pathname.startsWith("/blocks") || pathname.startsWith("/mempool") || pathname.startsWith("/forks") || pathname.startsWith("/analytics") || pathname.startsWith("/gas");
   // Home carries its own big editorial search in the hero — hide the header one there so the
   // page doesn't read as having two competing search bars stacked on top of each other.
   const isHome = pathname === "/";
@@ -222,6 +252,39 @@ export function Header() {
               </Link>
             );
           })}
+
+          {/* EVM dropdown */}
+          <RailDropdown
+            ref={evmRef}
+            label="EVM"
+            active={evmActive}
+            open={evmOpen}
+            onToggle={() => setEvmOpen(!evmOpen)}
+            onClose={() => setEvmOpen(false)}
+            items={EVM_ITEMS}
+          />
+
+          {/* Native dropdown */}
+          <RailDropdown
+            ref={nativeRef}
+            label="Native"
+            active={nativeActive}
+            open={nativeOpen}
+            onToggle={() => setNativeOpen(!nativeOpen)}
+            onClose={() => setNativeOpen(false)}
+            items={NATIVE_ITEMS}
+          />
+
+          {/* Chain dropdown — blocks, mempool, forks, analytics, gas */}
+          <RailDropdown
+            ref={chainRef}
+            label="Chain"
+            active={chainActive}
+            open={chainOpen}
+            onToggle={() => setChainOpen(!chainOpen)}
+            onClose={() => setChainOpen(false)}
+            items={CHAIN_ITEMS}
+          />
 
           {/* Leaderboard dropdown */}
           <div className="relative" ref={lbRef}>
@@ -397,28 +460,102 @@ export function Header() {
                 {t(l.key)}
               </Link>
             ))}
-            <div className="pt-3 mt-1">
-              <p className="py-2 text-[10px] tracking-[.2em] uppercase text-[var(--tx-d)]">
-                {t("leaderboard")}
-              </p>
-              {LEADERBOARD_ITEMS.map(({ href, label, icon: Icon, color }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 py-3 text-[12px] tracking-[.1em] uppercase text-[var(--tx-m)] hover:text-[var(--gold)] border-b border-[var(--brd)]"
-                >
-                  <Icon className={`h-3.5 w-3.5 ${color}`} />
-                  {label}
-                </Link>
-              ))}
-            </div>
+            {[
+              { title: "EVM", items: EVM_ITEMS },
+              { title: "Native", items: NATIVE_ITEMS },
+              { title: "Chain", items: CHAIN_ITEMS },
+              { title: "Leaderboard", items: LEADERBOARD_ITEMS },
+            ].map((group) => (
+              <div key={group.title} className="pt-3 mt-1">
+                <p className="py-2 text-[10px] tracking-[.2em] uppercase text-[var(--tx-d)]">
+                  {group.title}
+                </p>
+                {group.items.map(({ href, label, icon: Icon, color }) => (
+                  <Link
+                    key={href}
+                    href={href as Parameters<typeof Link>[0]["href"]}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 py-3 text-[12px] tracking-[.1em] uppercase text-[var(--tx-m)] hover:text-[var(--gold)] border-b border-[var(--brd)]"
+                  >
+                    <Icon className={`h-3.5 w-3.5 ${color}`} />
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            ))}
           </nav>
         </div>
       )}
     </header>
   );
 }
+
+// Reusable rail dropdown — used by EVM / Native / Chain in the desktop
+// nav. Same pattern as the Leaderboard dropdown but with an item shape
+// that includes a per-item hint subtitle. forwardRef so the click-outside
+// handler in the parent can bind to the wrapping div.
+import { forwardRef } from "react";
+
+interface RailDropdownItem {
+  readonly href: string;
+  readonly label: string;
+  readonly icon: React.ElementType;
+  readonly color: string;
+  readonly hint?: string;
+}
+
+interface RailDropdownProps {
+  label: string;
+  active: boolean;
+  open: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  items: readonly RailDropdownItem[];
+}
+
+const RailDropdown = forwardRef<HTMLDivElement, RailDropdownProps>(function RailDropdown(
+  { label, active, open, onToggle, onClose, items },
+  ref,
+) {
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-light tracking-[.1em] uppercase transition-all duration-200 rounded-full border ${
+          active
+            ? "text-[var(--gold)] bg-[color-mix(in_oklab,var(--gold)_6%,transparent)] border-[color-mix(in_oklab,var(--gold)_15%,transparent)]"
+            : "text-[var(--tx-d)] border-transparent hover:text-[var(--gold)]"
+        }`}
+      >
+        {label}
+        <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-2 w-64 bg-[var(--bk)]/95 backdrop-blur-xl border border-[var(--brd)] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,.3)] py-1.5 z-50">
+          {items.map(({ href, label: itemLabel, icon: Icon, color, hint }) => (
+            <Link
+              key={href}
+              href={href as Parameters<typeof Link>[0]["href"]}
+              onClick={onClose}
+              className="flex items-start gap-3 px-3 py-2 text-[11px] tracking-[.1em] uppercase text-[var(--tx-m)] hover:text-[var(--gold)] hover:bg-[color-mix(in_oklab,var(--gold)_5%,transparent)] transition-colors"
+            >
+              <Icon className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${color}`} />
+              <span className="flex flex-col gap-0.5">
+                <span>{itemLabel}</span>
+                {hint && (
+                  <span className="text-[10px] normal-case tracking-normal text-[var(--tx-d)]">
+                    {hint}
+                  </span>
+                )}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
 
 // Mobile bottom nav — 5-slot app-style tabbar so the core destinations stay one tap away
 // without opening the hamburger. Hidden on md+; the desktop nav takes over there.

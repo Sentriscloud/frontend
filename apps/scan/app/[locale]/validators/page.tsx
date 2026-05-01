@@ -93,6 +93,7 @@ export default function ValidatorsPage() {
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
       <PageHeader
         icon={Users}
+        eyebrow="NATIVE · VALIDATORS"
         title={t("title")}
         actions={
           validators ? (
@@ -102,6 +103,9 @@ export default function ValidatorsPage() {
           ) : null
         }
       />
+      <p className="text-xs text-muted-foreground -mt-3">
+        Native rail. Validators settle blocks on the consensus layer below the EVM — they don&apos;t live in any Solidity contract.
+      </p>
 
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
