@@ -21,8 +21,16 @@ export function formatSRX(n: number): string {
 }
 
 export function formatPrice(n: number): string {
-  if (n < 0.001) return n.toExponential(2) + ' SRX'
-  return n.toFixed(6) + ' SRX'
+  // Decimal everywhere — engineering notation ("1.01e-4 SRX") was
+  // technically correct but wallets and explorers all show plain
+  // decimal, so users had to context-switch. Stretch decimals as
+  // small as needed; fall back to "<0.000001 SRX" for the truly
+  // microscopic cases.
+  if (n <= 0) return '0 SRX'
+  if (n < 0.000001) return '<0.000001 SRX'
+  if (n < 0.001) return n.toFixed(6).replace(/0+$/, '').replace(/\.$/, '') + ' SRX'
+  if (n < 1) return n.toFixed(5).replace(/0+$/, '').replace(/\.$/, '') + ' SRX'
+  return n.toFixed(4).replace(/0+$/, '').replace(/\.$/, '') + ' SRX'
 }
 
 export function formatTimestamp(ts: number): string {

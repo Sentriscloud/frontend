@@ -40,7 +40,7 @@ export function Footer() {
 
         <div className="mt-8 pt-6 border-t border-[var(--brd)] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[var(--tx-d)]">
           <p>© 2026 SentrisCloud. BUSL-1.1 License.</p>
-          <p>Chain ID: 7119 · 1 SRX per launch · 1% trading fee</p>
+          <p>Chain ID: 7119 · pay-gas-only · 1% trading fee to Ecosystem Fund</p>
         </div>
       </div>
     </footer>

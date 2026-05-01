@@ -83,7 +83,7 @@ export default function HomePage() {
             <span className="shimmer-text">Fair for everyone.</span>
           </h1>
           <p className="text-[var(--tx-m)] text-base max-w-md mx-auto animate-fade-up" style={{ animationDelay: '0.1s' }}>
-            Pay 1 SRX → coin goes live instantly on a bonding curve. No VC, no presale.
+            Pay gas → coin goes live instantly on a bonding curve. No VC, no presale.
           </p>
           <div className="flex gap-3 justify-center animate-fade-up" style={{ animationDelay: '0.15s' }}>
             <Link href="/create">
@@ -200,7 +200,7 @@ export default function HomePage() {
             {/* CTA box */}
             <div className="mt-4 bg-[var(--gold)]/8 border border-[var(--brd2)] rounded-xl p-4 text-center">
               <p className="text-sm font-semibold text-[var(--tx)] mb-1">Ready to launch?</p>
-              <p className="text-xs text-[var(--tx-d)] mb-3">1 SRX · instant · fair</p>
+              <p className="text-xs text-[var(--tx-d)] mb-3">gas-only · instant · fair</p>
               <Link href="/create">
                 <Button variant="gold" size="sm" className="w-full">
                   <Rocket className="w-3.5 h-3.5" /> Launch Now

@@ -3,7 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine
 } from 'recharts'
-import { generateCurveData, GRADUATION_THRESHOLD } from '@/lib/bonding-curve'
+import { generateCurveData, GRADUATION_THRESHOLD as GRADUATION_THRESHOLD_FALLBACK } from '@/lib/bonding-curve'
 import type { Token } from '@/types'
 
 interface BondingCurveChartProps {
@@ -109,7 +109,10 @@ export function BondingCurveChart({ token }: BondingCurveChartProps) {
             <span className="w-3 h-0.5 bg-amber-400 inline-block" /> Current price
           </span>
         </div>
-        <span>Graduation: {GRADUATION_THRESHOLD.toLocaleString()} SRX mcap</span>
+        <span>
+          Graduation: {(token.graduationThresholdSrx ?? GRADUATION_THRESHOLD_FALLBACK).toLocaleString()}{' '}
+          {token.graduationThresholdSrx ? 'SRX raised' : 'SRX mcap'}
+        </span>
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Token } from '@/types'
 import { Progress } from '@/components/ui/Progress'
+import { TokenAvatar } from '@/components/ui/TokenAvatar'
 import { formatNumber, formatPrice, formatAddress } from '@/lib/utils'
 import { ShieldCheck, AlertTriangle, TrendingUp } from 'lucide-react'
 import { GRADUATION_THRESHOLD as GRADUATION_THRESHOLD_FALLBACK } from '@/lib/bonding-curve'
@@ -10,6 +11,7 @@ interface TokenCardProps {
 }
 
 export function TokenCard({ token }: TokenCardProps) {
+  const hasCurve = !!token.curveAddress
   const gradThreshold = token.graduationThresholdSrx ?? GRADUATION_THRESHOLD_FALLBACK
   const toGrad = Math.max(0, gradThreshold - token.marketCap)
 
@@ -19,11 +21,13 @@ export function TokenCard({ token }: TokenCardProps) {
       className="block group bg-[var(--sf)] border border-[var(--brd)] rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:border-[var(--brd2)] hover:shadow-[0_8px_32px_rgba(200,168,74,0.10)]"
     >
       {/* Square image */}
-      <div className="relative aspect-square w-full overflow-hidden bg-[var(--sf2)]">
-        <img
-          src={token.imageUrl}
-          alt={token.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      <div className="relative aspect-square w-full overflow-hidden bg-[var(--sf2)] group-hover:scale-105 transition-transform duration-300">
+        <TokenAvatar
+          address={token.address}
+          symbol={token.symbol}
+          imageUrl={token.imageUrl}
+          size={400}
+          className="w-full h-full !rounded-none"
         />
         {/* Badge overlays */}
         <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
@@ -66,18 +70,26 @@ export function TokenCard({ token }: TokenCardProps) {
           <span className="text-[10px] text-[var(--tx-d)] shrink-0">{formatPrice(token.price)}</span>
         </div>
 
-        {/* Progress */}
-        {!token.isGraduated ? (
+        {/* Progress (only shown for tokens that actually have a bonding
+            curve attached — bare ERC-20 deploys via the legacy
+            TokenFactory route have no curve, so 'X SRX to grad' is
+            meaningless for them). */}
+        {!token.isGraduated && hasCurve ? (
           <div className="space-y-1">
             <Progress value={token.progress} color="gold" />
             <p className="text-[10px] text-[var(--tx-d)]">
               {formatNumber(toGrad)} SRX to grad
             </p>
           </div>
-        ) : (
+        ) : token.isGraduated ? (
           <div className="flex items-center gap-1.5 pt-0.5">
             <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
             <span className="text-[10px] text-emerald-400">Listed on Sentrix DEX</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 pt-0.5">
+            <div className="w-1.5 h-1.5 bg-[var(--tx-d)] rounded-full" />
+            <span className="text-[10px] text-[var(--tx-d)]">Plain ERC-20 (no curve)</span>
           </div>
         )}
       </div>

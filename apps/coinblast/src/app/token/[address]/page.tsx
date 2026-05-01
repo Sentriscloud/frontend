@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Progress } from '@/components/ui/Progress'
 import { BondingCurveChart } from '@/components/token/BondingCurveChart'
 import { BuySellWidget } from '@/components/token/BuySellWidget'
+import { TokenAvatar } from '@/components/ui/TokenAvatar'
 import { formatAddress, formatNumber, formatPrice, formatTimestamp, formatSRX } from '@/lib/utils'
 import { GRADUATION_THRESHOLD as GRADUATION_THRESHOLD_FALLBACK } from '@/lib/bonding-curve'
 import { ExternalLink, ShieldCheck, AlertTriangle, TrendingUp, Users, BarChart2, Globe, Send, MessageSquare } from 'lucide-react'
@@ -62,10 +63,12 @@ export default function TokenDetailPage({ params }: Props) {
 
           {/* Token header */}
           <div className="flex items-start gap-4">
-            <img
-              src={token.imageUrl}
-              alt={token.name}
-              className="w-16 h-16 rounded-xl bg-[var(--sf2)] shrink-0"
+            <TokenAvatar
+              address={token.address}
+              symbol={token.symbol}
+              imageUrl={token.imageUrl}
+              size={64}
+              className="shrink-0"
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -144,8 +147,9 @@ export default function TokenDetailPage({ params }: Props) {
             ))}
           </div>
 
-          {/* Graduation progress */}
-          {!token.isGraduated && (
+          {/* Graduation progress (curve-only — bare ERC-20s have no
+              graduation flow, so the section is hidden for them). */}
+          {!token.isGraduated && !!token.curveAddress && (
             <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-[var(--tx)] text-sm">Graduation Progress</h3>
@@ -162,14 +166,28 @@ export default function TokenDetailPage({ params }: Props) {
             </div>
           )}
 
-          {/* Bonding curve chart */}
-          <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-[var(--tx)]">Bonding Curve</h3>
-              <span className="text-xs text-[var(--tx-d)]">{soldPct}% sold</span>
+          {/* Bonding curve chart — only if there's a real curve. For
+              bare ERC-20s the chart would be a static lie. */}
+          {token.curveAddress ? (
+            <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-[var(--tx)]">Bonding Curve</h3>
+                <span className="text-xs text-[var(--tx-d)]">{soldPct}% sold</span>
+              </div>
+              <BondingCurveChart token={token} />
             </div>
-            <BondingCurveChart token={token} />
-          </div>
+          ) : (
+            <div className="bg-amber-500/8 border border-amber-500/30 rounded-xl p-5">
+              <h3 className="font-semibold text-amber-300 text-sm mb-2">No bonding curve</h3>
+              <p className="text-xs text-amber-200/80 leading-relaxed">
+                This token was deployed via the legacy TokenFactory flow — full supply went
+                straight to the deployer&apos;s wallet, no on-chain curve attached. Trading
+                happens off-curve: peer-to-peer transfers, or a manual SentrixV2 DEX listing
+                if someone seeds liquidity. To get pump.fun-style buy/sell flow, deploy a
+                fresh curve via <a className="underline" href="/create">/create</a>.
+              </p>
+            </div>
+          )}
 
           {/* Description */}
           {token.description && (
@@ -203,20 +221,26 @@ export default function TokenDetailPage({ params }: Props) {
           {/* Holders */}
           <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
             <h3 className="font-semibold text-[var(--tx)] mb-4">Top Holders</h3>
-            <div className="space-y-3">
-              {MOCK_HOLDERS.map((holder, i) => (
-                <div key={holder.address} className="flex items-center gap-3">
-                  <span className="text-[var(--tx-d)] text-xs w-4 text-right">{i + 1}</span>
-                  <span className="font-mono text-xs text-[var(--tx-m)] flex-1 truncate">
-                    {formatAddress(holder.address, 6)}
-                  </span>
-                  <div className="flex-1">
-                    <Progress value={holder.percentage} color="gold" />
+            {MOCK_HOLDERS.length === 0 ? (
+              <p className="text-xs text-[var(--tx-d)] py-4 text-center">
+                No holder data yet — needs an indexer for the FactoryToken Transfer log.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {MOCK_HOLDERS.map((holder, i) => (
+                  <div key={holder.address} className="flex items-center gap-3">
+                    <span className="text-[var(--tx-d)] text-xs w-4 text-right">{i + 1}</span>
+                    <span className="font-mono text-xs text-[var(--tx-m)] flex-1 truncate">
+                      {formatAddress(holder.address, 6)}
+                    </span>
+                    <div className="flex-1">
+                      <Progress value={holder.percentage} color="gold" />
+                    </div>
+                    <span className="text-xs text-[var(--tx-d)] w-12 text-right">{holder.percentage.toFixed(2)}%</span>
                   </div>
-                  <span className="text-xs text-[var(--tx-d)] w-12 text-right">{holder.percentage.toFixed(2)}%</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Recent trades */}
@@ -234,6 +258,13 @@ export default function TokenDetailPage({ params }: Props) {
                   </tr>
                 </thead>
                 <tbody>
+                  {MOCK_TRADES.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="text-center text-xs text-[var(--tx-d)] py-6">
+                        No trades yet — be the first to buy on the curve.
+                      </td>
+                    </tr>
+                  )}
                   {MOCK_TRADES.map((trade) => (
                     <tr key={trade.txHash} className="border-b border-[var(--brd)]/50 hover:bg-[var(--sf2)]">
                       <td className="py-2.5">
