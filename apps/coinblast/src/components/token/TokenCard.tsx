@@ -3,14 +3,15 @@ import type { Token } from '@/types'
 import { Progress } from '@/components/ui/Progress'
 import { formatNumber, formatPrice, formatAddress } from '@/lib/utils'
 import { ShieldCheck, AlertTriangle, TrendingUp } from 'lucide-react'
-import { GRADUATION_THRESHOLD } from '@/lib/bonding-curve'
+import { GRADUATION_THRESHOLD as GRADUATION_THRESHOLD_FALLBACK } from '@/lib/bonding-curve'
 
 interface TokenCardProps {
   token: Token
 }
 
 export function TokenCard({ token }: TokenCardProps) {
-  const toGrad = Math.max(0, GRADUATION_THRESHOLD - token.marketCap)
+  const gradThreshold = token.graduationThresholdSrx ?? GRADUATION_THRESHOLD_FALLBACK
+  const toGrad = Math.max(0, gradThreshold - token.marketCap)
 
   return (
     <Link

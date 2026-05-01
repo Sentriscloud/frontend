@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/Progress'
 import { BondingCurveChart } from '@/components/token/BondingCurveChart'
 import { BuySellWidget } from '@/components/token/BuySellWidget'
 import { formatAddress, formatNumber, formatPrice, formatTimestamp, formatSRX } from '@/lib/utils'
-import { GRADUATION_THRESHOLD } from '@/lib/bonding-curve'
+import { GRADUATION_THRESHOLD as GRADUATION_THRESHOLD_FALLBACK } from '@/lib/bonding-curve'
 import { ExternalLink, ShieldCheck, AlertTriangle, TrendingUp, Users, BarChart2, Globe, Send, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 
@@ -20,6 +20,10 @@ export default async function TokenDetailPage({ params }: Props) {
   if (!token) notFound()
 
   const soldPct = ((token.tokensSold / token.totalSupply) * 100).toFixed(1)
+  // Live launches put their graduation threshold on the Token row (in SRX
+  // raised). Pre-deploy preview rows fall back to the legacy 69k mcap.
+  const gradThreshold = token.graduationThresholdSrx ?? GRADUATION_THRESHOLD_FALLBACK
+  const gradLabel = token.graduationThresholdSrx ? 'SRX raised' : 'SRX mcap'
 
   return (
     <div className="max-w-7xl mx-auto px-4 pt-[96px] pb-10">
@@ -128,10 +132,10 @@ export default async function TokenDetailPage({ params }: Props) {
               <Progress value={token.progress} color="gold" showLabel />
               <div className="flex items-center justify-between mt-3 text-xs text-[var(--tx-d)]">
                 <span>Current: {formatSRX(token.marketCap)} mcap</span>
-                <span>Goal: {formatNumber(GRADUATION_THRESHOLD)} SRX mcap</span>
+                <span>Goal: {formatNumber(gradThreshold)} {gradLabel}</span>
               </div>
               <p className="text-xs text-[var(--tx-d)] mt-2">
-                {formatSRX(Math.max(0, GRADUATION_THRESHOLD - token.marketCap))} remaining to auto-list on Sentrix DEX
+                {formatSRX(Math.max(0, gradThreshold - token.marketCap))} remaining to auto-list on Sentrix DEX
               </p>
             </div>
           )}
@@ -255,10 +259,10 @@ export default async function TokenDetailPage({ params }: Props) {
               <span>Trading fee</span><span className="text-[var(--tx)]">1%</span>
             </div>
             <div className="flex justify-between">
-              <span>Fee distribution</span><span className="text-[var(--tx)]">50% burn / 50% Ecosystem</span>
+              <span>Fee distribution</span><span className="text-[var(--tx)]">100% to Ecosystem Fund</span>
             </div>
             <div className="flex justify-between">
-              <span>Graduation threshold</span><span className="text-[var(--gold)]">69,000 SRX mcap</span>
+              <span>Graduation threshold</span><span className="text-[var(--gold)]">{formatNumber(gradThreshold)} {gradLabel}</span>
             </div>
           </div>
         </div>

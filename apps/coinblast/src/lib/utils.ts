@@ -26,7 +26,13 @@ export function formatPrice(n: number): string {
 }
 
 export function formatTimestamp(ts: number): string {
+  if (!ts || ts <= 0) return 'just launched'
   const diff = (Date.now() / 1000) - ts
+  // Future timestamp (clock skew or seed-from-future-calendar) — don't
+  // print "-3h ago", just call it fresh. Caught the CBLAST rollout
+  // when the in-product calendar (2026-05-01) ran ahead of real Unix
+  // (still 2025-05-01) and the seed displayed as "365d ago".
+  if (diff < 0) return 'just launched'
   if (diff < 60) return `${Math.floor(diff)}s ago`
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`

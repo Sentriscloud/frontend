@@ -18,6 +18,15 @@ export interface Token {
    * BuySellWidget falls back to the local TS estimator when null.
    */
   curveAddress?: `0x${string}`
+  /**
+   * Per-launch graduation threshold in **whole SRX raised** (matches the
+   * contract's `graduationSrxThreshold` field, just in SRX not wei).
+   * Different launches will have different thresholds — this lives on the
+   * row so the UI doesn't need to thread an on-chain read for static text.
+   * If absent, the UI falls back to the legacy 69_000 SRX market-cap
+   * default (kept around for pre-deploy preview rows only).
+   */
+  graduationThresholdSrx?: number
   // social links (all optional)
   website?: string
   twitter?: string

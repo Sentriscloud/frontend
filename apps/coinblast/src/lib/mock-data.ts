@@ -28,12 +28,45 @@ export const MOCK_TOKENS: Token[] = [
     creator: '0x5acb04058fc4dfa258f29ce318282377cac176fd',
     totalSupply: 1_000_000_000,
     tokensSold: 0,
-    createdAt: 1746105000, // 2026-05-01 ~14:30 UTC
+    // 0 = "just launched" (formatTimestamp short-circuits). Better than a
+    // fixed Unix seed that drifts as soon as time passes; ideally read from
+    // the curve's deploy block.timestamp via a hook.
+    createdAt: 0,
     volume24h: 0,
     isGraduated: false,
     isWarned: false,
     isVerified: true,
     price: 0.0001,
+    marketCap: 0,
+    progress: 0,
+    graduationThresholdSrx: 1000, // matches CoinBlastCurve.graduationSrxThreshold = 1000 SRX
+  },
+  // Tecucoin (TECU) — first user-launched token via the Launch flow
+  // (TokenFactory v1.1.0 deployToken). Block 1173990. Caught by the
+  // launchpad's "where's my token?" report 2026-05-01: the static seed
+  // list misses any token deployed after the seed lands. The proper
+  // long-term fix is a `useDeployedTokens()` hook that reads
+  // TokenFactory's TokenDeployed events live; until that ships, new
+  // launches get appended here as they happen. NB: this token does
+  // NOT have a CoinBlastCurve attached (deployToken alone just mints
+  // an ERC-20 to the deployer), so its detail page renders the
+  // PreviewWidget with the "Curve not deployed" notice — trading
+  // requires a separate curve deploy or manual DEX listing.
+  {
+    address: '0x66fffa1db3ee43363e882fb7217c1a77f3cd72c9',
+    name: 'Tecucoin',
+    symbol: 'TECU',
+    description: '',
+    imageUrl: '',
+    creator: '0x3c652cd1b9a12cb7961b000afe9a71e3d3e7cb19',
+    totalSupply: 1_000_000_000,
+    tokensSold: 0,
+    createdAt: 0,
+    volume24h: 0,
+    isGraduated: false,
+    isWarned: false,
+    isVerified: false,
+    price: 0,
     marketCap: 0,
     progress: 0,
   },
@@ -43,7 +76,7 @@ export const MOCK_HOLDERS: Holder[] = []
 export const MOCK_TRADES: Trade[] = []
 
 export const PLATFORM_STATS = {
-  totalTokens: 1,
+  totalTokens: MOCK_TOKENS.length,
   totalVolumeSRX: 0,
   totalSRXBurned: 0,
   activeTraders: 0,
