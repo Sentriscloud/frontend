@@ -5,19 +5,17 @@
 // Deploy log:
 //   Mainnet 7119: 0xc9D7a61D7C2F428F6A055916488041fD00532110
 //                 tx 0x961be17a…fc3d6d5c block 1178667
-//   Testnet 7120: pending operator deploy (mirror of mainnet flow)
+//   Testnet 7120: 0xc7FBd67fb809b189998cB27F1857b50A3e09619c
+//                 tx 0xd25cb184…0b8d060c block 1637883
 
 export const COINBLAST_FACTORY_ADDRESSES = {
   7119: "0xc9D7a61D7C2F428F6A055916488041fD00532110" as `0x${string}`,
-  // Testnet entry will land here once the mirror deploy ships.
-  // Until then the testnet path falls back to direct CoinBlastCurve
-  // CREATE (no shared registry on testnet).
-  7120: undefined as undefined | `0x${string}`,
+  7120: "0xc7FBd67fb809b189998cB27F1857b50A3e09619c" as `0x${string}`,
 } as const;
 
 export const COINBLAST_FACTORY_DEPLOY_BLOCK: Record<7119 | 7120, bigint> = {
   7119: 1178667n,
-  7120: 0n,
+  7120: 1637883n,
 } as const;
 
 export const COINBLAST_FACTORY_ABI = [

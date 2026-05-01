@@ -3,14 +3,35 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle, AlertCircle, Loader, ExternalLink } from "lucide-react";
 import { formatEther } from "viem";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from "wagmi";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSwitchChain, WagmiProvider } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   SENTRIX_MAINNET,
   ManualAddressInput,
   SoluxConnectButton,
   useEffectiveAddress,
+  getSingletonMainnetConfig,
 } from "@sentriscloud/wallet-config";
+
+// Singleton wagmi config — passed explicitly to every wagmi hook below
+// AND used to wrap a fresh WagmiProvider/RainbowKitProvider INSIDE the
+// dynamic chunk. The outer SentrixWalletProvider in layout.tsx mounts
+// in the static layout chunk and its WagmiProvider context doesn't
+// reach across the dynamic({ssr:false}) boundary that wraps
+// ClaimWidget — so we re-mount a local copy here using the SAME
+// config singleton (no double WC init, same connectors). RainbowKit
+// ConnectButton + every wagmi hook in the tree below find context.
+const wagmiConfig = getSingletonMainnetConfig();
+const sharedQueryClient = new QueryClient();
+const sharedTheme = darkTheme({
+  accentColor: "#f4c75e",
+  accentColorForeground: "#3a2a0e",
+  borderRadius: "medium",
+  fontStack: "system",
+  overlayBlur: "small",
+});
 import { AIRDROP_CONTRACT_ADDRESS } from "@/lib/chain";
 import { MERKLE_AIRDROP_ABI } from "@/lib/airdrop-abi";
 import { EMPTY_BUNDLE, fetchProofsClient, lookupEntry, type ProofsBundle } from "@/lib/proofs";
@@ -33,6 +54,18 @@ function shortAddr(addr: string) {
 }
 
 export function ClaimWidget() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={sharedQueryClient}>
+        <RainbowKitProvider theme={sharedTheme} modalSize="compact">
+          <ClaimWidgetInner />
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}
+
+function ClaimWidgetInner() {
   const [bundle, setBundle] = useState<ProofsBundle>(EMPTY_BUNDLE);
   const [status, setStatus] = useState<Status>("loading-proofs");
 
@@ -43,8 +76,8 @@ export function ClaimWidget() {
   useEffect(() => setMounted(true), []);
 
   // ── Wallet state from wagmi ──────────────────────────────
-  const { address: account, isConnected, chainId } = useAccount();
-  const { switchChain } = useSwitchChain();
+  const { address: account, isConnected, chainId } = useAccount({ config: wagmiConfig });
+  const { switchChain } = useSwitchChain({ config: wagmiConfig });
 
   // Manual-address mode: a visitor can paste a 0x… into the box and check
   // eligibility WITHOUT connecting a wallet. `viewAddress` is what drives
@@ -62,6 +95,7 @@ export function ClaimWidget() {
   // already claimed without needing a connected wallet.
   const contractEnabled = Boolean(AIRDROP_CONTRACT_ADDRESS) && Boolean(viewAddress);
   const { data: contractClaimed } = useReadContract({
+    config: wagmiConfig,
     address: AIRDROP_CONTRACT_ADDRESS as `0x${string}` | undefined,
     abi: MERKLE_AIRDROP_ABI,
     functionName: "claimed",
@@ -69,12 +103,14 @@ export function ClaimWidget() {
     query: { enabled: contractEnabled },
   });
   const { data: contractDeadline } = useReadContract({
+    config: wagmiConfig,
     address: AIRDROP_CONTRACT_ADDRESS as `0x${string}` | undefined,
     abi: MERKLE_AIRDROP_ABI,
     functionName: "claimDeadline",
     query: { enabled: contractEnabled },
   });
   const { data: contractSwept } = useReadContract({
+    config: wagmiConfig,
     address: AIRDROP_CONTRACT_ADDRESS as `0x${string}` | undefined,
     abi: MERKLE_AIRDROP_ABI,
     functionName: "swept",
@@ -89,8 +125,9 @@ export function ClaimWidget() {
 
   // ── Claim tx hooks ───────────────────────────────────────
   const { writeContract, data: txHash, error: writeError, isPending: isWriting, reset: resetWrite } =
-    useWriteContract();
+    useWriteContract({ config: wagmiConfig });
   const { isLoading: isMining, isSuccess: isMined } = useWaitForTransactionReceipt({
+    config: wagmiConfig,
     hash: txHash,
   });
 

@@ -63,6 +63,26 @@ export interface SentrixWalletConfigOptions {
   projectIdOverride?: string;
 }
 
+// Module-level singleton, created lazily on first access. The airdrop
+// claim page passes this directly to every wagmi hook (`useAccount({
+// config })`, `useReadContract({ config, ... })`) to bypass the
+// React-context lookup — `dynamic({ssr:false})` + Next.js 15 + React
+// 19 conspire to break context propagation specifically in airdrop's
+// ClaimWidget tree, so we sidestep the context entirely. wagmi/src/
+// hooks/useConfig.ts: `parameters.config ?? useContext(WagmiContext)`
+// — passing config wins, no tree boundary required.
+let _singletonConfig: SentrixWalletConfig | null = null;
+
+export function getSingletonMainnetConfig(): SentrixWalletConfig {
+  if (!_singletonConfig) {
+    _singletonConfig = createSentrixWalletConfig({
+      appName: "Sentrix",
+      mainnetOnly: true,
+    });
+  }
+  return _singletonConfig;
+}
+
 export function createSentrixWalletConfig(opts: SentrixWalletConfigOptions) {
   const projectId = opts.projectIdOverride ?? readProjectId();
   const chains = opts.mainnetOnly ? ([SENTRIX_MAINNET] as const) : SENTRIX_CHAINS;

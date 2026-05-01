@@ -1,6 +1,7 @@
 export { SENTRIX_MAINNET, SENTRIX_TESTNET, SENTRIX_CHAINS } from "./chain";
 export {
   createSentrixWalletConfig,
+  getSingletonMainnetConfig,
   type SentrixWalletConfig,
   type SentrixWalletConfigOptions,
 } from "./wagmi";
