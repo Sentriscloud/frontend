@@ -469,7 +469,10 @@ export async function fetchTokenHolders(
   if (!res?.holders) return [];
   return res.holders.map((h) => ({
     address: h.address,
-    balance: h.balance ?? h.balance_sentri ?? 0,
+    // 2026-04-30 audit: balance_sentri is the raw 1e8-scaled value; older
+    // code returned it as-is, so the holder list rendered numbers 10^8×
+    // larger than reality. Convert to SRX at the edge.
+    balance: h.balance ?? (h.balance_sentri !== undefined ? toSrx(h.balance_sentri) : 0),
     share: h.percent ?? h.percent_of_supply ?? 0,
   }));
 }
@@ -572,7 +575,16 @@ export async function fetchAccountTokens(network: NetworkId, address: string): P
 export interface ValidatorReward {
   block_height: number;
   timestamp: number;
-  amount: number;
+  amount: number; // SRX (post-conversion)
+}
+
+interface RawValidatorReward {
+  block_height?: number;
+  height?: number;
+  timestamp?: number;
+  amount?: number;
+  amount_sentri?: number;
+  amount_srx?: number;
 }
 
 export async function fetchValidatorRewards(
@@ -581,11 +593,19 @@ export async function fetchValidatorRewards(
   page = 1,
   limit = 20,
 ): Promise<{ rewards: ValidatorReward[]; hasMore: boolean }> {
-  const res = await apiFetch<{ rewards: ValidatorReward[]; pagination?: { has_more?: boolean } }>(
+  const res = await apiFetch<{ rewards: RawValidatorReward[]; pagination?: { has_more?: boolean } }>(
     network,
     `/validators/${address}/rewards?page=${page}&limit=${limit}`,
   );
-  return { rewards: res?.rewards ?? [], hasMore: res?.pagination?.has_more ?? false };
+  // 2026-04-30 audit: backend `amount` is in sentri (1e8) for parity with
+  // /staking/validators.pending_rewards. The hook layer would otherwise
+  // render rewards with 8 phantom decimals.
+  const rewards: ValidatorReward[] = (res?.rewards ?? []).map((r) => ({
+    block_height: r.block_height ?? r.height ?? 0,
+    timestamp: r.timestamp ?? 0,
+    amount: r.amount_srx ?? (r.amount_sentri !== undefined ? toSrx(r.amount_sentri) : toSrx(r.amount ?? 0)),
+  }));
+  return { rewards, hasMore: res?.pagination?.has_more ?? false };
 }
 
 // ── /validators/{addr}/blocks-over-time ─────────────────────────────────────
@@ -723,6 +743,10 @@ export async function fetchEventLogs(
     : (process.env.NEXT_PUBLIC_MAINNET_API || "https://api.sentrixchain.com"));
   const fromHex = typeof fromBlock === "number" ? `0x${fromBlock.toString(16)}` : fromBlock;
   const toHex = typeof toBlock === "number" ? `0x${toBlock.toString(16)}` : toBlock;
+  // 2026-04-30 audit: this function previously had no timeout. A slow RPC
+  // would hang the page render forever. 8s matches the apiFetch default.
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
     const res = await fetch(`${base}/rpc`, {
       method: "POST",
@@ -734,6 +758,7 @@ export async function fetchEventLogs(
         id: 1,
       }),
       cache: "no-store",
+      signal: ctrl.signal,
     });
     if (!res.ok) return [];
     const body = await res.json();
@@ -751,6 +776,8 @@ export async function fetchEventLogs(
     }));
   } catch {
     return [];
+  } finally {
+    clearTimeout(timer);
   }
 }
 

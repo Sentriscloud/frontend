@@ -41,6 +41,10 @@ export function toMillis(timestamp: string | number): number {
 export function timeAgo(timestamp: string | number): string {
   const now = Date.now();
   const then = toMillis(timestamp);
+  // 2026-04-30 audit: guard against unparseable input that bubbles through
+  // toMillis as NaN — without this, every comparison below is false and we
+  // fall through to `new Date(NaN).toLocaleDateString()` = "Invalid Date".
+  if (!Number.isFinite(then)) return "—";
   const diff = Math.floor((now - then) / 1000);
 
   if (diff < 5) return "just now";
@@ -52,8 +56,9 @@ export function timeAgo(timestamp: string | number): string {
 }
 
 export function formatTimestamp(timestamp: string | number): string {
-  const date = new Date(toMillis(timestamp));
-  return date.toLocaleString("en-US", {
+  const ms = toMillis(timestamp);
+  if (!Number.isFinite(ms)) return "—";
+  return new Date(ms).toLocaleString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",

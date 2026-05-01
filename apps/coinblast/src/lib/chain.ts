@@ -9,7 +9,10 @@ export const SENTRIX_CHAIN_PARAMS = {
   nativeCurrency: {
     name: 'Sentrix',
     symbol: 'SRX',
-    decimals: 8,
+    // 18 decimals at the EVM boundary (see canonical-contracts/WSRX.sol —
+    // native ledger uses 8 decimals; the EVM db adapter scales by 1e10 so
+    // eth_getBalance / msg.value / wei conventions all work normally).
+    decimals: 18,
   },
   rpcUrls: [process.env.NEXT_PUBLIC_RPC_URL ?? 'https://rpc.sentrixchain.com/rpc'],
   blockExplorerUrls: [
@@ -72,14 +75,15 @@ export async function connectWallet(): Promise<{
   return { provider, signer, address }
 }
 
-/** Get SRX balance for an address (returns value in SRX, not sentri). */
+/** Get SRX balance for an address (returns value in SRX, not wei). */
 export async function getSRXBalance(address: string): Promise<number> {
   try {
     const provider = getReadProvider()
-    const result = await provider.send('eth_getBalance', [address, 'latest']) as string
-    // Balance is in sentri (1 SRX = 100_000_000 sentri)
-    const sentri = BigInt(result)
-    return Number(sentri) / 100_000_000
+    // eth_getBalance returns wei (1 SRX = 1e18 wei) at the EVM boundary.
+    // Earlier code divided by 1e8 ("sentri") which under-reports by 10^10×;
+    // confirmed via WSRX.sol comment + standard EVM behaviour.
+    const balance = await provider.getBalance(address)
+    return Number(ethers.formatEther(balance))
   } catch {
     return 0
   }
