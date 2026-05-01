@@ -2,6 +2,8 @@
 import { useState, useMemo } from 'react'
 import { TokenCard } from '@/components/token/TokenCard'
 import { MOCK_TOKENS } from '@/lib/mock-data'
+import { useDeployedTokens } from '@/lib/useDeployedTokens'
+import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import type { Token } from '@/types'
 import { Search } from 'lucide-react'
 
@@ -28,9 +30,12 @@ export default function ExplorePage() {
   const [sort, setSort] = useState<SortKey>('marketCap')
   const [search, setSearch] = useState('')
 
+  const { tokens: deployed } = useDeployedTokens()
+  const merged = useMemo(() => mergeStaticAndDeployed(MOCK_TOKENS, deployed), [deployed])
+
   const tokens = useMemo(() => {
-    let list: Token[] = [...MOCK_TOKENS]
-    if (filter === 'new') list = list.filter((t) => Date.now() / 1000 - t.createdAt < 86400)
+    let list: Token[] = [...merged]
+    if (filter === 'new') list = list.filter((t) => t.createdAt === 0 || Date.now() / 1000 - t.createdAt < 86400)
     if (filter === 'trending') list = list.sort((a, b) => b.volume24h - a.volume24h).slice(0, 10)
     if (filter === 'graduating') list = list.filter((t) => !t.isGraduated && t.progress >= 50)
     if (filter === 'graduated') list = list.filter((t) => t.isGraduated)
@@ -47,7 +52,7 @@ export default function ExplorePage() {
     if (sort === 'new') list = [...list].sort((a, b) => b.createdAt - a.createdAt)
     if (sort === 'progress') list = [...list].sort((a, b) => b.progress - a.progress)
     return list
-  }, [filter, sort, search])
+  }, [merged, filter, sort, search])
 
   return (
     <div className="max-w-7xl mx-auto px-4 pt-[96px] pb-10">

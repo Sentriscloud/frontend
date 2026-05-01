@@ -1,5 +1,9 @@
+'use client'
 import { notFound } from 'next/navigation'
+import { use } from 'react'
 import { MOCK_TOKENS, MOCK_HOLDERS, MOCK_TRADES } from '@/lib/mock-data'
+import { useDeployedTokens } from '@/lib/useDeployedTokens'
+import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import { Badge } from '@/components/ui/Badge'
 import { Progress } from '@/components/ui/Progress'
 import { BondingCurveChart } from '@/components/token/BondingCurveChart'
@@ -13,11 +17,26 @@ interface Props {
   params: Promise<{ address: string }>
 }
 
-export default async function TokenDetailPage({ params }: Props) {
-  const { address } = await params
-  const token = MOCK_TOKENS.find((t) => t.address === address)
+export default function TokenDetailPage({ params }: Props) {
+  // Client component now (was server). Reason: any address deployed via
+  // /create needs to render here, not just the static MOCK_TOKENS rows.
+  // We unwrap params with React's use() hook + merge live-from-chain
+  // tokens with the static seed list.
+  const { address } = use(params)
+  const { tokens: deployed, isLoading } = useDeployedTokens()
+  const merged = mergeStaticAndDeployed(MOCK_TOKENS, deployed)
+  const token = merged.find((t) => t.address.toLowerCase() === address.toLowerCase())
 
-  if (!token) notFound()
+  if (!token) {
+    if (isLoading) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 pt-[96px] pb-10 text-center text-[var(--tx-m)]">
+          Loading on-chain registry…
+        </div>
+      )
+    }
+    notFound()
+  }
 
   const soldPct = ((token.tokensSold / token.totalSupply) * 100).toFixed(1)
   // Live launches put their graduation threshold on the Token row (in SRX

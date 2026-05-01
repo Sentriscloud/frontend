@@ -1,12 +1,15 @@
 'use client'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { TokenCard } from '@/components/token/TokenCard'
 import { DotGrid, GradientBlur } from '@/components/ui/GridBg'
 import { MOCK_TOKENS, PLATFORM_STATS } from '@/lib/mock-data'
+import { useDeployedTokens } from '@/lib/useDeployedTokens'
+import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import { formatNumber } from '@/lib/utils'
 import { Rocket, TrendingUp } from 'lucide-react'
+import type { Token } from '@/types'
 
 type Tab = 'hot' | 'new' | 'graduating' | 'graduated'
 
@@ -28,24 +31,36 @@ const RECENT_ACTIVITY: Array<{
   ts: number
 }> = []
 
-function getTabTokens(tab: Tab) {
+function getTabTokens(tokens: Token[], tab: Tab): Token[] {
   switch (tab) {
     case 'hot':
-      return [...MOCK_TOKENS].filter((t) => !t.isWarned).sort((a, b) => b.marketCap - a.marketCap)
+      return [...tokens].filter((t) => !t.isWarned).sort((a, b) => b.marketCap - a.marketCap)
     case 'new':
-      return [...MOCK_TOKENS].sort((a, b) => b.createdAt - a.createdAt)
+      // Live tokens get a real createdAt; static seeds use 0 ("just launched").
+      // Tokens with createdAt=0 sort to the top, then by descending real ts.
+      return [...tokens].sort((a, b) => {
+        if (a.createdAt === 0 && b.createdAt === 0) return 0
+        if (a.createdAt === 0) return -1
+        if (b.createdAt === 0) return 1
+        return b.createdAt - a.createdAt
+      })
     case 'graduating':
-      return [...MOCK_TOKENS].filter((t) => !t.isGraduated && t.progress >= 50).sort((a, b) => b.progress - a.progress)
+      return [...tokens].filter((t) => !t.isGraduated && t.progress >= 50).sort((a, b) => b.progress - a.progress)
     case 'graduated':
-      return [...MOCK_TOKENS].filter((t) => t.isGraduated)
+      return [...tokens].filter((t) => t.isGraduated)
   }
 }
 
 export default function HomePage() {
   const [tab, setTab] = useState<Tab>('hot')
   const [visible, setVisible] = useState(8)
+  const { tokens: deployed, isLoading } = useDeployedTokens()
 
-  const allTokens = getTabTokens(tab)
+  const merged = useMemo(
+    () => mergeStaticAndDeployed(MOCK_TOKENS, deployed),
+    [deployed],
+  )
+  const allTokens = getTabTokens(merged, tab)
   const shown = allTokens.slice(0, visible)
 
   const handleTabChange = (t: Tab) => {
@@ -87,7 +102,7 @@ export default function HomePage() {
       <div className="border-y border-[var(--brd)] bg-[var(--sf)]/50 py-3 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-8 text-sm flex-wrap">
           {[
-            { label: 'coins launched', value: PLATFORM_STATS.totalTokens },
+            { label: 'coins launched', value: merged.length },
             { label: 'SRX volume', value: `${formatNumber(PLATFORM_STATS.totalVolumeSRX)}` },
             { label: 'SRX burned (launch fees)', value: formatNumber(PLATFORM_STATS.totalSRXBurned) },
             { label: 'traders', value: PLATFORM_STATS.activeTraders },
