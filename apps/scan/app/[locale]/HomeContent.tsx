@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Link } from "@/i18n/navigation";
-import { Blocks, ArrowUpDown, Search, Clock } from "lucide-react";
+import { Blocks, ArrowUpDown, Search, Clock, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { RailBadge, classifyRail, type Rail } from "@/components/common/RailBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCardSkeleton } from "@/components/common/skeletons";
@@ -23,7 +24,7 @@ import { useNetwork } from "@/lib/network-context";
 import { useStats, useBlocks, useTransactions, useChainPerformance, useMempool, useCurrentEpoch, useChainStatus } from "@/lib/hooks";
 import { useLatestBlock, useLatestFinalized } from "@/lib/ws";
 import { formatNumber, formatSRX, toMillis } from "@/lib/format";
-import { detectSearchType } from "@/lib/format";
+import { validateAndResolveSearch } from "@/lib/search-validate";
 import type { ChainPerformance, HomeBundle } from "@/lib/api";
 
 // DECISION: lazy-load StatsChart to keep Home bundle below the 500 kB gzipped target.
@@ -174,16 +175,38 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
       : "—";
   const tpsAccent = isChainIdle ? "var(--orange)" : "var(--gold)";
 
-  function handleSearch(e: React.FormEvent) {
+  // Hero search now goes through validateAndResolveSearch — same path as
+  // the global header form. Without this, pasting a testnet tx hash on
+  // a mainnet-cookie browser routed to /tx/<hash> with no ?network= and
+  // forced the user to click the cross-probe "Switch to Testnet" button
+  // on the detail page. Now the resolver runs the cross-network probe
+  // upfront, the URL carries ?network= when the hit is on the other
+  // chain, and the toast tells the user what just happened.
+  const [searching, setSearching] = useState(false);
+  async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     const q = query.trim();
-    if (!q) return;
-    const type = detectSearchType(q);
-    if (type === "block") router.push(`/blocks/${q}`);
-    else if (type === "tx") router.push(`/tx/${q}`);
-    else if (type === "address") router.push(`/address/${q}`);
-    else router.push(`/search?q=${encodeURIComponent(q)}`);
-    setQuery("");
+    if (!q || searching) return;
+    setSearching(true);
+    try {
+      const result = await validateAndResolveSearch(network, q);
+      if (result.kind === "not_found") {
+        toast.error(result.reason);
+        return;
+      }
+      if (result.onNetwork !== network) {
+        toast.success(
+          `Found on ${result.onNetwork === "mainnet" ? "Mainnet" : "Testnet"} — switching network.`,
+        );
+      }
+      router.push(result.href as Parameters<typeof router.push>[0]);
+      setQuery("");
+    } catch (err) {
+      toast.error("Search failed — try again");
+      console.error("home search failure", err);
+    } finally {
+      setSearching(false);
+    }
   }
 
   return (
@@ -227,13 +250,18 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
 
         <form onSubmit={handleSearch} className="anim-hero-2 opacity-0 w-full lg:ml-auto lg:max-w-xl">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--tx-d)]" />
+            {searching ? (
+              <Loader2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--gold)] animate-spin" />
+            ) : (
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--tx-d)]" />
+            )}
             <input
               type="text"
               placeholder={t("search_placeholder")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full h-12 pl-11 pr-24 text-[13px] tracking-[.02em] bg-[color-mix(in_oklab,var(--foreground)_3%,transparent)] border border-[var(--brd)] rounded-full focus:outline-none focus:border-[var(--gold)] focus:bg-[color-mix(in_oklab,var(--gold)_3%,transparent)] transition-all placeholder:text-[var(--tx-d)]"
+              disabled={searching}
+              className="w-full h-12 pl-11 pr-24 text-[13px] tracking-[.02em] bg-[color-mix(in_oklab,var(--foreground)_3%,transparent)] border border-[var(--brd)] rounded-full focus:outline-none focus:border-[var(--gold)] focus:bg-[color-mix(in_oklab,var(--gold)_3%,transparent)] transition-all placeholder:text-[var(--tx-d)] disabled:opacity-60"
             />
             <kbd className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-mono text-[var(--tx-d)] border border-[var(--brd)] rounded px-1.5 py-0.5">
               ⌘K
