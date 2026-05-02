@@ -16,7 +16,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { StatCard } from "@/components/common/StatCard";
 import { EmptyState } from "@/components/common/EmptyState";
 import { WatchButton } from "@/components/common/WatchButton";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useValidators, useBlocks, useValidatorRewards, useValidatorBlocksOverTime, useValidatorDelegators, useStats } from "@/lib/hooks";
 import { formatNumber } from "@/lib/format";
 import { Calculator } from "lucide-react";
@@ -38,6 +38,8 @@ function statusLabel(s?: string) {
 export default function ValidatorDetailPage({ params }: { params: Promise<{ address: string }> }) {
   const { address } = use(params);
   const { network } = useNetwork();
+  // `?network=mainnet|testnet` deeplink (faucet, wallet notifications).
+  useNetworkFromQuery();
   const { data: validators, loading } = useValidators(network);
   const { data: stats } = useStats(network);
   const { data: recentBlocks } = useBlocks(network, 100);

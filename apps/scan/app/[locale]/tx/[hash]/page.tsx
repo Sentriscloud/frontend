@@ -1,7 +1,6 @@
 "use client";
 
-import { use, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { use } from "react";
 import { Link } from "@/i18n/navigation";
 import { ArrowUpDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,26 +19,17 @@ import { DecodedInputData } from "@/components/common/DecodedInputData";
 import { InternalTxsPlaceholder } from "@/components/common/InternalTxsPlaceholder";
 import { Copyable } from "@/components/common/Copyable";
 import { PageHeader } from "@/components/common/PageHeader";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useTransaction, useStats } from "@/lib/hooks";
 
 export default function TxDetailPage({ params }: { params: Promise<{ hash: string }> }) {
   const { hash } = use(params);
   const { network, setNetwork } = useNetwork();
-  const searchParams = useSearchParams();
 
-  // Honour `?network=mainnet|testnet` if present — deeplinks from Solux + the
-  // chain-landing site pass this so the lookup hits the right chain even if the
-  // viewer's cookie is set to the other network. Without this, a testnet tx
-  // link from Solux on a fresh browser would 404 because cookie defaults to
-  // mainnet (live-discovered 2026-04-28: faucet drip on testnet rendered
-  // "Transaction not found" when clicked from Solux).
-  useEffect(() => {
-    const param = searchParams.get("network");
-    if ((param === "mainnet" || param === "testnet") && param !== network) {
-      setNetwork(param);
-    }
-  }, [searchParams, network, setNetwork]);
+  // Honour `?network=mainnet|testnet` deeplinks (faucet, Solux, wallet
+  // notifications). Was inline; lifted to the shared hook 2026-05-02
+  // so every detail page treats the param the same way.
+  useNetworkFromQuery();
 
   // Try the currently-selected network first; the parallel cross-network
   // probe below catches the case where the user's cookie is on the wrong
@@ -47,12 +37,18 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
   // <other> network" prompt with a one-click switch.
   const { data: tx, loading } = useTransaction(network, hash);
   const otherNetwork = network === "mainnet" ? "testnet" : "mainnet";
-  const { data: txOther } = useTransaction(otherNetwork, hash);
+  const { data: txOther, loading: loadingOther } = useTransaction(otherNetwork, hash);
   // BFT finality is "did a descendant block land?" — we only need the chain
   // tip to compute that; we already have everything else from the tx body.
   const { data: stats } = useStats(network);
 
-  if (loading) {
+  // Wait for BOTH probes before deciding "not found". Otherwise the page
+  // briefly renders "Transaction not found" when the current network
+  // resolves with null first and the other-network probe is still in
+  // flight — a real complaint from the chainlist reviewer (testnet tx
+  // dropped on a mainnet-cookie browser flashed the not-found wall
+  // before the testnet probe finished).
+  if (loading || (!tx && loadingOther)) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-4">
         <Skeleton className="h-8 w-64" />

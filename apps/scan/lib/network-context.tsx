@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import type { NetworkId } from "./chain";
 
@@ -84,4 +84,22 @@ export function NetworkProvider({
 
 export function useNetwork() {
   return useContext(NetworkContext);
+}
+
+// Honour `?network=mainnet|testnet` on detail pages — without this, a
+// testnet deeplink (e.g. tx hash from the faucet, address from Solux)
+// landed on the user's cookie network instead of the link's network.
+// Was tx-page-only as of 2026-04-28; lifted to a shared hook 2026-05-02
+// so every detail page (blocks/address/tokens/validators) sticks to the
+// caller's network. Drop on routes that don't take a network — toggle
+// only fires when the param differs from the current network.
+export function useNetworkFromQuery() {
+  const { network, setNetwork } = useNetwork();
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const param = searchParams.get("network");
+    if ((param === "mainnet" || param === "testnet") && param !== network) {
+      setNetwork(param);
+    }
+  }, [searchParams, network, setNetwork]);
 }

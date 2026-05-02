@@ -14,7 +14,7 @@ import { InfoRow } from "@/components/common/InfoRow";
 import { Copyable } from "@/components/common/Copyable";
 import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useBlock } from "@/lib/hooks";
 import { classifyRail, RailBadge, type Rail } from "@/components/common/RailBadge";
 
@@ -24,6 +24,8 @@ type RailFilter = "all" | Rail;
 export default function BlockDetailPage({ params }: { params: Promise<{ height: string }> }) {
   const { height } = use(params);
   const { network } = useNetwork();
+  // `?network=mainnet|testnet` deeplink (faucet, wallet notifications).
+  useNetworkFromQuery();
   const blockHeight = parseInt(height, 10);
   const { data: block, loading } = useBlock(network, blockHeight);
   const [txPage, setTxPage] = useState(1);

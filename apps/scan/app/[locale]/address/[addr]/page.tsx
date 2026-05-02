@@ -14,7 +14,7 @@ import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useAddress, useAddressHistory, useAccountTokens, useEventLogs } from "@/lib/hooks";
 import { formatSRX, formatNumber } from "@/lib/format";
 import { Link } from "@/i18n/navigation";
@@ -43,6 +43,9 @@ const HISTORY_PAGE_SIZE = 25;
 export default function AddressDetailPage({ params }: { params: Promise<{ addr: string }> }) {
   const { addr } = use(params);
   const { network } = useNetwork();
+  // `?network=mainnet|testnet` deeplink (faucet, wallet notifications).
+  // Address `?page=N` pagination state is independent and stays untouched.
+  useNetworkFromQuery();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();

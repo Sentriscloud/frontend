@@ -10,7 +10,7 @@ import { TxHash } from "@/components/common/TxHash";
 import { Timestamp } from "@/components/common/Timestamp";
 import { InfoRow } from "@/components/common/InfoRow";
 import { Copyable } from "@/components/common/Copyable";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { fetchToken, type TokenData } from "@/lib/api";
 import { useTokenHolders, useTokenTrades } from "@/lib/hooks";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -25,6 +25,8 @@ import { formatNumber } from "@/lib/format";
 export default function TokenDetailPage({ params }: { params: Promise<{ addr: string }> }) {
   const { addr } = use(params);
   const { network } = useNetwork();
+  // `?network=mainnet|testnet` deeplink (faucet, wallet notifications).
+  useNetworkFromQuery();
   const [token, setToken] = useState<TokenData | null>(null);
   const [loading, setLoading] = useState(true);
   const { data: holders, loading: holdersLoading } = useTokenHolders(network, addr, 50);
