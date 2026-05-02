@@ -77,11 +77,13 @@ export default function SupplyPage() {
   const max = stats?.max_supply_srx ?? 315_000_000;
   const minted = stats?.total_minted_srx ?? 0;
   const burnt = stats?.total_burned_srx ?? 0;
-  // Circulating excludes burnt + premine that is still locked. Until vesting
-  // contracts go on-chain we approximate "locked" as the static premine total
-  // (~63M); once the founder vesting contract deploys and we can read the
-  // vested-vs-unvested split on-chain, this should switch to that.
-  const circulatingApprox = Math.max(0, minted - burnt - PREMINE_TOTAL);
+  // Prefer the backend-computed circulating supply when available — the API
+  // started returning `circulating_supply_srx` directly (verified live
+  // 2026-05-02), which reflects the on-chain locked-state instead of the
+  // static PREMINE_TOTAL constant we'd been subtracting manually. Falls
+  // back to the manual calc if the field isn't present on older nodes.
+  const circulatingApprox =
+    stats?.circulating_supply_srx ?? Math.max(0, minted - burnt - PREMINE_TOTAL);
   const remainingToMint = Math.max(0, max - minted);
 
   const segments = [

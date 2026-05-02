@@ -34,6 +34,16 @@ export interface ChainInfo {
   active_validators: number;
   deployed_tokens: number;
   next_block_reward_srx: number;
+  // Backend-computed circulating supply (minted - burnt - locked premine,
+  // reading the on-chain locked-state instead of relying on a static
+  // PREMINE_TOTAL constant). Optional because the field was added later;
+  // the supply page falls back to the manual calc if it's missing.
+  circulating_supply_srx?: number;
+  // Set on Voyager + EVM-active chains (post-h=579047 mainnet).
+  consensus_mode?: "voyager" | "pioneer";
+  voyager_activated?: boolean;
+  evm_activated?: boolean;
+  chain_id?: number;
   // TODO(api): needs /chain/stats to return cumulative tx count. Optional until backend ships.
   total_transactions?: number;
 }
@@ -377,15 +387,30 @@ type RawValidator = ValidatorData & {
 };
 
 export async function fetchValidators(network: NetworkId) {
-  // /staking/validators has the rich shape we need (total_stake,
-  // commission_rate, is_jailed, blocks_signed/missed, pending_rewards).
-  // The plain /validators endpoint returns a stripped-down legacy shape
-  // missing stake fields entirely — using it here surfaces "Total
-  // Staked: 0 SRX, Active: 0" on the page even though the chain has
-  // healthy 4-of-4 validators. Bug fixed 2026-05-02.
-  const res = await apiFetch<{ validators: RawValidator[] } | RawValidator[]>(network, "/staking/validators");
-  if (!res) return [];
-  const list = Array.isArray(res) ? res : (res.validators ?? []);
+  // /staking/validators has the rich shape (total_stake, commission_rate,
+  // is_jailed, blocks_signed/missed, pending_rewards) — but doesn't carry
+  // validator `name`. /validators (the legacy endpoint) has the names but
+  // none of the stake data. Fetch both in parallel and merge on address
+  // so the UI gets full coverage. Fixed 2026-05-02 after switching to
+  // /staking/validators initially dropped the names from the page.
+  const [stakingRes, namedRes] = await Promise.all([
+    apiFetch<{ validators: RawValidator[] } | RawValidator[]>(network, "/staking/validators"),
+    apiFetch<{ validators: RawValidator[] } | RawValidator[]>(network, "/validators"),
+  ]);
+  if (!stakingRes) return [];
+  const stakingList = Array.isArray(stakingRes) ? stakingRes : (stakingRes.validators ?? []);
+  const namedList = namedRes
+    ? (Array.isArray(namedRes) ? namedRes : (namedRes.validators ?? []))
+    : [];
+  const nameByAddr = new Map(
+    namedList
+      .filter((v) => v.address && v.name)
+      .map((v) => [v.address.toLowerCase(), v.name]),
+  );
+  const list = stakingList.map((v) => ({
+    ...v,
+    name: v.name ?? nameByAddr.get((v.address ?? "").toLowerCase()) ?? "",
+  }));
   return list.map((v) => {
     const stake =
       v.stake !== undefined
@@ -875,6 +900,10 @@ export interface EpochInfo {
   total_blocks_produced: number;
   total_rewards: number;
   total_staked: number;
+  // Active validator set for this epoch — added by the API but missing
+  // from the type until 2026-05-02. Surfaced on /epochs so the user
+  // knows which validators are signing during the current window.
+  validator_set?: string[];
 }
 
 export async function fetchCurrentEpoch(network: NetworkId): Promise<EpochInfo | null> {

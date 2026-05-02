@@ -159,7 +159,7 @@
     "transfers": "Transfer",
     "no_tokens": "Belum ada token SRC-20 yang disebar.",
     "empty_title": "Belum ada token yang ter-index",
-    "empty_hint": "Indexer token masih backfill — chain sudah ada token yang ter-deploy (mis. CBLAST di launchpad) tapi belum masuk list ini. Buka /contracts untuk kontrak infrastruktur kanonik (WSRX, Multicall3, SentrixSafe, TokenFactory, dll), atau /coinblast untuk launch bonding-curve yang aktif."
+    "empty_hint": "Indexer token masih backfill — chain sudah ada token yang ter-deploy (mis. CBLAST di launchpad CoinBlast di coinblast.sentriscloud.com) tapi belum masuk list ini. Buka /contracts untuk kontrak infrastruktur kanonik (WSRX, Multicall3, SentrixSafe, TokenFactory, dll)."
   },
   "token_detail": {
     "transfers": "Transfer",
