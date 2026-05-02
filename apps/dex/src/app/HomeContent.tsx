@@ -1,14 +1,49 @@
 "use client";
 
 import { useState } from "react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useChainId } from "wagmi";
+import { ConnectButton, RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
+import { useAccount, useChainId, WagmiProvider } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Copy, Check } from "lucide-react";
-import { ManualAddressInput, SoluxConnectButton, useEffectiveAddress } from "@sentriscloud/wallet-config";
+import {
+  ManualAddressInput,
+  SoluxConnectButton,
+  useEffectiveAddress,
+  getSingletonMainnetConfig,
+} from "@sentriscloud/wallet-config";
 import { SwapWidget } from "./SwapWidget";
 import { DEX } from "@/lib/contracts";
 
+// Local wagmi providers — same pattern airdrop uses (commit f045fd7).
+// SentrixWalletProvider in layout.tsx wraps the static layout chunk,
+// but its WagmiProvider context doesn't propagate across the
+// dynamic({ssr:false}) boundary in ClientShell. Re-anchoring the
+// providers HERE — with the SAME singleton config — gives every wagmi
+// hook + RainbowKit's ConnectButton a context they can find. Using the
+// singleton means no double WC init and no double connector creation.
+const wagmiConfig = getSingletonMainnetConfig();
+const queryClient = new QueryClient();
+const sharedTheme = darkTheme({
+  accentColor: "#f4c75e",
+  accentColorForeground: "#3a2a0e",
+  borderRadius: "medium",
+  fontStack: "system",
+  overlayBlur: "small",
+});
+
 export function HomeContent() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider theme={sharedTheme} modalSize="compact">
+          <HomeContentInner />
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}
+
+function HomeContentInner() {
   const [showManual, setShowManual] = useState(false);
   const [copiedManual, setCopiedManual] = useState(false);
   const { source, manualAddress, setManualAddress } = useEffectiveAddress("dex");
