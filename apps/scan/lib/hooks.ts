@@ -202,11 +202,16 @@ export function useAddress(network: NetworkId, address: string) {
   );
 }
 
-export function useAddressHistory(network: NetworkId, address: string, page = 1) {
+export function useAddressHistory(
+  network: NetworkId,
+  address: string,
+  page = 1,
+  limit = 20,
+) {
   return usePolling<TransactionData[]>(
-    () => fetchAccountHistory(network, address, page),
+    () => fetchAccountHistory(network, address, page, limit),
     0,
-    [network, address, page]
+    [network, address, page, limit]
   );
 }
 

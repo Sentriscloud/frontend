@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Coins, ArrowUpDown } from "lucide-react";
+import { Coins, ArrowUpDown, Search, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Copyable } from "@/components/common/Copyable";
@@ -21,11 +22,23 @@ const PAGE_SIZE = 25;
 export default function TokensPage() {
   const t = useTranslations("tokens");
   const { network } = useNetwork();
+  const searchParams = useSearchParams();
   const { data: tokens, loading } = useTokens(network);
   const [sortKey, setSortKey] = useState<SortKey>("none");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [standardFilter, setStandardFilter] = useState<StandardFilter>("all");
   const [page, setPage] = useState(1);
+  // ?search= populated by the global search bar in header.tsx when the
+  // query was an unknown string (not a tx/address/block). Local state so
+  // the chip can be cleared without forcing a route change.
+  const [search, setSearch] = useState(searchParams.get("search") ?? "");
+  // Sync URL → state when the param changes (e.g. user submits another
+  // query from the header without leaving /tokens).
+  useEffect(() => {
+    const incoming = searchParams.get("search") ?? "";
+    setSearch(incoming);
+    setPage(1);
+  }, [searchParams]);
 
   // Counts before filtering — drive the pill row labels so the user sees
   // at a glance how many tokens of each rail exist on the chain.
@@ -37,16 +50,25 @@ export default function TokensPage() {
 
   const sorted = useMemo(() => {
     if (!tokens) return [];
-    const filtered =
+    const railFiltered =
       standardFilter === "all" ? tokens : tokens.filter((tk) => tk.standard === standardFilter);
-    if (sortKey === "none") return filtered;
+    const needle = search.trim().toLowerCase();
+    const searched = needle
+      ? railFiltered.filter(
+          (tk) =>
+            (tk.symbol?.toLowerCase().includes(needle) ?? false) ||
+            (tk.name?.toLowerCase().includes(needle) ?? false) ||
+            (tk.contract_address?.toLowerCase().includes(needle) ?? false),
+        )
+      : railFiltered;
+    if (sortKey === "none") return searched;
     const dir = sortDir === "asc" ? 1 : -1;
-    return [...filtered].sort((a, b) => {
+    return [...searched].sort((a, b) => {
       const av = (sortKey === "supply" ? a.total_supply : sortKey === "holders" ? a.holders : a.transfers) ?? 0;
       const bv = (sortKey === "supply" ? b.total_supply : sortKey === "holders" ? b.holders : b.transfers) ?? 0;
       return (av - bv) * dir;
     });
-  }, [tokens, sortKey, sortDir, standardFilter]);
+  }, [tokens, sortKey, sortDir, standardFilter, search]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -119,6 +141,45 @@ export default function TokensPage() {
                 </button>
               );
             })}
+          </div>
+
+          {/* Inline search box — wired to the URL ?search= param so the
+              global header search drops the user here pre-filtered when
+              the query was a token name/symbol. The chip-style clear
+              also drops the URL param so the filter doesn't quietly
+              persist across rail-pill clicks. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Filter by name, symbol, or contract address"
+                className="w-full h-8 pl-9 pr-9 text-xs bg-muted/30 border border-border rounded-md focus:outline-none focus:border-primary"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    setPage(1);
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+            {search && (
+              <span className="text-[11px] text-muted-foreground font-mono">
+                {sorted.length} match{sorted.length === 1 ? "" : "es"}
+              </span>
+            )}
           </div>
         </CardHeader>
         <CardContent className="p-0">

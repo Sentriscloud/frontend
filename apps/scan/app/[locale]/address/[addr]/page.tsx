@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useMemo, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Wallet, ArrowDown, ArrowUp, ArrowLeftRight, FileCode, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,10 +35,29 @@ import { classifyRail, RailBadge, type Rail } from "@/components/common/RailBadg
 type DirFilter = "all" | "in" | "out";
 type RailFilter = "all" | Rail;
 
+// 25 tx per page so the user can deep-link a specific page (?page=N) and
+// the URL reflects history navigation. Was 20 before — bumped to match the
+// rest of the explorer's pagination cadence.
+const HISTORY_PAGE_SIZE = 25;
+
 export default function AddressDetailPage({ params }: { params: Promise<{ addr: string }> }) {
   const { addr } = use(params);
   const { network } = useNetwork();
-  const [page, setPage] = useState(1);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  // Read page from URL so the user can deep-link / share a specific page.
+  // Falls back to 1 for missing or malformed param.
+  const urlPage = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
+  const [page, setPageState] = useState(urlPage);
+  const setPage = (p: number) => {
+    setPageState(p);
+    const params = new URLSearchParams(searchParams.toString());
+    if (p === 1) params.delete("page");
+    else params.set("page", String(p));
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
   const [dirFilter, setDirFilter] = useState<DirFilter>("all");
   // railFilter is now driven by the active tab — All Txns ↔ "all", EVM
   // tab ↔ "evm", etc. Kept as a separate state because the table render
@@ -45,7 +65,7 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
   const [railFilter, setRailFilter] = useState<RailFilter>("all");
   const [activeTab, setActiveTab] = useState("history");
   const { data: account, loading: accountLoading } = useAddress(network, addr);
-  const { data: history, loading: historyLoading } = useAddressHistory(network, addr, page);
+  const { data: history, loading: historyLoading } = useAddressHistory(network, addr, page, HISTORY_PAGE_SIZE);
   const { data: tokens, loading: tokensLoading } = useAccountTokens(network, addr);
   const { data: eventLogs, loading: eventLogsLoading } = useEventLogs(network, addr);
   const label = useAddressLabel(addr);
@@ -351,7 +371,17 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
                   <div className="border-t border-border">
                     <Pagination
                       page={page}
-                      hasMore={history ? history.length >= 20 : false}
+                      // tx_count comes back window-scoped (last ~1000 blocks);
+                      // good enough to drive numbered buttons. If unknown,
+                      // fall back to the legacy hasMore heuristic so very
+                      // active addresses still get a Next button until the
+                      // server-side history runs out.
+                      totalPages={
+                        account?.tx_count != null
+                          ? Math.max(1, Math.ceil(account.tx_count / HISTORY_PAGE_SIZE))
+                          : undefined
+                      }
+                      hasMore={history ? history.length >= HISTORY_PAGE_SIZE : false}
                       onPageChange={setPage}
                     />
                   </div>

@@ -4,18 +4,19 @@ import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useRef, useEffect } from "react";
 import {
-  Search, Sun, Moon, Menu, X, Globe, Check, ChevronDown,
+  Search, Sun, Moon, Menu, X, Globe, Check, ChevronDown, Loader2,
   Users, Coins, Shield, FileCode, Fish, GitCompare,
   Home as HomeIcon, Blocks as BlocksIcon, BarChart3,
   Cpu, Boxes, Layers, Inbox, GitFork, PieChart, Fuel,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { toast } from "sonner";
 import { useNetwork } from "@/lib/network-context";
-import { detectSearchType } from "@/lib/format";
 import { SentrixLogo } from "@/components/common/Logo";
 import { NetworkHealth } from "@/components/common/NetworkHealth";
 import { SearchAutocomplete } from "@/components/common/SearchAutocomplete";
 import { pushRecentSearch } from "@/lib/search-index";
+import { validateAndResolveSearch } from "@/lib/search-validate";
 import { routing } from "@/i18n/routing";
 
 const LOCALE_LABELS: Record<string, { flag: string; label: string }> = {
@@ -31,6 +32,7 @@ export function Header() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [lbOpen, setLbOpen] = useState(false);
@@ -132,33 +134,41 @@ export function Header() {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  function handleSearch(e: React.FormEvent) {
+  async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     const q = query.trim();
-    if (!q) return;
-    const type = detectSearchType(q);
-    let href: string;
-    let label: string;
-    if (type === "block") {
-      href = `/blocks/${q}`;
-      label = `Block ${q}`;
-    } else if (type === "tx") {
-      href = `/tx/${q}`;
-      label = `Tx ${q.slice(0, 10)}…`;
-    } else if (type === "address") {
-      href = `/address/${q}`;
-      label = `Address ${q.slice(0, 10)}…`;
-    } else {
-      // Symbol / moniker / unknown — punt to /search which now does the
-      // server-side symbol+moniker lookup and either redirects or shows a
-      // typed "no result" view.
-      href = `/search?q=${encodeURIComponent(q)}`;
-      label = q;
+    if (!q || searching) return;
+    setSearching(true);
+    try {
+      const result = await validateAndResolveSearch(network, q);
+      if (result.kind === "not_found") {
+        toast.error(result.reason);
+        return;
+      }
+      const labels: Record<typeof result.kind, string> = {
+        block: `Block ${q}`,
+        tx: `Tx ${q.slice(0, 10)}…`,
+        address: `Address ${q.slice(0, 10)}…`,
+        tokens: `"${q}"`,
+      };
+      pushRecentSearch({ q, label: labels[result.kind], href: result.href });
+      // The href shape is one of the four typed templates from
+      // validateAndResolveSearch — Next.js router accepts the union safely.
+      router.push(
+        result.href as
+          | "/blocks/${string}"
+          | "/tx/${string}"
+          | "/address/${string}"
+          | "/tokens",
+      );
+      setQuery("");
+      setMobileOpen(false);
+    } catch (err) {
+      toast.error("Search failed — try again");
+      console.error("search failure", err);
+    } finally {
+      setSearching(false);
     }
-    pushRecentSearch({ q, label, href });
-    router.push(href as "/blocks/${string}" | "/tx/${string}" | "/address/${string}" | "/search");
-    setQuery("");
-    setMobileOpen(false);
   }
 
   function switchLocale(next: string) {
@@ -211,9 +221,10 @@ export function Header() {
   const evmActive = pathname.startsWith("/evm") || pathname.startsWith("/contracts");
   const nativeActive = pathname.startsWith("/native") || pathname.startsWith("/validators") || pathname.startsWith("/epochs") || pathname.startsWith("/supply");
   const chainActive = pathname.startsWith("/blocks") || pathname.startsWith("/mempool") || pathname.startsWith("/forks") || pathname.startsWith("/analytics") || pathname.startsWith("/gas");
-  // Home carries its own big editorial search in the hero — hide the header one there so the
-  // page doesn't read as having two competing search bars stacked on top of each other.
-  const isHome = pathname === "/";
+  // Search bar shown globally — including home — per spec 2026-05-02.
+  // Home still has its own hero search; both coexist (header is the
+  // always-visible "any page" entry point, hero is the editorial one).
+
 
   return (
     <header
@@ -318,29 +329,34 @@ export function Header() {
           </div>
         </nav>
 
-        {/* Search — hidden on home (hero owns the search); dropdown shows a typed-hint so the
-            user knows what the raw input maps to (block height / tx hash / address) and can
-            jump without submitting the form. */}
-        {!isHome && (
-          <form onSubmit={handleSearch} className="flex-1 max-w-md hidden lg:flex relative">
-            <div className="relative w-full">
+        {/* Search — global. Visible on every page including home (hero
+            still has its own editorial search; the two coexist). Surfaces
+            from md+ breakpoint instead of lg+ so tablets see it without
+            opening the mobile menu. Dropdown shows a typed-hint so the
+            user knows what the raw input maps to (block / tx / address)
+            and can jump without submitting. */}
+        <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:flex relative">
+          <div className="relative w-full">
+            {searching ? (
+              <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--gold)] animate-spin" />
+            ) : (
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--tx-d)]" />
-              <input
-                ref={searchRef}
-                type="text"
-                placeholder={t("search_placeholder")}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-12 text-[12px] bg-[color-mix(in_oklab,var(--foreground)_3%,transparent)] border border-[var(--brd)] rounded-full tracking-[.05em] placeholder:text-[var(--tx-d)] focus:outline-none focus:border-[var(--gold)] focus:bg-[color-mix(in_oklab,var(--gold)_4%,transparent)] transition-all"
-              />
-              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-[var(--tx-d)] border border-[var(--brd)] rounded px-1.5 py-0.5 hidden xl:inline-block">
-                ⌘K
-              </kbd>
-            </div>
-            <SearchAutocomplete query={query} onPick={() => { setQuery(""); searchRef.current?.blur(); }} />
-          </form>
-        )}
-        {isHome && <div className="flex-1 hidden lg:block" />}
+            )}
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder={t("search_placeholder")}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              disabled={searching}
+              className="w-full h-9 pl-9 pr-12 text-[12px] bg-[color-mix(in_oklab,var(--foreground)_3%,transparent)] border border-[var(--brd)] rounded-full tracking-[.05em] placeholder:text-[var(--tx-d)] focus:outline-none focus:border-[var(--gold)] focus:bg-[color-mix(in_oklab,var(--gold)_4%,transparent)] transition-all disabled:opacity-60"
+            />
+            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-[var(--tx-d)] border border-[var(--brd)] rounded px-1.5 py-0.5 hidden xl:inline-block">
+              ⌘K
+            </kbd>
+          </div>
+          <SearchAutocomplete query={query} onPick={() => { setQuery(""); searchRef.current?.blur(); }} />
+        </form>
 
         {/* Right controls */}
         <div className="flex items-center gap-2 ml-auto md:ml-0">
@@ -438,13 +454,18 @@ export function Header() {
         <div className="md:hidden border-t border-[var(--brd)] bg-[var(--bk)]/97 backdrop-blur-[30px] p-5 space-y-3 animate-fade-in">
           <form onSubmit={handleSearch}>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--tx-d)]" />
+              {searching ? (
+                <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--gold)] animate-spin" />
+              ) : (
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--tx-d)]" />
+              )}
               <input
                 type="text"
                 placeholder={t("search_placeholder")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-4 text-[12px] bg-[color-mix(in_oklab,var(--foreground)_3%,transparent)] border border-[var(--brd)] rounded-full focus:outline-none focus:border-[var(--gold)]"
+                disabled={searching}
+                className="w-full h-9 pl-9 pr-4 text-[12px] bg-[color-mix(in_oklab,var(--foreground)_3%,transparent)] border border-[var(--brd)] rounded-full focus:outline-none focus:border-[var(--gold)] disabled:opacity-60"
               />
             </div>
           </form>
