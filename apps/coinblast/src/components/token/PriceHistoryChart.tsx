@@ -113,19 +113,41 @@ function buildCandles(
 }
 
 export function PriceHistoryChart({ curveAddress }: Props) {
-  const { trades, isLoading, error } = useTradesByCurve(curveAddress, 500)
+  // 5s poll is the same cadence the /live trade feed uses — a chart that
+  // updates as new trades land is what makes a "trading chart" feel live
+  // vs static.
+  const { trades, isLoading, error } = useTradesByCurve(curveAddress, 500, 5000)
   const { data: tipBlock } = useBlockNumber({ watch: true, chainId: 7119 })
   const [tf, setTf] = useState<Timeframe>('1m')
+
+  // Crosshair OHLC — populated by chart.subscribeCrosshairMove. When the
+  // user isn't hovering, fall back to the latest candle so the header
+  // always shows *something*.
+  const [hoverCandle, setHoverCandle] = useState<Candle | null>(null)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const candleRef = useRef<ISeriesApi<'Candlestick'> | null>(null)
   const volumeRef = useRef<ISeriesApi<'Histogram'> | null>(null)
+  const priceLineRef = useRef<ReturnType<NonNullable<typeof candleRef.current>['createPriceLine']> | null>(null)
 
   const candles = useMemo(
     () => buildCandles(trades, tipBlock ?? 0n, TIMEFRAME_SECONDS[tf]),
     [trades, tipBlock, tf],
   )
+
+  // Header summary: latest price + change vs first candle in view.
+  const lastCandle = candles.length > 0 ? candles[candles.length - 1] : null
+  const firstCandle = candles.length > 0 ? candles[0] : null
+  const lastPrice = lastCandle?.close ?? 0
+  const changePct =
+    firstCandle && lastCandle && firstCandle.open > 0
+      ? ((lastCandle.close - firstCandle.open) / firstCandle.open) * 100
+      : 0
+  const totalVolume = candles.reduce((s, c) => s + c.volume, 0)
+  // Show the hovered candle's OHLC when the crosshair is active; otherwise
+  // the latest candle so the row never reads as empty.
+  const displayCandle = hoverCandle ?? lastCandle
 
   // Init the chart once. setData lives in a separate effect so timeframe
   // / data changes don't tear down + recreate the canvas (which would
@@ -198,16 +220,47 @@ export function PriceHistoryChart({ curveAddress }: Props) {
     })
     ro.observe(containerRef.current)
 
+    // Crosshair OHLC handler — pulls the candle the cursor is over and
+    // pushes it into React state so the header row reflects it. Param
+    // shape: { time, seriesData: Map<series, { open,high,low,close }> }.
+    const sub = chart.subscribeCrosshairMove((p) => {
+      if (!p.time || !candleRef.current) {
+        setHoverCandle(null)
+        return
+      }
+      const data = p.seriesData.get(candleRef.current) as
+        | { open: number; high: number; low: number; close: number }
+        | undefined
+      if (!data) {
+        setHoverCandle(null)
+        return
+      }
+      setHoverCandle({
+        time: p.time as UTCTimestamp,
+        open: data.open,
+        high: data.high,
+        low: data.low,
+        close: data.close,
+        volume: 0, // not surfaced from crosshair API; header uses total
+      })
+    })
+
     return () => {
       ro.disconnect()
+      sub
       chart.remove()
       chartRef.current = null
       candleRef.current = null
       volumeRef.current = null
+      priceLineRef.current = null
     }
   }, [])
 
   // Push data on every change (timeframe flip, new trades, fresh tip).
+  // Also re-anchor the last-price horizontal line so the user's eye
+  // always lands on the freshest fill. lightweight-charts has built-in
+  // priceLine API — we rebuild it on each data push since the price
+  // value comes from the latest candle.
   useEffect(() => {
     if (!candleRef.current || !volumeRef.current) return
     candleRef.current.setData(
@@ -227,14 +280,73 @@ export function PriceHistoryChart({ curveAddress }: Props) {
           c.close >= c.open ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)',
       })),
     )
-    if (candles.length > 0) chartRef.current?.timeScale().fitContent()
+
+    // Last-price dashed line — drop the old one (if any) before adding
+    // the new one so they don't stack. The horizontal line is what most
+    // trading UIs use to anchor "current price" without a moving label.
+    if (priceLineRef.current) {
+      candleRef.current.removePriceLine(priceLineRef.current)
+      priceLineRef.current = null
+    }
+    if (candles.length > 0) {
+      const last = candles[candles.length - 1]
+      const isUp = last.close >= last.open
+      priceLineRef.current = candleRef.current.createPriceLine({
+        price: last.close,
+        color: isUp ? '#10B981' : '#EF4444',
+        lineWidth: 1,
+        lineStyle: 2, // dashed
+        axisLabelVisible: true,
+        title: '',
+      })
+      chartRef.current?.timeScale().fitContent()
+    }
   }, [candles])
 
   const showOverlay =
     !curveAddress || !!error || isLoading || trades.length === 0 || candles.length === 0
 
+  // Format helpers for the OHLC + price summary row. Tiny prices like
+  // 1e-5 SRX read better in scientific notation than as 0.00001; large
+  // prices read better with thousands separators. Switch threshold at 1.
+  const fmt = (n: number) =>
+    n === 0 ? '—' : n < 0.01 ? n.toExponential(3) : n.toFixed(6)
+
   return (
     <div>
+      {/* Price summary — last close + 24h-ish change + total volume.
+          Mirrors what every centralised exchange UI shows above their
+          chart. Hovering the candle swaps the OHLC values to the
+          hovered candle's so the row doubles as a crosshair tooltip. */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-3 pb-3 border-b border-[var(--brd)]">
+        <div className="flex items-baseline gap-3">
+          <span className="text-2xl font-bold text-[var(--tx)] tabular-nums leading-none">
+            {fmt(lastPrice)}
+          </span>
+          {candles.length > 1 && (
+            <span
+              className={`text-sm font-semibold tabular-nums ${
+                changePct >= 0 ? 'text-emerald-400' : 'text-red-400'
+              }`}
+            >
+              {changePct >= 0 ? '▲' : '▼'} {Math.abs(changePct).toFixed(2)}%
+            </span>
+          )}
+          <span className="text-[10px] text-[var(--tx-d)] uppercase tracking-wider">
+            SRX
+          </span>
+        </div>
+        {displayCandle && (
+          <div className="flex items-baseline gap-3 text-[11px] font-mono text-[var(--tx-d)]">
+            <span>O <span className="text-[var(--tx-m)]">{fmt(displayCandle.open)}</span></span>
+            <span>H <span className="text-emerald-400">{fmt(displayCandle.high)}</span></span>
+            <span>L <span className="text-red-400">{fmt(displayCandle.low)}</span></span>
+            <span>C <span className="text-[var(--tx-m)]">{fmt(displayCandle.close)}</span></span>
+            <span className="hidden sm:inline">VOL <span className="text-[var(--tx-m)]">{totalVolume.toFixed(2)}</span></span>
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center justify-between mb-3">
         <div className="flex gap-1">
           {TIMEFRAMES.map((t) => (
@@ -252,8 +364,12 @@ export function PriceHistoryChart({ curveAddress }: Props) {
             </button>
           ))}
         </div>
-        <span className="text-[10px] text-[var(--tx-d)] uppercase tracking-wider">
-          SRX pair
+        <span className="inline-flex items-center gap-1.5 text-[10px] text-[var(--tx-d)] uppercase tracking-wider">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          </span>
+          live • 5s poll
         </span>
       </div>
       <div className="relative rounded-md overflow-hidden">

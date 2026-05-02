@@ -131,7 +131,11 @@ export function useTrades(args: UseTradesArgs = {}) {
   return { trades, isLoading, error };
 }
 
-export function useTradesByCurve(curve: string | undefined, limit = 100) {
+export function useTradesByCurve(
+  curve: string | undefined,
+  limit = 100,
+  pollMs = 0,
+) {
   const [trades, setTrades] = useState<IndexerTrade[]>([]);
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -142,22 +146,33 @@ export function useTradesByCurve(curve: string | undefined, limit = 100) {
       return;
     }
     let cancelled = false;
-    fetchJson<{ trades: IndexerTrade[] }>(
-      `/api/cb/trades/by-curve/${curve.toLowerCase()}?limit=${limit}`,
-    )
-      .then((d) => {
-        if (!cancelled) setTrades(d.trades);
-      })
-      .catch((e: Error) => {
-        if (!cancelled) setError(e);
-      })
-      .finally(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const tick = async () => {
+      try {
+        const d = await fetchJson<{ trades: IndexerTrade[] }>(
+          `/api/cb/trades/by-curve/${curve.toLowerCase()}?limit=${limit}`,
+        );
+        if (!cancelled) {
+          setTrades(d.trades);
+          setError(null);
+        }
+      } catch (e) {
+        if (!cancelled) setError(e as Error);
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+        if (!cancelled && pollMs > 0) {
+          timer = setTimeout(tick, pollMs);
+        }
+      }
+    };
+
+    tick();
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
-  }, [curve, limit]);
+  }, [curve, limit, pollMs]);
 
   return { trades, isLoading, error };
 }
