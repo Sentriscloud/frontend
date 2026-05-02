@@ -3,6 +3,7 @@ import { SentrixPrivyProvider } from '@sentriscloud/wallet-config'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { CookieConsent } from '@/components/layout/CookieConsent'
 
 // Absolute base for OpenGraph + Twitter card image URLs. Without this,
 // Slack / Twitter / Telegram unfurls fall back to the relative URL (which
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </main>
           <Footer />
+          <CookieConsent />
         </SentrixPrivyProvider>
       </body>
     </html>
