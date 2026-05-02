@@ -81,7 +81,13 @@ export function formatTimestamp(timestamp: string | number): string {
 export function detectSearchType(query: string): "block" | "tx" | "address" | "unknown" {
   const trimmed = query.trim();
   if (/^\d+$/.test(trimmed)) return "block";
+  // Tx hashes accept BOTH 0x-prefixed (wallet shape) and bare 64-hex
+  // (Sentrix REST shape) — fetchTransaction normalizes both to bare
+  // before hitting the backend. Without bare-hex detection, copying a
+  // hash out of the explorer's own UI and re-pasting into the search
+  // bar fell through to token search.
   if (/^0x[a-fA-F0-9]{64}$/.test(trimmed)) return "tx";
+  if (/^[a-fA-F0-9]{64}$/.test(trimmed)) return "tx";
   if (/^0x[a-fA-F0-9]{40}$/.test(trimmed)) return "address";
   return "unknown";
 }

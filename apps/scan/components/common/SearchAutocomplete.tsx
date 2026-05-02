@@ -40,7 +40,11 @@ type RawHint = {
 
 function detectRaw(q: string): RawHint | null {
   if (/^\d+$/.test(q)) return { kind: "block", label: "Block", href: `/blocks/${q}`, icon: BlocksIcon };
-  if (/^0x[a-fA-F0-9]{64}$/.test(q)) return { kind: "tx", label: "Transaction", href: `/tx/${q}`, icon: FileCode };
+  // Same dual-form detection as detectSearchType — wallets give 0x,
+  // scan's own copy buttons give bare hex. Both must light the typed
+  // hint or users land in the token-search fallback for their own
+  // copied hashes.
+  if (/^(0x)?[a-fA-F0-9]{64}$/.test(q)) return { kind: "tx", label: "Transaction", href: `/tx/${q}`, icon: FileCode };
   if (/^0x[a-fA-F0-9]{40}$/.test(q)) return { kind: "address", label: "Address", href: `/address/${q}`, icon: Users };
   if (/^SRC20_[a-fA-F0-9]{40}$/i.test(q)) return { kind: "src20", label: "Token", href: `/tokens/${q}`, icon: Coins };
   return null;

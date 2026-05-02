@@ -5,6 +5,27 @@ import { getApiUrl, type NetworkId } from "./chain";
 const SENTRI_PER_SRX = 100_000_000;
 const toSrx = (sentri: number): number => sentri / SENTRI_PER_SRX;
 
+// Backend's address index is keyed on the lowercased 0x-prefixed form
+// it stores in chain.db. Bare hex (no 0x) is treated as a *different*
+// address — `/accounts/4fec…/balance` returns 0 even when the same
+// address with the 0x prefix has 8 SRX. Worse, it returns 200 OK so
+// the UI shows "balance: 0 SRX" silently. Normalize at the edge so a
+// bare-hex URL paste (rare but real) lands on the right row.
+function normalizeAddress(a: string): string {
+  const lower = a.toLowerCase();
+  return lower.startsWith("0x") ? lower : `0x${lower}`;
+}
+
+// Reverse of the above for tx hashes — REST `/transactions/<hash>`
+// indexes on the bare-hex form, so a 0x-prefixed wallet hash returns
+// empty. Strip the prefix before the REST call. JSON-RPC accepts both,
+// but the detail page goes through REST, so this is the path that
+// matters for the chainlist reviewer's "TX not found" complaint.
+function normalizeTxHash(h: string): string {
+  const lower = h.toLowerCase();
+  return lower.startsWith("0x") ? lower.slice(2) : lower;
+}
+
 // DECISION: timeout is bounded by an AbortController. Default 8s for client polls (matches the
 // browser's typical idle timeout). SSR callers should pass a tight value (e.g. 1500ms) so a
 // slow upstream cannot stall page render past the user's patience window. Endpoints with
@@ -268,7 +289,7 @@ function normalizeTx(raw: RawTxDetail): TransactionData | null {
 }
 
 export async function fetchTransaction(network: NetworkId, txId: string): Promise<TransactionData | null> {
-  const res = await apiFetch<RawTxDetail>(network, `/transactions/${txId}`);
+  const res = await apiFetch<RawTxDetail>(network, `/transactions/${normalizeTxHash(txId)}`);
   if (!res) return null;
   return normalizeTx(res);
 }
@@ -314,7 +335,8 @@ export async function fetchLatestTransactions(network: NetworkId, count = 10) {
 // DECISION: use /address/{addr}/info which returns balance_srx, nonce, and a windowed tx_count.
 // Falls back to /accounts/{addr}/balance if the info endpoint is missing.
 export async function fetchAccountBalance(network: NetworkId, address: string): Promise<AccountBalance | null> {
-  const info = await apiFetch<RawAccountInfo>(network, `/address/${address}/info`);
+  const addr = normalizeAddress(address);
+  const info = await apiFetch<RawAccountInfo>(network, `/address/${addr}/info`);
   if (info) {
     return {
       address: info.address,
@@ -323,7 +345,7 @@ export async function fetchAccountBalance(network: NetworkId, address: string): 
       tx_count: info.tx_count?.window_tx_count,
     };
   }
-  const bal = await apiFetch<RawAccountBalance>(network, `/accounts/${address}/balance`);
+  const bal = await apiFetch<RawAccountBalance>(network, `/accounts/${addr}/balance`);
   if (!bal) return null;
   return {
     address: bal.address,
@@ -354,7 +376,7 @@ export async function fetchAccountHistory(
   const offset = (page - 1) * limit;
   const res = await apiFetch<{ transactions: RawHistoryItem[] }>(
     network,
-    `/address/${address}/history?limit=${limit}&offset=${offset}`,
+    `/address/${normalizeAddress(address)}/history?limit=${limit}&offset=${offset}`,
   );
   if (!res?.transactions) return [];
   return res.transactions.map((t) => ({
@@ -587,16 +609,18 @@ function decodeAbiString(data: string, offset: number): string {
 }
 
 export async function fetchToken(network: NetworkId, address: string): Promise<TokenData | null> {
+  const addr = normalizeAddress(address);
   // Native first — `/tokens/{addr}` only resolves for native TokenOp.
-  const native = await apiFetch<TokenData>(network, `/tokens/${address}`);
+  const native = await apiFetch<TokenData>(network, `/tokens/${addr}`);
   if (native) return { ...native, standard: "tokenop" };
   // Fall back to ERC-20 read-via-RPC for EVM contracts (TokenFactory-deployed
   // or any other ERC-20). Multicall would be tighter, but per-field calls
   // keep this readable + work without Multicall3 ABI in this file.
-  return await fetchEvmTokenFromChain(network, address);
+  return await fetchEvmTokenFromChain(network, addr);
 }
 
 async function fetchEvmTokenFromChain(network: NetworkId, address: string): Promise<TokenData | null> {
+  const addr = normalizeAddress(address);
   const base = network === "testnet"
     ? (process.env.NEXT_PUBLIC_TESTNET_API || "https://testnet-api.sentrixchain.com")
     : (process.env.NEXT_PUBLIC_MAINNET_API || "https://api.sentrixchain.com");
@@ -610,7 +634,7 @@ async function fetchEvmTokenFromChain(network: NetworkId, address: string): Prom
         body: JSON.stringify({
           jsonrpc: "2.0",
           method: "eth_call",
-          params: [{ to: address, data: sig }, "latest"],
+          params: [{ to: addr, data: sig }, "latest"],
           id: 1,
         }),
         signal: ctrl.signal,
@@ -641,7 +665,7 @@ async function fetchEvmTokenFromChain(network: NetworkId, address: string): Prom
       ? Number(BigInt(supplyRaw)) / Math.pow(10, decimals)
       : 0;
     return {
-      contract_address: address,
+      contract_address: addr,
       name: decode(nameRaw),
       symbol: decode(symRaw),
       decimals,
@@ -688,7 +712,7 @@ export async function fetchTokenHolders(
 ): Promise<TokenHolder[]> {
   const res = await apiFetch<{ holders: RawTokenHolder[] }>(
     network,
-    `/tokens/${contract}/holders?limit=${limit}`,
+    `/tokens/${normalizeAddress(contract)}/holders?limit=${limit}`,
   );
   if (!res?.holders) return [];
   return res.holders.map((h) => ({
@@ -721,7 +745,7 @@ export async function fetchTokenTrades(
   const offset = (page - 1) * limit;
   const res = await apiFetch<{ trades: RawTokenTrade[] }>(
     network,
-    `/tokens/${contract}/trades?limit=${limit}&offset=${offset}`,
+    `/tokens/${normalizeAddress(contract)}/trades?limit=${limit}&offset=${offset}`,
   );
   if (!res?.trades) return [];
   return res.trades.map((t) => ({
@@ -791,7 +815,7 @@ interface RawAccountTokenHolding {
 }
 
 export async function fetchAccountTokens(network: NetworkId, address: string): Promise<AccountTokenHolding[]> {
-  const res = await apiFetch<{ tokens: RawAccountTokenHolding[] }>(network, `/accounts/${address}/tokens`);
+  const res = await apiFetch<{ tokens: RawAccountTokenHolding[] }>(network, `/accounts/${normalizeAddress(address)}/tokens`);
   if (!res?.tokens) return [];
   return res.tokens.map((t) => ({
     contract_address: t.contract_address ?? t.contract ?? "",
@@ -826,7 +850,7 @@ export async function fetchValidatorRewards(
 ): Promise<{ rewards: ValidatorReward[]; hasMore: boolean }> {
   const res = await apiFetch<{ rewards: RawValidatorReward[]; pagination?: { has_more?: boolean } }>(
     network,
-    `/validators/${address}/rewards?page=${page}&limit=${limit}`,
+    `/validators/${normalizeAddress(address)}/rewards?page=${page}&limit=${limit}`,
   );
   // 2026-04-30 audit: backend `amount` is in sentri (1e8) for parity with
   // /staking/validators.pending_rewards. The hook layer would otherwise
@@ -852,7 +876,7 @@ export async function fetchValidatorBlocksOverTime(
 ): Promise<ValidatorBlocksPoint[]> {
   const res = await apiFetch<{ points: ValidatorBlocksPoint[] }>(
     network,
-    `/validators/${address}/blocks-over-time?range=${range}`,
+    `/validators/${normalizeAddress(address)}/blocks-over-time?range=${range}`,
   );
   return res?.points ?? [];
 }
@@ -872,7 +896,7 @@ export async function fetchValidatorDelegators(
     delegators: Array<{ address: string; amount_sentri?: number; amount_srx?: number; shares?: number }>;
     total?: number;
     total_delegated_srx?: number;
-  }>(network, `/validators/${address}/delegators`);
+  }>(network, `/validators/${normalizeAddress(address)}/delegators`);
   if (!res) return { delegators: [], total: 0, total_srx: 0 };
   return {
     delegators: (res.delegators ?? []).map((d) => ({

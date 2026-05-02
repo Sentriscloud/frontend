@@ -77,12 +77,16 @@ export async function validateAndResolveSearch(
     return { kind: "not_found", reason: `Block #${q} not found on either network` };
   }
 
-  // Transaction hash — 0x + 64 hex
-  if (/^0x[a-fA-F0-9]{64}$/.test(q)) {
-    const hash = q as `0x${string}`;
+  // Transaction hash — accept both 0x-prefixed (wallet shape) and bare
+  // 64-hex (Sentrix internal shape). viem getTransaction needs the 0x
+  // form, so we prepend if missing before probing. The href routes
+  // through with whatever the user typed — fetchTransaction strips 0x
+  // again for the REST call internally.
+  if (/^(0x)?[a-fA-F0-9]{64}$/.test(q)) {
+    const probeHash = (q.startsWith("0x") ? q : `0x${q}`) as `0x${string}`;
     const [hereOk, otherOk] = await Promise.all([
-      probeTx(network, hash),
-      probeTx(OTHER[network], hash),
+      probeTx(network, probeHash),
+      probeTx(OTHER[network], probeHash),
     ]);
     if (hereOk) return { kind: "tx", href: `/tx/${q}`, onNetwork: network };
     if (otherOk)
@@ -94,14 +98,14 @@ export async function validateAndResolveSearch(
     return { kind: "not_found", reason: "Transaction not found on either network" };
   }
 
-  // Address — viem's checksum-or-lowercase validator. Every well-formed
-  // address is a valid lookup target whether or not it has on-chain
-  // activity (zero-balance EOAs are normal), so no balance check needed.
-  // Stays on the current network because addresses aren't network-scoped
-  // in a way that makes "found on the other side" meaningful for an
-  // address with zero activity.
-  if (isAddress(q)) {
-    return { kind: "address", href: `/address/${q.toLowerCase()}`, onNetwork: network };
+  // Address — viem's `isAddress` accepts 0x-prefixed only. Sentrix's
+  // backend index also keys on the 0x-prefixed lowercase form; pasting
+  // bare 40-hex would otherwise silently route to a 0-balance ghost
+  // row. Accept both shapes here, normalize before the route.
+  if (isAddress(q) || /^[a-fA-F0-9]{40}$/.test(q)) {
+    const norm = q.toLowerCase();
+    const withPrefix = norm.startsWith("0x") ? norm : `0x${norm}`;
+    return { kind: "address", href: `/address/${withPrefix}`, onNetwork: network };
   }
 
   // Fallback: token name / symbol search.
