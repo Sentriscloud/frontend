@@ -24,22 +24,38 @@ import { formatNumber } from "@/lib/format";
 
 export default function TokenDetailPage({ params }: { params: Promise<{ addr: string }> }) {
   const { addr } = use(params);
-  const { network } = useNetwork();
+  const { network, setNetwork } = useNetwork();
   // `?network=mainnet|testnet` deeplink (faucet, wallet notifications).
   useNetworkFromQuery();
   const [token, setToken] = useState<TokenData | null>(null);
   const [loading, setLoading] = useState(true);
+  // Cross-network probe — token contracts are address-specific and a
+  // bytecode hit on the other network is a strong signal the user is
+  // on the wrong side. Same UX as /tx/[hash]: hold the not-found wall
+  // until the other-network probe also resolves, then offer a switch.
+  const otherNetwork = network === "mainnet" ? "testnet" : "mainnet";
+  const [tokenOther, setTokenOther] = useState<TokenData | null>(null);
+  const [loadingOther, setLoadingOther] = useState(true);
   const { data: holders, loading: holdersLoading } = useTokenHolders(network, addr, 50);
   const { data: trades, loading: tradesLoading } = useTokenTrades(network, addr, 1, 25);
 
   useEffect(() => {
+    setLoading(true);
     fetchToken(network, addr).then((t) => {
       setToken(t);
       setLoading(false);
     });
   }, [network, addr]);
 
-  if (loading) {
+  useEffect(() => {
+    setLoadingOther(true);
+    fetchToken(otherNetwork, addr).then((t) => {
+      setTokenOther(t);
+      setLoadingOther(false);
+    });
+  }, [otherNetwork, addr]);
+
+  if (loading || (!token && loadingOther)) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-4">
         <Skeleton className="h-8 w-48" />
@@ -49,6 +65,31 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
   }
 
   if (!token) {
+    if (tokenOther) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="p-8 text-center space-y-3">
+              <p className="text-muted-foreground">
+                <strong className="text-primary">{tokenOther.symbol}</strong> ({tokenOther.name}) lives on{" "}
+                <strong className="text-primary">
+                  {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"}
+                </strong>
+                , but you&apos;re viewing{" "}
+                {network === "mainnet" ? "Mainnet" : "Testnet"}.
+              </p>
+              <p className="text-xs font-mono text-muted-foreground break-all">{addr}</p>
+              <button
+                onClick={() => setNetwork(otherNetwork)}
+                className="text-primary hover:underline text-sm inline-block"
+              >
+                Switch to {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"} →
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Card>

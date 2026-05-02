@@ -152,14 +152,19 @@ export function Header() {
         tokens: `"${q}"`,
       };
       pushRecentSearch({ q, label: labels[result.kind], href: result.href });
-      // The href shape is one of the four typed templates from
-      // validateAndResolveSearch — Next.js router accepts the union safely.
+      // Cross-network hit — tell the user the lookup landed them on the
+      // other network. Without this they end up on testnet pages with
+      // no idea why, which was the reviewer's confusion.
+      if (result.onNetwork !== network) {
+        toast.success(
+          `Found on ${result.onNetwork === "mainnet" ? "Mainnet" : "Testnet"} — switching network.`,
+        );
+      }
       router.push(
-        result.href as
-          | "/blocks/${string}"
-          | "/tx/${string}"
-          | "/address/${string}"
-          | "/tokens",
+        // Cast: search-validate now returns plain `string` so the router
+        // accepts arbitrary `?network=…` query strings the typed-routes
+        // union doesn't enumerate.
+        result.href as Parameters<typeof router.push>[0],
       );
       setQuery("");
       setMobileOpen(false);
@@ -395,7 +400,12 @@ export function Header() {
               in one glance. */}
           <NetworkHealth />
 
-          {/* Network — segmented control so both options are always visible */}
+          {/* Network — segmented control so both options are always visible.
+              The "Main"/"Test" labels used to be sm:+ only, which made the
+              toggle read as two undecorated dots on phones (chainlist
+              reviewer complaint: "tidak ada cara switch ke testnet").
+              Labels now show on every breakpoint; chain ID stays lg:+ to
+              avoid crowding small screens. */}
           <div className="inline-flex items-center h-8 p-0.5 rounded-full border border-[var(--brd)] bg-[color-mix(in_oklab,var(--foreground)_3%,transparent)]" role="radiogroup" aria-label="Network">
             <button
               type="button"
@@ -409,7 +419,7 @@ export function Header() {
               }`}
             >
               <span className={`w-1.5 h-1.5 rounded-full bg-[var(--green)] ${network === "mainnet" ? "animate-pulse-live" : ""}`} />
-              <span className="hidden sm:inline">Main</span>
+              <span>Main</span>
               <span className="hidden lg:inline text-[9px] font-mono text-[var(--tx-d)]">7119</span>
             </button>
             <button
@@ -424,7 +434,7 @@ export function Header() {
               }`}
             >
               <span className={`w-1.5 h-1.5 rounded-full bg-[var(--orange)] ${network === "testnet" ? "animate-pulse-live" : ""}`} />
-              <span className="hidden sm:inline">Test</span>
+              <span>Test</span>
               <span className="hidden lg:inline text-[9px] font-mono text-[var(--tx-d)]">7120</span>
             </button>
           </div>

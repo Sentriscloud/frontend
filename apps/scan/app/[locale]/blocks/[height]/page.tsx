@@ -23,11 +23,17 @@ type RailFilter = "all" | Rail;
 
 export default function BlockDetailPage({ params }: { params: Promise<{ height: string }> }) {
   const { height } = use(params);
-  const { network } = useNetwork();
+  const { network, setNetwork } = useNetwork();
   // `?network=mainnet|testnet` deeplink (faucet, wallet notifications).
   useNetworkFromQuery();
   const blockHeight = parseInt(height, 10);
   const { data: block, loading } = useBlock(network, blockHeight);
+  // Cross-network probe — same pattern as /tx/[hash]. Mainnet and testnet
+  // height counts are unrelated, so a "block not found" on one side is
+  // often a hit on the other. Without this the user dead-ends instead of
+  // getting a one-click switch.
+  const otherNetwork = network === "mainnet" ? "testnet" : "mainnet";
+  const { data: blockOther, loading: loadingOther } = useBlock(otherNetwork, blockHeight);
   const [txPage, setTxPage] = useState(1);
   const [railFilter, setRailFilter] = useState<RailFilter>("all");
 
@@ -56,7 +62,10 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
     return filteredTxs.slice(start, start + TX_PAGE_SIZE);
   }, [filteredTxs, txPage]);
 
-  if (loading) {
+  // Hold the not-found wall until BOTH probes resolve — otherwise we
+  // briefly flash "Block not found" while the other-network probe is
+  // still in flight (same race the tx page used to hit).
+  if (loading || (!block && loadingOther)) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-4">
         <Skeleton className="h-8 w-48" />
@@ -66,6 +75,30 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
   }
 
   if (!block) {
+    if (blockOther) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="p-8 text-center space-y-3">
+              <p className="text-muted-foreground">
+                Block <span className="font-mono">#{height}</span> exists on{" "}
+                <strong className="text-primary">
+                  {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"}
+                </strong>
+                , but you&apos;re viewing{" "}
+                {network === "mainnet" ? "Mainnet" : "Testnet"}.
+              </p>
+              <button
+                onClick={() => setNetwork(otherNetwork)}
+                className="text-primary hover:underline text-sm inline-block"
+              >
+                Switch to {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"} →
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Card>
