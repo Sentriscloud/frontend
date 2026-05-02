@@ -1,0 +1,6 @@
+# APK preview builds are large binaries that bloat git history. Serve from
+# disk only — the systemd-managed Next.js process exposes /downloads/*.apk
+# as static assets at runtime. Re-build the APK from
+# ~/projects/sentrix-wallet-mobile and copy here on each release.
+*.apk
+*.apk.sha1

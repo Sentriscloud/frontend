@@ -181,6 +181,16 @@ export default function Landing() {
                 {' '}<span className="text-[var(--tx-2)]">Add to Home Screen</span> on iOS and Android, which gives you a real app icon and full-screen experience.
               </p>
 
+              {/* Mock-data preview banner — the APK below is a UI build
+                  that runs against mock data only (no real signing, no
+                  blockchain calls). State this loud so testers know not
+                  to put real funds in. Wire-up to live chain calls
+                  is the next step. */}
+              <div className="mb-4 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/40 text-[12px] text-amber-300 leading-snug">
+                <span className="font-mono uppercase tracking-wider text-[10px] block mb-0.5">UI preview · mock data</span>
+                The Android build below is a visual preview. Buttons render but no real signing or blockchain calls fire yet — DO NOT use real keys. Web wallet at <Link href="/wallet" className="underline hover:text-amber-200">/wallet</Link> is the live one.
+              </div>
+
               <div className="space-y-2 mb-6">
                 <button
                   type="button"
@@ -204,17 +214,17 @@ export default function Landing() {
                     <div className="text-sm font-medium">Google Play</div>
                   </div>
                 </button>
-                <button
-                  type="button"
-                  disabled
-                  className="w-full sm:w-auto sm:min-w-[180px] flex items-center gap-3 px-5 py-3 rounded-lg bg-[var(--sf)] border border-[var(--brd)] text-[var(--tx-d)] cursor-not-allowed opacity-70"
+                <a
+                  href="/downloads/solux-preview.apk"
+                  download
+                  className="w-full sm:w-auto sm:min-w-[180px] flex items-center gap-3 px-5 py-3 rounded-lg bg-[var(--gold-bg)] border border-[var(--gold-bg-s)] text-[var(--gold)] hover:bg-[color-mix(in_oklab,var(--gold)_14%,transparent)] transition-colors"
                 >
                   <Download className="w-5 h-5" />
                   <div className="text-left">
-                    <div className="text-[10px] font-mono uppercase tracking-wider">Coming soon</div>
+                    <div className="text-[10px] font-mono uppercase tracking-wider">Preview · 22.6 MB</div>
                     <div className="text-sm font-medium">Direct APK</div>
                   </div>
-                </button>
+                </a>
               </div>
 
               <Link
