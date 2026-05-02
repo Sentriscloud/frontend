@@ -238,7 +238,10 @@ export default function TokenDetailPage({ params }: Props) {
           {token.curveAddress && (
             <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-[var(--tx)]">Price History</h3>
+                <h3 className="font-semibold text-[var(--tx)] font-mono tracking-wide">
+                  {token.symbol}/SRX
+                </h3>
+                <span className="text-xs text-[var(--tx-d)]">price in SRX per token</span>
               </div>
               <PriceHistoryChart curveAddress={token.curveAddress} />
             </div>

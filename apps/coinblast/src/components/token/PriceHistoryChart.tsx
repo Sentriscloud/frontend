@@ -248,7 +248,9 @@ export function PriceHistoryChart({ curveAddress }: Props) {
             </button>
           ))}
         </div>
-        <span className="text-xs text-[var(--tx-d)]">SRX per token</span>
+        <span className="text-[10px] text-[var(--tx-d)] uppercase tracking-wider">
+          SRX pair
+        </span>
       </div>
       <div className="relative rounded-md overflow-hidden">
         <div ref={containerRef} className="h-[380px] w-full bg-[#030712]" />
