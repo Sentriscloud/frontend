@@ -1,21 +1,37 @@
 'use client'
 import { notFound } from 'next/navigation'
 import { use } from 'react'
-import { MOCK_TOKENS, MOCK_TRADES } from '@/lib/mock-data'
+import { MOCK_TOKENS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
 import { useDeployedCurves } from '@/lib/useDeployedCurves'
 import { useTopHolders } from '@/lib/useTopHolders'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
-import { formatEther } from 'viem'
 import { Badge } from '@/components/ui/Badge'
 import { Progress } from '@/components/ui/Progress'
 import { BondingCurveChart } from '@/components/token/BondingCurveChart'
 import { BuySellWidget } from '@/components/token/BuySellWidget'
+import { PriceHistoryChart } from '@/components/token/PriceHistoryChart'
+import { TradeHistoryTable } from '@/components/token/TradeHistoryTable'
+import { ShareButtons } from '@/components/token/ShareButtons'
 import { TokenAvatar } from '@/components/ui/TokenAvatar'
-import { formatAddress, formatNumber, formatPrice, formatTimestamp, formatSRX } from '@/lib/utils'
+import { formatAddress, formatNumber, formatPrice, formatSRX } from '@/lib/utils'
 import { GRADUATION_THRESHOLD as GRADUATION_THRESHOLD_FALLBACK } from '@/lib/bonding-curve'
 import { ExternalLink, ShieldCheck, AlertTriangle, TrendingUp, Users, BarChart2, Globe, Send, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
+
+// Convert a unix timestamp to a "X ago" relative string. The full
+// timestamp goes into the title for accessibility — hover shows the
+// exact moment without bloating the page text.
+function relativeTime(unix: number): string {
+  if (!unix) return 'just launched'
+  const diffSec = Math.floor(Date.now() / 1000) - unix
+  if (diffSec < 60) return `${diffSec}s ago`
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`
+  if (diffSec < 86400 * 30) return `${Math.floor(diffSec / 86400)}d ago`
+  if (diffSec < 86400 * 365) return `${Math.floor(diffSec / (86400 * 30))}mo ago`
+  return `${Math.floor(diffSec / (86400 * 365))}y ago`
+}
 
 interface Props {
   params: Promise<{ address: string }>
@@ -90,9 +106,20 @@ export default function TokenDetailPage({ params }: Props) {
                 )}
               </div>
               <div className="flex items-center gap-3 text-sm text-[var(--tx-d)] flex-wrap">
-                <span>by {formatAddress(token.creator, 6)}</span>
+                <span>
+                  Created by{' '}
+                  <Link
+                    href={`${process.env.NEXT_PUBLIC_EXPLORER_URL ?? 'https://scan.sentrixchain.com'}/address/${token.creator}`}
+                    target="_blank"
+                    className="font-mono text-[var(--tx-m)] hover:text-[var(--gold)] transition-colors"
+                  >
+                    {formatAddress(token.creator, 6)}
+                  </Link>
+                </span>
                 <span>·</span>
-                <span>Created {formatTimestamp(token.createdAt)}</span>
+                <span title={token.createdAt ? new Date(token.createdAt * 1000).toLocaleString() : ''}>
+                  {relativeTime(token.createdAt)}
+                </span>
                 <Link
                   href={`${process.env.NEXT_PUBLIC_EXPLORER_URL ?? 'https://scan.sentrixchain.com'}/address/${token.address}`}
                   target="_blank"
@@ -100,6 +127,13 @@ export default function TokenDetailPage({ params }: Props) {
                 >
                   Explorer <ExternalLink className="w-3 h-3" />
                 </Link>
+              </div>
+
+              {/* Share row — sits below the meta line so it's
+                  clearly a separate action. Copy-link gets feedback
+                  via inline state, no toast. */}
+              <div className="mt-3">
+                <ShareButtons name={token.name} symbol={token.symbol} />
               </div>
 
               {/* Social links */}
@@ -171,6 +205,19 @@ export default function TokenDetailPage({ params }: Props) {
             </div>
           )}
 
+          {/* Price history (real trades) — sits above the theoretical
+              curve so traders see actual fills first. Only renders for
+              tokens with a curve attached. */}
+          {token.curveAddress && (
+            <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-[var(--tx)]">Price History</h3>
+                <span className="text-xs text-[var(--tx-d)]">SRX per token</span>
+              </div>
+              <PriceHistoryChart curveAddress={token.curveAddress} />
+            </div>
+          )}
+
           {/* Bonding curve chart — only if there's a real curve. For
               bare ERC-20s the chart would be a static lie. */}
           {token.curveAddress ? (
@@ -228,49 +275,14 @@ export default function TokenDetailPage({ params }: Props) {
 
           {/* Stat row pulls Holders count from the same hook below. */}
 
-          {/* Recent trades */}
-          <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
-            <h3 className="font-semibold text-[var(--tx)] mb-4">Recent Trades</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-[var(--tx-d)] text-xs border-b border-[var(--brd)]">
-                    <th className="text-left pb-2">Type</th>
-                    <th className="text-right pb-2">SRX</th>
-                    <th className="text-right pb-2">Tokens</th>
-                    <th className="text-right pb-2">By</th>
-                    <th className="text-right pb-2">Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {MOCK_TRADES.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="text-center text-xs text-[var(--tx-d)] py-6">
-                        No trades yet — be the first to buy on the curve.
-                      </td>
-                    </tr>
-                  )}
-                  {MOCK_TRADES.map((trade) => (
-                    <tr key={trade.txHash} className="border-b border-[var(--brd)]/50 hover:bg-[var(--sf2)]">
-                      <td className="py-2.5">
-                        <span className={`font-semibold ${trade.type === 'buy' ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {trade.type === 'buy' ? '▲ BUY' : '▼ SELL'}
-                        </span>
-                      </td>
-                      <td className="text-right text-[var(--tx)] py-2.5">{formatNumber(trade.srxAmount, 2)}</td>
-                      <td className="text-right text-[var(--tx-m)] py-2.5">{formatNumber(trade.tokenAmount, 0)}</td>
-                      <td className="text-right font-mono text-xs text-[var(--tx-d)] py-2.5">
-                        {formatAddress(trade.address)}
-                      </td>
-                      <td className="text-right text-[var(--tx-d)] text-xs py-2.5">
-                        {formatTimestamp(trade.timestamp)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Recent trades — paginated, indexer-fed. Hidden for bare
+              ERC-20s (no curve = nothing to index). */}
+          {token.curveAddress && (
+            <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
+              <h3 className="font-semibold text-[var(--tx)] mb-4">Recent Trades</h3>
+              <TradeHistoryTable curveAddress={token.curveAddress} />
             </div>
-          </div>
+          )}
         </div>
 
         {/* Right column — Buy/Sell */}

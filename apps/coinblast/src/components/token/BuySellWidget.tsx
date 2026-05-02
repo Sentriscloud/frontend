@@ -8,7 +8,7 @@ import type { Token } from '@/types'
 import { useWalletStore } from '@/store/wallet'
 import { ArrowDown, Info, ExternalLink, Loader } from 'lucide-react'
 import { parseEther, formatEther } from 'viem'
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { useEffectiveAddress, useSoluxSigner } from '@sentriscloud/wallet-config'
 import {
   useCurveState,
@@ -74,7 +74,6 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
     ? (address as `0x${string}` | undefined)
     : (manualAddress as `0x${string}` | undefined) ?? undefined
   const useSoluxPath = !isConnected && addrSource === 'manual' && !!manualAddress
-  const publicClient = usePublicClient({ chainId: 7119 })
 
   const curve = useCurveState(curveAddr)
   const isGraduated = curve.graduated === true
@@ -168,7 +167,6 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
   // After mine, refresh quotes and clear the input.
   useEffect(() => {
     if (isMined) setAmount('')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMined])
 
   function handleAction() {

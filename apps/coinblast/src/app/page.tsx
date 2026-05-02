@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { TokenCard } from '@/components/token/TokenCard'
@@ -10,14 +10,15 @@ import { useDeployedCurves } from '@/lib/useDeployedCurves'
 import { useCurveTradeStats } from '@/lib/useCurveTradeStats'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import { formatNumber } from '@/lib/utils'
-import { Rocket, TrendingUp } from 'lucide-react'
+import { Rocket, TrendingUp, Search, X as XIcon } from 'lucide-react'
 import type { Token } from '@/types'
 
-type Tab = 'hot' | 'new' | 'graduating' | 'graduated'
+type Tab = 'hot' | 'new' | 'graduating' | 'graduated' | 'movers'
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'hot', label: '🔥 Hot' },
   { key: 'new', label: '✨ New' },
+  { key: 'movers', label: '🚀 Movers' },
   { key: 'graduating', label: '📈 Graduating' },
   { key: 'graduated', label: '✅ Graduated' },
 ]
@@ -54,6 +55,11 @@ function getTabTokens(tokens: Token[], tab: Tab): Token[] {
         if (b.createdAt === 0) return 1
         return b.createdAt - a.createdAt
       })
+    case 'movers':
+      // Volume-as-proxy-for-momentum: marketCap reflects SRX raised on
+      // the curve, which only goes up with buys. Sort descending and
+      // hide warned rows (same hide rule as Hot — Movers is curated).
+      return [...tokens].filter((t) => !t.isWarned).sort((a, b) => b.volume24h - a.volume24h || b.marketCap - a.marketCap)
     case 'graduating':
       return [...tokens].filter((t) => !t.isGraduated && t.progress >= 50).sort((a, b) => b.progress - a.progress)
     case 'graduated':
@@ -61,9 +67,42 @@ function getTabTokens(tokens: Token[], tab: Tab): Token[] {
   }
 }
 
+// Search predicate — case-insensitive substring across name, symbol,
+// contract address, and creator. Matches what the spec calls "filter
+// real-time by: nama, symbol, contract address, creator". `q` is
+// already lowercased upstream so this stays cheap inside the render
+// loop.
+function matchesQuery(t: Token, q: string): boolean {
+  if (!q) return true
+  return (
+    t.name.toLowerCase().includes(q) ||
+    t.symbol.toLowerCase().includes(q) ||
+    t.address.toLowerCase().includes(q) ||
+    t.creator.toLowerCase().includes(q)
+  )
+}
+
 export default function HomePage() {
   const [tab, setTab] = useState<Tab>('hot')
   const [visible, setVisible] = useState(8)
+  const [query, setQuery] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // ⌘K / Ctrl+K → focus search. Captures at the document level so the
+  // shortcut works no matter what's in focus. We deliberately do NOT
+  // preventDefault when the input is already focused — typing 'k'
+  // while writing a query shouldn't clobber the keystroke.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const isModK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'
+      if (!isModK) return
+      e.preventDefault()
+      searchRef.current?.focus()
+      searchRef.current?.select()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
   const { tokens: deployed } = useDeployedTokens()
   const { curves, latestBlock } = useDeployedCurves()
 
@@ -95,7 +134,11 @@ export default function HomePage() {
       })),
     [curves],
   )
-  const allTokens = getTabTokens(merged, tab)
+  const lowerQuery = query.trim().toLowerCase()
+  const tabTokens = getTabTokens(merged, tab)
+  const allTokens = lowerQuery
+    ? tabTokens.filter((t) => matchesQuery(t, lowerQuery))
+    : tabTokens
   const shown = allTokens.slice(0, visible)
 
   const handleTabChange = (t: Tab) => {
@@ -169,6 +212,40 @@ export default function HomePage() {
 
           {/* Token grid */}
           <div className="flex-1 min-w-0">
+            {/* Search bar — ⌘K focuses, real-time filter against the
+                current tab's slice. The clear button only renders when
+                there's actual input so the layout doesn't twitch on an
+                empty query. */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--tx-d)] pointer-events-none" />
+              <input
+                ref={searchRef}
+                type="text"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value)
+                  setVisible(8)
+                }}
+                placeholder="Search tokens... ⌘K"
+                aria-label="Search tokens"
+                className="w-full bg-[var(--sf)] border border-[var(--brd)] rounded-full pl-9 pr-9 py-2 text-sm text-[var(--tx)] placeholder:text-[var(--tx-d)] focus:outline-none focus:border-[var(--brd2)] focus:ring-1 focus:ring-[var(--brd2)] transition-colors"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery('')
+                    setVisible(8)
+                    searchRef.current?.focus()
+                  }}
+                  aria-label="Clear search"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--tx-d)] hover:text-[var(--tx)] transition-colors"
+                >
+                  <XIcon className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
             {/* Tabs */}
             <div className="flex items-center gap-1 mb-5 flex-wrap">
               {TABS.map((t) => (

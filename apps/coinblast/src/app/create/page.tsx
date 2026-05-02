@@ -164,7 +164,7 @@ export default function CreatePage() {
         })
       }
     }
-  }, [isMined, receipt, deployed, form.name, form.symbol, address, chainId])
+  }, [isMined, receipt, deployed, form.name, form.symbol, form.imageUrl, address, chainId])
 
   const set = (key: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [key]: e.target.value }))
