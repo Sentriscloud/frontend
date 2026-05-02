@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SentrixWalletProvider } from "@sentriscloud/wallet-config";
+import { SentrixPrivyProvider } from "@sentriscloud/wallet-config";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -29,14 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className="antialiased min-h-screen bg-[var(--bk)] text-[var(--tx)]">
-        <SentrixWalletProvider
-          appName="Sentrix DEX"
-          appDescription="Native AMM for Sentrix Chain."
-          appUrl="https://dex.sentrixchain.com"
-          mainnetOnly
-        >
+        <SentrixPrivyProvider mainnetOnly>
           {children}
-        </SentrixWalletProvider>
+        </SentrixPrivyProvider>
       </body>
     </html>
   );

@@ -7,6 +7,7 @@ import { ShieldCheck, AlertTriangle, TrendingUp } from 'lucide-react'
 import { GRADUATION_THRESHOLD as GRADUATION_THRESHOLD_FALLBACK } from '@/lib/bonding-curve'
 import { useCurveState } from '@/lib/useCoinBlastCurve'
 import { formatEther } from 'viem'
+import { CardSparkline } from './CardSparkline'
 
 interface TokenCardProps {
   token: Token
@@ -44,11 +45,9 @@ export function TokenCard({ token }: TokenCardProps) {
   // line-clamp at 2. `description` may be undefined for bare ERC-20s.
   const description = token.description?.trim() || ''
 
-  // Stats row — market cap (SRX raised proxy) is real today;
-  // holders + per-curve trade count need either a per-card indexer
-  // fetch (waterfall) or an aggregated parent prop. Showing "—"
-  // beats fabricating until the parent passes them down.
-  const holdersDisplay = '—'
+  // Trades count fallback — the parent could pass this from an
+  // aggregated indexer query; until that lands, "—" beats fabricating.
+  // (Holders dropped from the row to make room for the price sparkline.)
   const tradesDisplay = '—'
 
   // Progress bar label tiers per spec: "Graduating soon 🔥" >80%,
@@ -118,17 +117,18 @@ export function TokenCard({ token }: TokenCardProps) {
           </p>
         )}
 
-        {/* Stats row: market cap | holders | trades. MC is the primary
-            number — bold + gold to lead the eye. Holders + trades sit
-            in muted text since they often render "—" today. */}
+        {/* Stats row: market cap | sparkline | trades. The sparkline
+            replaces the previous "Holders —" cell because holders is
+            hard to compute per card without a waterfall fetch, while
+            the sparkline tells a more immediate story (price trend
+            over recent trades) and the indexer already serves it. */}
         <div className="flex items-center justify-between gap-1 pt-0.5">
           <div className="flex flex-col items-start min-w-0">
             <span className="text-[9px] uppercase tracking-wider text-[var(--tx-d)] opacity-70">MC</span>
             <span className="text-[var(--gold)] font-bold text-[13px] leading-none tabular-nums">{formatCompactSrx(srxRaised)}</span>
           </div>
-          <div className="flex flex-col items-center">
-            <span className="text-[9px] uppercase tracking-wider text-[var(--tx-d)] opacity-70">Holders</span>
-            <span className="text-[var(--tx-m)] font-mono text-[12px] leading-none">{holdersDisplay}</span>
+          <div className="flex items-center justify-center min-w-0">
+            <CardSparkline curveAddress={token.curveAddress} width={80} height={28} />
           </div>
           <div className="flex flex-col items-end">
             <span className="text-[9px] uppercase tracking-wider text-[var(--tx-d)] opacity-70">Trades</span>

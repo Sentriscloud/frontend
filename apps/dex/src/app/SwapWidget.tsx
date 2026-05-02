@@ -10,9 +10,9 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { usePrivy } from "@privy-io/react-auth";
 import { formatUnits, maxUint256, parseUnits } from "viem";
-import { ArrowDown, Loader, ExternalLink, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowDown, Loader, ExternalLink, AlertTriangle, ChevronDown, ChevronUp, Wallet } from "lucide-react";
 import { useEffectiveAddress, useSoluxSigner } from "@sentriscloud/wallet-config";
 import { DEX, TOKENS, ROUTER_ABI, ERC20_ABI, FACTORY_ABI, PAIR_ABI, type Token } from "@/lib/contracts";
 
@@ -550,9 +550,7 @@ export function SwapWidget() {
       )}
 
       {!isConnected && addrSource !== "manual" ? (
-        <div className="flex flex-col items-center gap-2">
-          <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
-        </div>
+        <PrivySignInButton />
       ) : !isConnected && addrSource === "manual" ? (
         // Solux signing path — popup-based signer instead of injected wallet.
         isPending ? (
@@ -737,6 +735,26 @@ function TokenSide(props: {
         </div>
       </div>
     </div>
+  );
+}
+
+// Sign-in CTA inside the swap card. Mirrors WalletConnect's Privy hook —
+// the swap card has its own button so a user who skipped past the
+// header sign-in still has a primary CTA where they're already looking
+// (the swap pane). Solux + watch-address peers stay on the header
+// component (WalletConnect) so we don't double the button surface.
+function PrivySignInButton() {
+  const { ready, login } = usePrivy();
+  return (
+    <button
+      type="button"
+      onClick={() => ready && login()}
+      disabled={!ready}
+      className="w-full py-3 rounded-xl bg-[var(--gold)] text-[var(--bk)] font-semibold text-sm hover:bg-[var(--gold-l)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+    >
+      <Wallet className="w-4 h-4" />
+      {ready ? "Sign in to swap" : "Loading…"}
+    </button>
   );
 }
 

@@ -25,10 +25,10 @@ importers:
         version: 1.0.8
       '@privy-io/react-auth':
         specifier: ^3.23.0
-        version: 3.23.0(@solana-program/system@0.10.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana-program/token@0.9.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@solana/sysvars@5.5.1(typescript@5.9.3))(@tanstack/query-core@5.100.5)(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(bufferutil@4.1.0)(immer@11.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.1.0))(utf-8-validate@5.0.10)(zod@4.4.2)
+        version: 3.23.0(@solana-program/system@0.10.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana-program/token@0.9.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@solana/sysvars@5.5.1(typescript@5.9.3))(@tanstack/query-core@5.100.5)(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(bufferutil@4.1.0)(immer@11.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.1.0))(utf-8-validate@5.0.10)(zod@4.4.2)
       '@privy-io/wagmi':
         specifier: ^4.0.6
-        version: 4.0.6(810a7fb0eced5d6e9020094ab787da35)
+        version: 4.0.6(65fcd5b84081ad68c1c5ee0473d49c5e)
       '@rainbow-me/rainbowkit':
         specifier: ^2.2.0
         version: 2.2.10(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)(viem@2.48.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.2))(wagmi@2.19.5(@tanstack/query-core@5.100.5)(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(bufferutil@4.1.0)(immer@11.1.4)(react@19.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.48.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.2))(zod@4.4.2))
@@ -165,10 +165,10 @@ importers:
     dependencies:
       '@privy-io/react-auth':
         specifier: ^3.23.0
-        version: 3.23.0(@solana-program/system@0.10.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana-program/token@0.9.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@solana/sysvars@5.5.1(typescript@5.9.3))(@tanstack/query-core@5.100.5)(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(bufferutil@4.1.0)(immer@11.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.1.0))(utf-8-validate@5.0.10)(zod@4.4.2)
+        version: 3.23.0(@solana-program/system@0.10.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana-program/token@0.9.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@solana/sysvars@5.5.1(typescript@5.9.3))(@tanstack/query-core@5.100.5)(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(bufferutil@4.1.0)(immer@11.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.1.0))(utf-8-validate@5.0.10)(zod@4.4.2)
       '@privy-io/wagmi':
         specifier: ^4.0.6
-        version: 4.0.6(65fcd5b84081ad68c1c5ee0473d49c5e)
+        version: 4.0.6(810a7fb0eced5d6e9020094ab787da35)
       '@rainbow-me/rainbowkit':
         specifier: ^2.2.0
         version: 2.2.10(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)(viem@2.48.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.2))(wagmi@2.19.5(@tanstack/query-core@5.100.5)(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(bufferutil@4.1.0)(immer@11.1.4)(react@19.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.48.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.2))(zod@4.4.2))
@@ -216,7 +216,7 @@ importers:
         version: 2.19.5(@tanstack/query-core@5.100.5)(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(bufferutil@4.1.0)(immer@11.1.4)(react@19.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.48.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.2))(zod@4.4.2)
       zustand:
         specifier: ^5.0.12
-        version: 5.0.12(@types/react@19.2.14)(immer@11.1.4)(react@19.1.0)(use-sync-external-store@1.4.0(react@19.1.0))
+        version: 5.0.12(@types/react@19.2.14)(immer@11.1.4)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0))
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -248,6 +248,12 @@ importers:
 
   apps/dex:
     dependencies:
+      '@privy-io/react-auth':
+        specifier: ^3.23.0
+        version: 3.23.0(@solana-program/system@0.10.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana-program/token@0.9.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)))(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@solana/sysvars@5.5.1(typescript@5.9.3))(@tanstack/query-core@5.100.5)(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(bufferutil@4.1.0)(immer@11.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.1.0))(utf-8-validate@5.0.10)(zod@4.4.2)
+      '@privy-io/wagmi':
+        specifier: ^4.0.6
+        version: 4.0.6(810a7fb0eced5d6e9020094ab787da35)
       '@rainbow-me/rainbowkit':
         specifier: ^2.2.0
         version: 2.2.10(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)(viem@2.48.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.2))(wagmi@2.19.5(@tanstack/query-core@5.100.5)(@tanstack/react-query@5.100.5(react@19.1.0))(@types/react@19.2.14)(bufferutil@4.1.0)(immer@11.1.4)(react@19.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.48.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.4.2))(zod@4.4.2))
@@ -260,6 +266,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      framer-motion:
+        specifier: ^12.38.0
+        version: 12.38.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       lucide-react:
         specifier: ^1.8.0
         version: 1.11.0(react@19.1.0)
@@ -13676,7 +13685,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.59.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.6.1)):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.59.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -13698,7 +13707,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.4(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.59.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.59.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
       hasown: 2.0.3
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -13727,7 +13736,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.4(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.59.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.59.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
       hasown: 2.0.3
       is-core-module: 2.16.1
       is-glob: 4.0.3
