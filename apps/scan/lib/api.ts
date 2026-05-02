@@ -377,7 +377,13 @@ type RawValidator = ValidatorData & {
 };
 
 export async function fetchValidators(network: NetworkId) {
-  const res = await apiFetch<{ validators: RawValidator[] } | RawValidator[]>(network, "/validators");
+  // /staking/validators has the rich shape we need (total_stake,
+  // commission_rate, is_jailed, blocks_signed/missed, pending_rewards).
+  // The plain /validators endpoint returns a stripped-down legacy shape
+  // missing stake fields entirely — using it here surfaces "Total
+  // Staked: 0 SRX, Active: 0" on the page even though the chain has
+  // healthy 4-of-4 validators. Bug fixed 2026-05-02.
+  const res = await apiFetch<{ validators: RawValidator[] } | RawValidator[]>(network, "/staking/validators");
   if (!res) return [];
   const list = Array.isArray(res) ? res : (res.validators ?? []);
   return list.map((v) => {
