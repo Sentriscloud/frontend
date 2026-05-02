@@ -35,17 +35,22 @@ export function Header() {
   }, [lastY])
 
   return (
-    <header
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-transform duration-300',
-        hidden && '-translate-y-full'
-      )}
-    >
-      {/* ── Nav bar ── */}
-      <div
-        className="border-b border-[var(--brd)]"
-        style={{ background: 'rgba(12,12,16,0.92)', backdropFilter: 'blur(20px)' }}
+    <>
+      {/* Top nav — fixed + slides up on scroll-down. Wrapped on its own
+          so the transition transform doesn't drag the mobile bottom
+          tabs along with it (transform creates a containing block,
+          which would re-anchor any nested fixed-position child to
+          this element, sliding it offscreen on scroll-hide). */}
+      <header
+        className={cn(
+          'fixed top-0 left-0 right-0 z-50 transition-transform duration-300',
+          hidden && '-translate-y-full'
+        )}
       >
+        <div
+          className="border-b border-[var(--brd)]"
+          style={{ background: 'rgba(12,12,16,0.92)', backdropFilter: 'blur(20px)' }}
+        >
         <div className="max-w-7xl mx-auto px-6 h-[60px] flex items-center justify-between gap-6">
           {/* Logo — canonical Sentrix mark + CoinBlast wordmark (sub-brand
               pairs with the parent Sentrix mark, no longer the rocket icon). */}
@@ -89,11 +94,15 @@ export function Header() {
           <WalletConnect />
         </div>
       </div>
+      </header>
 
-      {/* Mobile bottom tabs — `pb-[env(safe-area-inset-bottom)]` lifts
-          the strip above iPhone home-bar territory; pages should match
-          with their own `pb-[calc(5rem+env(safe-area-inset-bottom))]`
-          so content never disappears behind the strip. */}
+      {/* Mobile bottom tabs — sibling of <header>, NOT child. Keeping it
+          out of the scroll-hide transform tree means it stays anchored
+          to the viewport bottom while the user scrolls (the previous
+          nesting made it disappear with the top bar on scroll-down).
+          `pb-[env(safe-area-inset-bottom)]` lifts the strip above
+          iPhone home-bar territory; pages already pad their content
+          with `pb-20` so nothing slips beneath it. */}
       <div
         className="md:hidden fixed bottom-0 left-0 right-0 flex border-t border-[var(--brd)] z-50"
         style={{
@@ -124,6 +133,6 @@ export function Header() {
           )
         })}
       </div>
-    </header>
+    </>
   )
 }
