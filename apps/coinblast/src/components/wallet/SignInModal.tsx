@@ -109,14 +109,20 @@ export function SignInModal({
                 onPrivyLogin()
                 onClose()
               }}
-              disabled={!isPrivyReady}
-              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[var(--sf2)] hover:bg-[var(--sf3)] border border-[var(--brd)] hover:border-[var(--gold)]/60 transition-colors text-left disabled:opacity-50"
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[var(--sf2)] hover:bg-[var(--sf3)] border border-[var(--brd)] hover:border-[var(--gold)]/60 transition-colors text-left"
             >
               <span className="w-9 h-9 rounded-lg bg-[var(--bk)] flex items-center justify-center">
                 <Wallet className="w-4 h-4 text-[var(--tx)]" />
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[var(--tx)]">Sign in or create account</p>
+                <p className="text-sm font-semibold text-[var(--tx)]">
+                  Sign in or create account
+                  {!isPrivyReady && (
+                    <span className="ml-2 text-[10px] text-[var(--tx-d)] font-normal">
+                      (warming up…)
+                    </span>
+                  )}
+                </p>
                 <p className="text-[11px] text-[var(--tx-m)] leading-snug">
                   Email · Google · Twitter · MetaMask · Rabby · Brave · WC
                 </p>
