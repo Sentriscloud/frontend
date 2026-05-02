@@ -56,7 +56,11 @@ function buildCandles(
   tipBlock: bigint,
   bucketSec: number,
 ): Candle[] {
-  if (tipBlock === 0n || trades.length < 2) return []
+  // Lowered from `< 2` to `< 1` so a curve with a single buy still
+  // renders as a one-bucket doji candle (open=close=that-price). Empty
+  // chart on a real trade reads as broken; one tick reads as "just
+  // started, here's the entry price".
+  if (tipBlock === 0n || trades.length < 1) return []
   const now = Math.floor(Date.now() / 1000)
 
   // 1s blocks on Sentrix → tradeTime ≈ now - (tipBlock - tradeBlock).
@@ -77,7 +81,7 @@ function buildCandles(
     .filter((p) => p.price > 0)
     .sort((a, b) => a.time - b.time)
 
-  if (points.length < 2) return []
+  if (points.length < 1) return []
 
   const buckets = new Map<
     number,
@@ -227,7 +231,7 @@ export function PriceHistoryChart({ curveAddress }: Props) {
   }, [candles])
 
   const showOverlay =
-    !curveAddress || !!error || isLoading || trades.length < 2 || candles.length === 0
+    !curveAddress || !!error || isLoading || trades.length === 0 || candles.length === 0
 
   return (
     <div>
