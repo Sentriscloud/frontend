@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { Wallet, ArrowDown, ArrowUp, ArrowLeftRight, FileCode, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,15 +39,27 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
   const { network } = useNetwork();
   const [page, setPage] = useState(1);
   const [dirFilter, setDirFilter] = useState<DirFilter>("all");
-  // Rail filter sits next to direction so a user can ask things like
-  // "show me only this address's EVM activity" or "only its staking ops"
-  // — both common asks on a mixed-rail chain.
+  // railFilter is now driven by the active tab — All Txns ↔ "all", EVM
+  // tab ↔ "evm", etc. Kept as a separate state because the table render
+  // already reads from it; the Tabs onValueChange just forwards.
   const [railFilter, setRailFilter] = useState<RailFilter>("all");
+  const [activeTab, setActiveTab] = useState("history");
   const { data: account, loading: accountLoading } = useAddress(network, addr);
   const { data: history, loading: historyLoading } = useAddressHistory(network, addr, page);
   const { data: tokens, loading: tokensLoading } = useAccountTokens(network, addr);
   const { data: eventLogs, loading: eventLogsLoading } = useEventLogs(network, addr);
   const label = useAddressLabel(addr);
+
+  // Per-rail counts on the current page of history — feed the inline
+  // badges next to each tab trigger so a user lands and sees "EVM 12"
+  // without having to click through.
+  const historyRailCounts = useMemo(() => {
+    const counts: Record<Rail, number> = { evm: 0, native: 0, token: 0, stake: 0 };
+    for (const tx of history ?? []) {
+      counts[classifyRail({ to_address: tx.to, data: tx.input_data })] += 1;
+    }
+    return counts;
+  }, [history]);
 
   const filtered = (history ?? []).filter((tx) => {
     if (dirFilter !== "all") {
@@ -132,12 +144,40 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
       </Card>
 
       {/* Tabs — `line` variant for the gold-underline active state that
-          reads as "tool, not card." Counts inline so the user can scan
-          where the data is (Etherscan/Blockscout pattern). */}
-      <Tabs defaultValue="history" className="space-y-4">
+          reads as "tool, not card." All / EVM / Native / SRC-20 / Staking
+          are sibling rail tabs Etherscan-style; clicking one swaps the
+          railFilter that the shared history table reads from. Counts
+          shown inline use the per-rail tally so the user can see at a
+          glance which rail this address is active on. */}
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => {
+          setActiveTab(v);
+          // Keep railFilter in sync with the active tab so the shared
+          // history-table render produces the right slice without each
+          // TabsContent block needing its own filter state.
+          if (v === "history") setRailFilter("all");
+          else if (v === "evm" || v === "native" || v === "token" || v === "stake") setRailFilter(v);
+          // Other tabs (internal, tokens, approvals, events, contract) leave
+          // railFilter alone — they don't render the history table.
+        }}
+        className="space-y-4"
+      >
         <TabsList variant="line">
           <TabsTrigger value="history">
-            Transactions <CountBadge count={history?.length ?? null} />
+            All Txns <CountBadge count={history?.length ?? null} />
+          </TabsTrigger>
+          <TabsTrigger value="evm">
+            EVM <CountBadge count={historyRailCounts.evm} />
+          </TabsTrigger>
+          <TabsTrigger value="native">
+            Native <CountBadge count={historyRailCounts.native} />
+          </TabsTrigger>
+          <TabsTrigger value="token">
+            SRC-20 <CountBadge count={historyRailCounts.token} />
+          </TabsTrigger>
+          <TabsTrigger value="stake">
+            Staking <CountBadge count={historyRailCounts.stake} />
           </TabsTrigger>
           <TabsTrigger value="internal">Internal</TabsTrigger>
           <TabsTrigger value="tokens">
@@ -150,12 +190,15 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
           <TabsTrigger value="contract">Contract</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="history">
+        {/* All / EVM / Native / SRC-20 / Staking each render the same
+            history-table block — railFilter is driven by the active tab,
+            so the filter wired into `filtered` produces the right slice
+            for each. The Direction filter (in/out) stays inline because
+            it composes with whichever rail tab is selected. */}
+        {(["history", "evm", "native", "token", "stake"] as const).map((tabValue) => (
+        <TabsContent key={tabValue} value={tabValue}>
           <Card>
             <CardContent className="p-0">
-              {/* Filter bar + CSV export. Two pill rows: direction and rail.
-                  Both apply simultaneously — e.g. "Outbound + EVM" shows
-                  only EVM contracts this address called. */}
               <div className="flex items-center gap-2 p-3 border-b border-border flex-wrap">
                 <span className="text-xs text-muted-foreground mr-2">Direction:</span>
                 {(["all", "in", "out"] as const).map((f) => (
@@ -169,28 +212,6 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
                     }`}
                   >
                     {f === "all" ? "All" : f === "in" ? "Inbound" : "Outbound"}
-                  </button>
-                ))}
-                <span className="text-xs text-muted-foreground ml-3 mr-2">Rail:</span>
-                {(
-                  [
-                    { key: "all", label: "All" },
-                    { key: "evm", label: "EVM" },
-                    { key: "native", label: "Native" },
-                    { key: "token", label: "SRC-20" },
-                    { key: "stake", label: "Staking" },
-                  ] as const
-                ).map((p) => (
-                  <button
-                    key={p.key}
-                    onClick={() => setRailFilter(p.key)}
-                    className={`text-xs px-3 py-1 rounded-md border transition-colors ${
-                      railFilter === p.key
-                        ? "bg-primary/10 text-primary border-primary/30"
-                        : "border-border text-muted-foreground hover:bg-accent"
-                    }`}
-                  >
-                    {p.label}
                   </button>
                 ))}
                 <div className="ml-auto">
@@ -345,6 +366,7 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
             </CardContent>
           </Card>
         </TabsContent>
+        ))}
 
         <TabsContent value="internal">
           <InternalTxsPlaceholder />
