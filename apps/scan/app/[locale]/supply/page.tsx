@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Coins, Flame, Lock, PieChart, Wallet, ShieldCheck } from "lucide-react";
+import { Coins, Lock, ShieldCheck } from "lucide-react";
 import dynamic from "next/dynamic";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DetailCard } from "@/components/common/DetailCard";

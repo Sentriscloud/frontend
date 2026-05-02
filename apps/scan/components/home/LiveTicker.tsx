@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChainInfo, EpochInfo, ChainStatus } from "@/lib/api";
-import { formatNumber, formatSRX } from "@/lib/format";
+import { formatSRX } from "@/lib/format";
 
 interface LiveTickerProps {
   stats: ChainInfo | null;

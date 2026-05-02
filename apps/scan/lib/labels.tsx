@@ -9,7 +9,7 @@
 // - O(1) lookup via a lower-cased Map.
 // - No coupling to individual pages; components call `useAddressLabel(addr)`.
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { NetworkId } from "./chain";
 import { fetchValidators, fetchAccountsTop, fetchTokens } from "./api";
 

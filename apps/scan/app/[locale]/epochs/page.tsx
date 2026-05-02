@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Link } from "@/i18n/navigation";
-import { CalendarRange, Layers, Coins, Users } from "lucide-react";
+import { CalendarRange, Layers } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DetailCard } from "@/components/common/DetailCard";
 import { InfoRow } from "@/components/common/InfoRow";

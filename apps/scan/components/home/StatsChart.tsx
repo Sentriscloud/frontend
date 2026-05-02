@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,7 +18,10 @@ export function StatsChart({ performance, range, onRangeChange, loading }: {
   onRangeChange: (r: Range) => void;
   loading?: boolean;
 }) {
-  const points = performance?.points ?? [];
+  // Wrap in useMemo so the `?? []` fallback doesn't produce a fresh
+  // array on every render — that would invalidate the downstream useMemo
+  // deps unnecessarily and re-render the chart on every parent update.
+  const points = useMemo(() => performance?.points ?? [], [performance?.points]);
 
   const data = useMemo(() => points.map((p) => ({
     t: formatBucketLabel(p.timestamp),

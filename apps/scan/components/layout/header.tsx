@@ -7,7 +7,7 @@ import {
   Search, Sun, Moon, Menu, X, Globe, Check, ChevronDown,
   Users, Coins, Shield, FileCode, Fish, GitCompare,
   Home as HomeIcon, Blocks as BlocksIcon, BarChart3,
-  Cpu, Boxes, Layers, Inbox, Landmark, GitFork, TrendingUp, PieChart, Fuel,
+  Cpu, Boxes, Layers, Inbox, GitFork, PieChart, Fuel,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useNetwork } from "@/lib/network-context";

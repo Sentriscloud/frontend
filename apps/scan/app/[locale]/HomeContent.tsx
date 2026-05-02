@@ -98,6 +98,11 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
     refetchStats();
     refetchBlocks();
     refetchTxs();
+    // Intentionally tracking only wsHead.number, not the wsHead object —
+    // the WS hook returns a fresh object reference per block but we
+    // only want to refetch when the block height changes. Adding the
+    // whole wsHead object would refetch on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wsHead?.number, refetchStats, refetchBlocks, refetchTxs]);
   const liveHeight = Math.max(stats?.height ?? 0, wsHead?.number ?? 0);
   // Lag between proposer tip and BFT-finalized cursor. 0 = chain is finalising
