@@ -158,8 +158,8 @@
     "holders": "Holders",
     "transfers": "Transfers",
     "no_tokens": "No SRC-20 tokens deployed yet.",
-    "empty_title": "No SRC-20 tokens deployed yet",
-    "empty_hint": "Deployed tokens will appear here with live supply, holder counts, and recent transfers. Ship yours with the Sentrix SDK."
+    "empty_title": "No tokens indexed yet",
+    "empty_hint": "The token indexer is still backfilling — the chain has deployed tokens (e.g. CBLAST on the launchpad) but they're not in this list yet. Visit /contracts for the canonical infrastructure contracts (WSRX, Multicall3, SentrixSafe, TokenFactory, etc.) or browse /coinblast for live bonding-curve launches."
   },
   "token_detail": {
     "transfers": "Transfers",
