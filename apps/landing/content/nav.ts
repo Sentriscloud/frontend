@@ -16,13 +16,13 @@ export const footerLinks = {
     { label: "SentrixScan", href: "https://scan.sentrixchain.com", external: true },
     { label: "Solux", href: "https://solux.sentriscloud.com", external: true },
     { label: "Sentrix Faucet", href: "https://faucet.sentrixchain.com", external: true },
-    { label: "CoinBlast", href: "#", external: false },
+    { label: "CoinBlast", href: "https://coinblast.sentriscloud.com", external: true },
   ],
   ecosystem: [
     { label: "Sentrix Chain", href: "https://sentrixchain.com", external: true },
     { label: "Sentrix Labs", href: "https://github.com/sentrix-labs", external: true },
     { label: "Brand kit", href: "https://github.com/sentrix-labs/brand-kit", external: true },
-    { label: "Validator program", href: "https://sentrixchain.com/validators", external: true },
+    { label: "Validators", href: "https://scan.sentrixchain.com/validators", external: true },
   ],
   company: [
     { label: "About", href: "#about" },
