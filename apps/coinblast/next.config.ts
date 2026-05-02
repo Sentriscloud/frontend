@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
+import { withSentrixDefaults } from "@sentriscloud/wallet-config/next-config";
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
+const nextConfig: NextConfig = withSentrixDefaults({});
 
 export default nextConfig;

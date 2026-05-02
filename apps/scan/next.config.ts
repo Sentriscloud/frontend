@@ -41,6 +41,22 @@ const nextConfig: NextConfig = {
       { source: "/:locale(en|id)/token/:addr", destination: "/:locale/tokens/:addr", permanent: true },
     ];
   },
+  // Suppress webpack "Critical dependency: the request of a dependency
+  // is an expression" warnings from Sentry's transitive OpenTelemetry
+  // chain — `@opentelemetry/instrumentation` and `require-in-the-middle`
+  // both use `require(variable)` patterns that webpack can't statically
+  // analyze. These are reachable only on dynamic OTel registration paths
+  // we never trigger; the warnings are pure static-analysis noise.
+  webpack: (cfg) => {
+    cfg.ignoreWarnings = [
+      ...((cfg.ignoreWarnings as Array<RegExp | { module?: RegExp; message?: RegExp }>) ?? []),
+      {
+        module: /node_modules\/(\.pnpm\/)?(@opentelemetry\/instrumentation|require-in-the-middle|@prisma\/instrumentation)/,
+        message: /Critical dependency/,
+      },
+    ];
+    return cfg;
+  },
 };
 
 const withIntl = withNextIntl(nextConfig);
