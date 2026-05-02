@@ -12,7 +12,6 @@
   "dependencies": {
     "@privy-io/react-auth": "^3.23.0",
     "@privy-io/wagmi": "^4.0.6",
-    "@rainbow-me/rainbowkit": "^2.2.0",
     "@sentriscloud/wallet-config": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
     "clsx": "^2.1.1",

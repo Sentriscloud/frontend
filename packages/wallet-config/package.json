@@ -8,14 +8,12 @@
   "exports": {
     ".": "./src/index.ts",
     "./chain": "./src/chain.ts",
-    "./provider": "./src/provider.tsx",
     "./next-config": "./src/next-config.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@rainbow-me/rainbowkit": "^2.2.0",
     "@tanstack/react-query": "^5.62.0",
     "next": ">=15",
     "react": ">=19",
@@ -29,7 +27,6 @@
   "devDependencies": {
     "@privy-io/react-auth": "^3.23.0",
     "@privy-io/wagmi": "^4.0.6",
-    "@rainbow-me/rainbowkit": "^2.2.0",
     "@tanstack/react-query": "^5.62.0",
     "@types/node": "^20",
     "@types/react": "^19",
