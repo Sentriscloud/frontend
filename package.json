@@ -25,6 +25,9 @@
         "react": "19",
         "react-dom": "19"
       }
+    },
+    "overrides": {
+      "zod": "^4.4.2"
     }
   }
 }

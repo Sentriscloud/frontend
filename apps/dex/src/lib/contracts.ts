@@ -98,6 +98,44 @@ export const ROUTER_ABI = [
   },
 ] as const;
 
+// Pair ABI — only the views needed for price-impact calculation. Pulling the
+// full UniswapV2Pair surface is overkill for the swap UI; if we ever need
+// mint/burn here we can extend. `factory()` lets us double-check the pair
+// belongs to our deployment instead of trusting whatever address was passed.
+export const PAIR_ABI = [
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "getReserves",
+    inputs: [],
+    outputs: [
+      { name: "reserve0", type: "uint112" },
+      { name: "reserve1", type: "uint112" },
+      { name: "blockTimestampLast", type: "uint32" },
+    ],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "token0",
+    inputs: [],
+    outputs: [{ type: "address" }],
+  },
+] as const;
+
+export const FACTORY_ABI = [
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "getPair",
+    inputs: [
+      { name: "tokenA", type: "address" },
+      { name: "tokenB", type: "address" },
+    ],
+    outputs: [{ type: "address" }],
+  },
+] as const;
+
 export const ERC20_ABI = [
   {
     type: "function",
