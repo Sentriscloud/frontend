@@ -16,6 +16,8 @@ import { BlockHeight } from "@/components/common/BlockHeight";
 import { Timestamp } from "@/components/common/Timestamp";
 import { StatCard } from "@/components/common/StatCard";
 import { LiveTicker } from "@/components/home/LiveTicker";
+import { StickyStatsBar } from "@/components/home/StickyStatsBar";
+import { TxChart14d } from "@/components/home/TxChart14d";
 import { FreshnessChip } from "@/components/common/FreshnessChip";
 import { useNetwork } from "@/lib/network-context";
 import { useStats, useBlocks, useTransactions, useChainPerformance, useMempool, useCurrentEpoch, useChainStatus } from "@/lib/hooks";
@@ -187,6 +189,10 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
   return (
     <>
       <LiveTicker stats={stats} blockTime={blockTime} network={network} epoch={epoch} status={chainStatus} />
+      {/* Sticky stats bar — Etherscan-style 4-card row right under the
+          navbar. Sits above LiveTicker's flow content but below the
+          fixed header (top-16 = h-16 of header). */}
+      <StickyStatsBar />
       {isChainIdle && latestBlockAgeSec !== null && (
         <div className="border-b border-[var(--orange)]/30 bg-[color-mix(in_oklab,var(--orange)_8%,transparent)]">
           <div className="max-w-7xl mx-auto px-4 lg:px-6 py-2 flex items-center gap-3 text-[11px]">
@@ -385,6 +391,12 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
           </span>
         </CardContent>
       </Card>
+
+      {/* TX-per-day, last 14 days. Backed by `/stats/daily` (5-min
+          server cache, so the 5-min poll cadence on the hook is the
+          right alignment). Emerald accent per spec — distinct from the
+          gold/orange palette the rest of the home page uses. */}
+      <TxChart14d />
 
       {/* Latest blocks + transactions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

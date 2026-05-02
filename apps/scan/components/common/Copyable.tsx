@@ -37,7 +37,7 @@ export function Copyable({ text, children, className, iconClassName, bare, label
       setState("error");
       toast.error("Clipboard blocked by browser");
     }
-    setTimeout(() => setState("idle"), 1500);
+    setTimeout(() => setState("idle"), 2_000);
   }
 
   const disabled = !text;
@@ -66,13 +66,34 @@ export function Copyable({ text, children, className, iconClassName, bare, label
   );
 
   if (bare || !children) {
+    // Bare mode means the icon stands alone (e.g., a copy-only column).
+    // Hover-fade doesn't make sense without a visible companion, so the
+    // icon stays at full opacity in this mode.
     return iconBtn;
   }
 
+  // Hover-only spec 2026-05-02: icon hides until the user hovers the row
+  // (or the focus lands inside it for keyboard nav). The named group
+  // (`copy`) avoids colliding with parent components that already use
+  // `group` for their own hover effects (StatCard, AddressNote, etc).
+  // Once copied, the icon stays visible for the success-feedback window
+  // even if the cursor leaves — that's `data-state` driving the override.
   return (
-    <span className={cn("inline-flex items-center gap-1 min-w-0", className)}>
+    <span
+      className={cn("group/copy inline-flex items-center gap-1 min-w-0", className)}
+      data-copy-state={state}
+    >
       {children}
-      {iconBtn}
+      <span
+        className={cn(
+          "transition-opacity duration-150",
+          state === "idle"
+            ? "opacity-0 group-hover/copy:opacity-100 group-focus-within/copy:opacity-100"
+            : "opacity-100",
+        )}
+      >
+        {iconBtn}
+      </span>
     </span>
   );
 }

@@ -34,8 +34,8 @@ const LabelContext = createContext<LabelMap>(new Map());
 // 7120, so these labels apply on either network.
 const STATIC_LABELS: ReadonlyArray<[string, LabelEntry]> = [
   // Premine wallets
-  ["0x5b5b06688dcdbe532353ac610aaff41af825279d", { name: "Founder (Vesting 1y+4y)", kind: "treasury" }],
-  ["0xeb70fdefd00fdb768dec06c478f450c351499f14", { name: "Sentrix Ecosystem Fund", kind: "treasury" }],
+  ["0x5b5b06688dcdbe532353ac610aaff41af825279d", { name: "Founder v3", kind: "treasury" }],
+  ["0xeb70fdefd00fdb768dec06c478f450c351499f14", { name: "Ecosystem Fund", kind: "treasury" }],
   ["0x328d56b8174697ef6c9e40e19b7663797e16fa47", { name: "Validator Incentive Pool", kind: "treasury" }],
   ["0x2578cad17e3e56c2970a5b5eab45952439f5ba97", { name: "Strategic Reserve", kind: "treasury" }],
 
@@ -43,6 +43,14 @@ const STATIC_LABELS: ReadonlyArray<[string, LabelEntry]> = [
   ["0xa25236925bc10954e0519731cc7ba97f4bb5714b", { name: "Authority Wallet", kind: "treasury" }],
   ["0x6272dc0c842f05542f9ff7b5443e93c0642a3b26", { name: "SentrixSafe (Mainnet)", kind: "treasury" }],
   ["0xc9d7a61d7c2f428f6a055916488041fd00532110", { name: "SentrixSafe (Testnet)", kind: "treasury" }],
+
+  // Mainnet validators — operator names hard-coded so they always render
+  // even when the dynamic feed misses them (validator addresses don't move
+  // tokens often, so the top-N richlist may rotate them out for whales).
+  ["0x753f2f68829fbe76a0132295624f48b27ce2e2d9", { name: "Sentrix Foundation (Validator)", kind: "validator" }],
+  ["0x0804a00f53fde72d46abd1db7ee3e97cbfd0a107", { name: "Sentrix Treasury (Validator)", kind: "validator" }],
+  ["0x87c9976d4b2e360b9fbb87e4bd5442edce2a7511", { name: "Sentrix Core (Validator)", kind: "validator" }],
+  ["0x4cad4793b25b6bb2c927eddfe911996070c7ce68", { name: "Sentrix Beacon (Validator)", kind: "validator" }],
 
   // Protocol-reserved sentinels (no private key — consensus-level only)
   ["0x0000000000000000000000000000000000000000", { name: "Sentrix Token Op (sentinel)", kind: "treasury" }],

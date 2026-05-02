@@ -12,8 +12,10 @@ interface TimestampProps {
   absolute?: boolean;
 }
 
-// DECISION: Re-render every 30s to keep relative time fresh.
-// Uses @base-ui tooltip (this project's UI lib), prop name is `delay`.
+// Re-render every second so "X secs ago" stays live without forcing a
+// data refetch. React batches re-renders + the tab-throttle in browsers
+// keeps the cost bounded; if a Timestamp is offscreen the layout effect
+// is fine, only the displayed value refreshes.
 //
 // Hydration: relative time depends on Date.now() which drifts between SSR and CSR. On the very
 // first paint we render the absolute timestamp (deterministic), then on mount we flip to the
@@ -24,7 +26,7 @@ export function Timestamp({ timestamp, className, absolute = false }: TimestampP
 
   useEffect(() => {
     setMounted(true);
-    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    const id = setInterval(() => setTick((t) => t + 1), 1_000);
     return () => clearInterval(id);
   }, []);
 

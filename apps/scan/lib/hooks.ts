@@ -11,14 +11,14 @@ import {
   fetchChainPerformance,
   fetchAccountTokens, fetchValidatorRewards, fetchValidatorBlocksOverTime,
   fetchValidatorDelegators, fetchMempool, fetchCurrentEpoch, fetchChainStatus,
-  fetchEventLogs,
+  fetchEventLogs, fetchDailyStats, fetchAccountsTop,
   type ChainInfo, type BlockData, type TransactionData,
   type ValidatorData, type AccountBalance, type TokenData,
   type TopHolder, type TokenHolder, type TokenTransfer,
   type ChainPerformance,
   type AccountTokenHolding, type ValidatorReward, type ValidatorBlocksPoint,
   type ValidatorDelegator, type MempoolSnapshot, type EpochInfo, type ChainStatus,
-  type EventLog,
+  type EventLog, type DailyStat,
 } from "./api";
 
 interface UsePollingReturn<T> {
@@ -244,6 +244,28 @@ export function useTokenHolders(network: NetworkId, contract: string, limit = 50
     () => fetchTokenHolders(network, contract, limit),
     30000,
     [network, contract, limit],
+  );
+}
+
+// Daily TX counts — backed by `/stats/daily` (last 14 UTC days). Backend
+// caches the response for 5 min, so polling at 5 min frontend matches
+// the cache window and avoids the cold-recompute hit.
+export function useDailyStats(network: NetworkId) {
+  return usePolling<DailyStat[]>(
+    () => fetchDailyStats(network),
+    300_000,
+    [network],
+  );
+}
+
+// Top accounts — `/accounts/top` returns up to 100 entries with balance,
+// share %, and tx_count. 30s poll matches the rest of the leaderboard
+// hooks. The /accounts page slices the result into 25-row pages.
+export function useAccountsTop(network: NetworkId, limit = 100) {
+  return usePolling<TopHolder[]>(
+    () => fetchAccountsTop(network, limit),
+    30_000,
+    [network, limit],
   );
 }
 

@@ -196,6 +196,7 @@ export function Header() {
   const NATIVE_ITEMS = [
     { href: "/native" as const,     label: "Native Dashboard", icon: Boxes,    color: "text-[var(--green)]",  hint: "SRX transfers + StakingOps + SRC-20" },
     { href: "/validators" as const, label: "Validators",       icon: Shield,   color: "text-[var(--purple)]", hint: "Active set, stake, jail state" },
+    { href: "/accounts" as const,   label: "Top Accounts",     icon: Users,    color: "text-[var(--cyan)]",   hint: "Richlist by SRX balance" },
     { href: "/epochs" as const,     label: "Epochs",           icon: Layers,   color: "text-[var(--purple)]", hint: "Reward distribution + rotation" },
     { href: "/tokens" as const,     label: "SRC-20 Tokens",    icon: Coins,    color: "text-[var(--gold)]",   hint: "Token list — filter to Native" },
     { href: "/supply" as const,     label: "Supply",           icon: PieChart, color: "text-[var(--gold)]",   hint: "315M cap + halving curve" },

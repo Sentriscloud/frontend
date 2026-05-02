@@ -47,12 +47,21 @@ export function timeAgo(timestamp: string | number): string {
   if (!Number.isFinite(then)) return "—";
   const diff = Math.floor((now - then) / 1000);
 
+  // Spelled-out spec 2026-05-02 — Etherscan-style "X secs ago", "X mins ago",
+  // "X hours ago". Older than a day stays as days indefinitely; the grew-up
+  // explorer reading habit is "this transaction is N days old", not a date.
   if (diff < 5) return "just now";
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`;
-  return new Date(then).toLocaleDateString();
+  if (diff < 60) return `${diff} sec${diff === 1 ? "" : "s"} ago`;
+  if (diff < 3600) {
+    const m = Math.floor(diff / 60);
+    return `${m} min${m === 1 ? "" : "s"} ago`;
+  }
+  if (diff < 86400) {
+    const h = Math.floor(diff / 3600);
+    return `${h} hour${h === 1 ? "" : "s"} ago`;
+  }
+  const d = Math.floor(diff / 86400);
+  return `${d} day${d === 1 ? "" : "s"} ago`;
 }
 
 export function formatTimestamp(timestamp: string | number): string {
