@@ -25,15 +25,28 @@ export default function PortfolioPage() {
   const { isConnected, address, connect } = useWalletStore()
 
   if (!isConnected) {
+    const valueProps = [
+      'Holdings across every CoinBlast token',
+      'Buy / sell history pulled live from chain',
+      'Tokens you created, with curve progress + fees earned',
+    ]
     return (
-      <div className="max-w-7xl mx-auto px-4 pt-[96px] pb-20 text-center">
+      <div className="max-w-md mx-auto px-4 pt-[96px] pb-20 text-center">
         <div className="w-20 h-20 bg-[var(--sf)] border border-[var(--brd)] rounded-full flex items-center justify-center mx-auto mb-6">
           <Wallet className="w-10 h-10 text-[var(--tx-d)]" />
         </div>
         <h2 className="text-2xl font-black text-[var(--tx)] mb-3">Connect your wallet</h2>
-        <p className="text-[var(--tx-m)] mb-8 max-w-md mx-auto">
-          Connect a wallet on Sentrix Chain to view your portfolio, holdings, and transaction history.
+        <p className="text-[var(--tx-m)] mb-6">
+          Connect on Sentrix Chain to see your activity here:
         </p>
+        <ul className="text-left text-sm text-[var(--tx-m)] space-y-2 mb-8 mx-auto max-w-xs">
+          {valueProps.map((line) => (
+            <li key={line} className="flex items-start gap-2">
+              <span className="text-[var(--gold)] mt-0.5">·</span>
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
         <Button variant="gold" size="lg" onClick={connect}>
           <Wallet className="w-5 h-5" />
           Connect Wallet

@@ -12,6 +12,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useBlockNumber } from 'wagmi'
 import { useTrades, type IndexerTrade } from '@/lib/useCoinblastIndexer'
 import { useTokens } from '@/lib/useCoinblastIndexer'
 import { formatAddress } from '@/lib/utils'
@@ -126,6 +127,13 @@ export default function LivePage() {
   const { trades, isLoading, error } = useTrades({ pollMs: POLL_MS, limit: 50 })
   const { tokens } = useTokens()
 
+  // Chain tip for relative-time math. Without this, the row's "X secs
+  // ago" was computed against the highest *trade* block, which made
+  // the freshest trade always read "just now" even hours after it
+  // landed. wagmi auto-refreshes on each new head, so this stays
+  // current with no manual polling.
+  const { data: tipBlock } = useBlockNumber({ watch: true, chainId: 7119 })
+
   // Index tokens by curve address for the row lookup. Recomputes on
   // every tokens change; dataset is tiny (one row per curve) so the
   // memo is honestly defensive more than necessary.
@@ -140,21 +148,15 @@ export default function LivePage() {
     return m
   }, [tokens])
 
-  // Track the highest block seen so we can compute "X secs ago" relative
-  // to the freshest data, and so we can flag rows that arrived in the
-  // last poll for a brief highlight.
-  const [headBlock, setHeadBlock] = useState<bigint>(0n)
+  // Track new-row arrivals so we can briefly highlight them. The head
+  // block itself comes from useBlockNumber above — we don't need a
+  // separate state for it.
   const prevTradeIdsRef = useRef<Set<string>>(new Set())
   const [freshIds, setFreshIds] = useState<Set<string>>(new Set())
+  const headBlock = tipBlock ?? 0n
 
   useEffect(() => {
     if (trades.length === 0) return
-    const maxBlock = trades.reduce(
-      (m, t) => (BigInt(t.block_number) > m ? BigInt(t.block_number) : m),
-      0n,
-    )
-    if (maxBlock > headBlock) setHeadBlock(maxBlock)
-
     const prev = prevTradeIdsRef.current
     const fresh = new Set<string>()
     for (const t of trades) {
@@ -169,7 +171,7 @@ export default function LivePage() {
       return () => clearTimeout(clear)
     }
     prevTradeIdsRef.current = new Set(trades.map((t) => t.id))
-  }, [trades, headBlock])
+  }, [trades])
 
   return (
     <div className="max-w-4xl mx-auto px-4 pt-[96px] pb-20">

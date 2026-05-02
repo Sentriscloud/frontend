@@ -36,15 +36,17 @@ export function Header() {
 
   return (
     <>
-      {/* Top nav — fixed + slides up on scroll-down. Wrapped on its own
-          so the transition transform doesn't drag the mobile bottom
-          tabs along with it (transform creates a containing block,
-          which would re-anchor any nested fixed-position child to
-          this element, sliding it offscreen on scroll-hide). */}
+      {/* Top nav — fixed + slides up on scroll-down on mobile only.
+          On desktop the bar's a 60px sliver and aggressive scroll-hide
+          felt like friction; lock it in place at md+. The wrapping
+          element also keeps the transform out of the mobile bottom
+          tabs' containing-block (a fixed-position descendant inside a
+          transformed parent gets re-anchored to that parent and
+          slides off with it). */}
       <header
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-transform duration-300',
-          hidden && '-translate-y-full'
+          hidden && 'max-md:-translate-y-full'
         )}
       >
         <div

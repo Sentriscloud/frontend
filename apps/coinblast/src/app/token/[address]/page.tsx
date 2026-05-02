@@ -1,10 +1,12 @@
 'use client'
 import { notFound } from 'next/navigation'
 import { use } from 'react'
+import { formatEther } from 'viem'
 import { MOCK_TOKENS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
 import { useDeployedCurves } from '@/lib/useDeployedCurves'
 import { useTopHolders } from '@/lib/useTopHolders'
+import { useCurveState } from '@/lib/useCoinBlastCurve'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import { Badge } from '@/components/ui/Badge'
 import { Progress } from '@/components/ui/Progress'
@@ -52,6 +54,19 @@ export default function TokenDetailPage({ params }: Props) {
   // resolves out of the merge.
   const token = merged.find((t) => t.address.toLowerCase() === address.toLowerCase())
 
+  // Live curve state — must be called unconditionally before any early
+  // return, per React's rules-of-hooks. Hook gates internally on the
+  // curve address being defined, so a missing token (or a bare ERC-20)
+  // produces a no-op read. Overrides MOCK_TOKENS' static tokensSold /
+  // marketCap / progress fields once the on-chain reads resolve.
+  const live = useCurveState(token?.curveAddress)
+  const liveTokensSold =
+    live.tokensSold !== undefined ? Number(formatEther(live.tokensSold)) : null
+  const liveSrxRaised =
+    live.srxRaised !== undefined ? Number(formatEther(live.srxRaised)) : null
+  const liveCurveSupply =
+    live.curveSupply !== undefined ? Number(formatEther(live.curveSupply)) : null
+
   if (!token) {
     if (isLoading) {
       return (
@@ -63,11 +78,20 @@ export default function TokenDetailPage({ params }: Props) {
     notFound()
   }
 
-  const soldPct = ((token.tokensSold / token.totalSupply) * 100).toFixed(1)
   // Live launches put their graduation threshold on the Token row (in SRX
   // raised). Pre-deploy preview rows fall back to the legacy 69k mcap.
   const gradThreshold = token.graduationThresholdSrx ?? GRADUATION_THRESHOLD_FALLBACK
   const gradLabel = token.graduationThresholdSrx ? 'SRX raised' : 'SRX mcap'
+
+  // Resolve display fields: prefer live on-chain reads when the curve is
+  // attached and reachable; fall back to the static Token row otherwise
+  // (bare ERC-20s without a curve, mid-load before the read resolves).
+  const tokensSold = liveTokensSold ?? token.tokensSold
+  const srxRaised = liveSrxRaised ?? token.marketCap
+  const totalSupply = liveCurveSupply ?? token.totalSupply
+  const soldPct = totalSupply > 0 ? ((tokensSold / totalSupply) * 100).toFixed(1) : '0.0'
+  const progressPct = Math.min(100, (srxRaised / gradThreshold) * 100)
+  const isGraduated = live.graduated ?? token.isGraduated
 
   return (
     <div className="max-w-7xl mx-auto px-4 pt-[96px] pb-10">
@@ -101,7 +125,7 @@ export default function TokenDetailPage({ params }: Props) {
                 {token.isWarned && (
                   <Badge variant="warn"><AlertTriangle className="w-3 h-3" /> Warning</Badge>
                 )}
-                {token.isGraduated && (
+                {isGraduated && (
                   <Badge variant="green"><TrendingUp className="w-3 h-3" /> Graduated</Badge>
                 )}
               </div>
@@ -168,11 +192,14 @@ export default function TokenDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Stats grid */}
+          {/* Stats grid — values come from live curve reads when the
+              curve is on-chain. Bare ERC-20s without a curve fall back
+              to the Token row (which carries the MOCK_TOKENS seed
+              shape) so the layout stays consistent across both kinds. */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               { label: 'Price', value: formatPrice(token.price), icon: <BarChart2 className="w-4 h-4 text-[var(--gold)]" /> },
-              { label: 'Market Cap', value: formatSRX(token.marketCap), icon: <TrendingUp className="w-4 h-4 text-[var(--gold-l)]" /> },
+              { label: 'Market Cap', value: formatSRX(srxRaised), icon: <TrendingUp className="w-4 h-4 text-[var(--gold-l)]" /> },
               { label: '24h Volume', value: formatSRX(token.volume24h), icon: <BarChart2 className="w-4 h-4 text-emerald-400" /> },
               { label: 'Holders', value: '—', icon: <Users className="w-4 h-4 text-[var(--tx-m)]" /> },
             ].map((s) => (
@@ -188,19 +215,19 @@ export default function TokenDetailPage({ params }: Props) {
 
           {/* Graduation progress (curve-only — bare ERC-20s have no
               graduation flow, so the section is hidden for them). */}
-          {!token.isGraduated && !!token.curveAddress && (
+          {!isGraduated && !!token.curveAddress && (
             <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-[var(--tx)] text-sm">Graduation Progress</h3>
-                <span className="text-[var(--gold)] font-bold">{token.progress.toFixed(1)}%</span>
+                <span className="text-[var(--gold)] font-bold">{progressPct.toFixed(1)}%</span>
               </div>
-              <Progress value={token.progress} color="gold" showLabel />
+              <Progress value={progressPct} color="gold" showLabel />
               <div className="flex items-center justify-between mt-3 text-xs text-[var(--tx-d)]">
-                <span>Current: {formatSRX(token.marketCap)} mcap</span>
+                <span>Current: {formatSRX(srxRaised)} raised</span>
                 <span>Goal: {formatNumber(gradThreshold)} {gradLabel}</span>
               </div>
               <p className="text-xs text-[var(--tx-d)] mt-2">
-                {formatSRX(Math.max(0, gradThreshold - token.marketCap))} remaining to auto-list on Sentrix DEX
+                {formatSRX(Math.max(0, gradThreshold - srxRaised))} remaining to auto-list on Sentrix DEX
               </p>
             </div>
           )}
@@ -255,8 +282,8 @@ export default function TokenDetailPage({ params }: Props) {
             <div className="space-y-3 text-sm">
               {[
                 { label: 'Contract Address', value: token.address, mono: true },
-                { label: 'Total Supply', value: formatNumber(token.totalSupply, 0), mono: false },
-                { label: 'Tokens Sold', value: `${formatNumber(token.tokensSold, 0)} (${soldPct}%)`, mono: false },
+                { label: 'Total Supply', value: formatNumber(totalSupply, 0), mono: false },
+                { label: 'Tokens Sold', value: `${formatNumber(tokensSold, 0)} (${soldPct}%)`, mono: false },
                 { label: 'Creator', value: formatAddress(token.creator, 8), mono: true },
                 { label: 'Chain', value: 'Sentrix Chain (ID: 7119)', mono: false },
               ].map((row) => (

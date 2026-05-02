@@ -59,7 +59,12 @@ export function TokenCard({ token }: TokenCardProps) {
   return (
     <Link
       href={`/token/${token.address}`}
-      className="block group bg-[var(--sf)] border border-[var(--brd)] rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.03] hover:border-[var(--brd2)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"
+      // `flex flex-col` + `min-h` keeps every card the same total
+      // height regardless of whether `description` is set, so a
+      // grid row with one CBLAST-style described card next to a
+      // bare ERC-20 doesn't break alignment. The image keeps its
+      // aspect-square at the top; the info block grows to fill.
+      className="flex flex-col min-h-[420px] group bg-[var(--sf)] border border-[var(--brd)] rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.03] hover:border-[var(--brd2)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"
     >
       {/* Square image */}
       <div className="relative aspect-square w-full overflow-hidden bg-[var(--sf2)]">
@@ -90,8 +95,9 @@ export function TokenCard({ token }: TokenCardProps) {
         </div>
       </div>
 
-      {/* Info */}
-      <div className="p-3 space-y-2">
+      {/* Info — flex-1 so the bottom progress bar / DEX badge anchors
+          to the card's lower edge regardless of description length. */}
+      <div className="p-3 space-y-2 flex-1 flex flex-col">
         {/* Name + symbol + creator. MC moved to the stats row below to
             avoid showing the same number twice on the card. */}
         <div className="min-w-0">
@@ -133,9 +139,10 @@ export function TokenCard({ token }: TokenCardProps) {
         {/* Progress bar — emerald per spec. "Graduating soon 🔥" tier
             kicks in at 80% to give a visible heat signal before the
             bar fully fills. Bare ERC-20s skip this whole section
-            (their progress isn't meaningful). */}
+            (their progress isn't meaningful). `mt-auto` pins this row
+            to the bottom of the info block. */}
         {!token.isGraduated && hasCurve ? (
-          <div className="space-y-1 pt-1">
+          <div className="space-y-1 pt-1 mt-auto">
             <div className="h-1.5 bg-[var(--sf2)] rounded-full overflow-hidden">
               <div
                 className="h-full bg-emerald-500 rounded-full transition-all duration-500 group-hover:shadow-[0_0_10px_rgba(16,185,129,0.55)]"
@@ -145,13 +152,13 @@ export function TokenCard({ token }: TokenCardProps) {
             <p className="text-[10px] text-[var(--tx-d)]">{progressLabel}</p>
           </div>
         ) : token.isGraduated ? (
-          <div className="flex items-center gap-1.5 pt-1">
+          <div className="flex items-center gap-1.5 pt-1 mt-auto">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-[10px] text-emerald-400 font-semibold">
               ✅ Graduated
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 pt-1">
+          <div className="flex items-center gap-1.5 pt-1 mt-auto">
             <div className="w-1.5 h-1.5 bg-[var(--tx-d)] rounded-full" />
             <span className="text-[10px] text-[var(--tx-d)]">Plain ERC-20 (no curve)</span>
           </div>

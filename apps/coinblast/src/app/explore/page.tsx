@@ -1,21 +1,25 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { TokenCard } from '@/components/token/TokenCard'
 import { MOCK_TOKENS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
 import { useDeployedCurves } from '@/lib/useDeployedCurves'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import type { Token } from '@/types'
-import { Search } from 'lucide-react'
+import { Search, X as XIcon } from 'lucide-react'
 
-type Filter = 'all' | 'new' | 'trending' | 'graduating' | 'graduated'
+// Tab labels mirror src/app/page.tsx exactly so users don't see two
+// different filter vocabularies for the same set of coins. The only
+// thing Explore adds on top of the homepage is the explicit sort
+// dropdown (homepage tabs imply sort; Explore lets you crosscut).
+type Tab = 'hot' | 'new' | 'movers' | 'graduating' | 'graduated'
 type SortKey = 'marketCap' | 'volume' | 'new' | 'progress'
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'new', label: '🆕 New' },
-  { key: 'trending', label: '🔥 Trending' },
-  { key: 'graduating', label: '🎓 Graduating' },
+const TABS: { key: Tab; label: string }[] = [
+  { key: 'hot', label: '🔥 Hot' },
+  { key: 'new', label: '✨ New' },
+  { key: 'movers', label: '🚀 Movers' },
+  { key: 'graduating', label: '📈 Graduating' },
   { key: 'graduated', label: '✅ Graduated' },
 ]
 
@@ -26,65 +30,113 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: 'progress', label: 'Near Graduation' },
 ]
 
+function tabFilter(t: Token, tab: Tab): boolean {
+  switch (tab) {
+    case 'hot':
+    case 'new':
+    case 'movers':
+      return !t.isWarned
+    case 'graduating':
+      return !t.isGraduated && t.progress >= 50
+    case 'graduated':
+      return t.isGraduated
+  }
+}
+
+function matchesQuery(t: Token, q: string): boolean {
+  if (!q) return true
+  return (
+    t.name.toLowerCase().includes(q) ||
+    t.symbol.toLowerCase().includes(q) ||
+    t.address.toLowerCase().includes(q) ||
+    t.creator.toLowerCase().includes(q) ||
+    t.description.toLowerCase().includes(q)
+  )
+}
+
 export default function ExplorePage() {
-  const [filter, setFilter] = useState<Filter>('all')
+  const [tab, setTab] = useState<Tab>('hot')
   const [sort, setSort] = useState<SortKey>('marketCap')
-  const [search, setSearch] = useState('')
+  const [query, setQuery] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // ⌘K / Ctrl+K shortcut — matches the homepage so users build muscle
+  // memory across both pages.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const isModK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'
+      if (!isModK) return
+      e.preventDefault()
+      searchRef.current?.focus()
+      searchRef.current?.select()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const { tokens: deployed } = useDeployedTokens()
   const { curves } = useDeployedCurves()
-  const merged = useMemo(() => mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves), [deployed, curves])
+  const merged = useMemo(
+    () => mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves),
+    [deployed, curves],
+  )
 
   const tokens = useMemo(() => {
-    let list: Token[] = [...merged]
-    if (filter === 'new') list = list.filter((t) => t.createdAt === 0 || Date.now() / 1000 - t.createdAt < 86400)
-    if (filter === 'trending') list = list.sort((a, b) => b.volume24h - a.volume24h).slice(0, 10)
-    if (filter === 'graduating') list = list.filter((t) => !t.isGraduated && t.progress >= 50)
-    if (filter === 'graduated') list = list.filter((t) => t.isGraduated)
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      list = list.filter((t) =>
-        t.name.toLowerCase().includes(q) ||
-        t.symbol.toLowerCase().includes(q) ||
-        t.description.toLowerCase().includes(q)
-      )
-    }
+    const lowerQuery = query.trim().toLowerCase()
+    let list = merged.filter((t) => tabFilter(t, tab))
+    if (lowerQuery) list = list.filter((t) => matchesQuery(t, lowerQuery))
     if (sort === 'marketCap') list = [...list].sort((a, b) => b.marketCap - a.marketCap)
     if (sort === 'volume') list = [...list].sort((a, b) => b.volume24h - a.volume24h)
     if (sort === 'new') list = [...list].sort((a, b) => b.createdAt - a.createdAt)
     if (sort === 'progress') list = [...list].sort((a, b) => b.progress - a.progress)
     return list
-  }, [merged, filter, sort, search])
+  }, [merged, tab, sort, query])
 
   return (
     <div className="max-w-7xl mx-auto px-4 pt-[96px] pb-10">
-
-      {/* Search bar — prominent at top */}
-      <div className="relative max-w-xl mx-auto mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--tx-d)]" />
+      {/* Search — same compact pill as the homepage so users see
+          one search-bar pattern across the app. */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--tx-d)] pointer-events-none" />
         <input
+          ref={searchRef}
           type="text"
-          placeholder="Search coins by name, symbol or description..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-[var(--sf)] border border-[var(--brd)] rounded-xl pl-11 pr-4 py-3 text-sm text-[var(--tx)] placeholder:text-[var(--tx-d)] focus:outline-none focus:border-[var(--gold)] transition-colors"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search tokens... ⌘K"
+          aria-label="Search tokens"
+          className="w-full bg-[var(--sf)] border border-[var(--brd)] rounded-full pl-9 pr-9 py-2 text-sm text-[var(--tx)] placeholder:text-[var(--tx-d)] focus:outline-none focus:border-[var(--brd2)] focus:ring-1 focus:ring-[var(--brd2)] transition-colors"
         />
+        {query && (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery('')
+              searchRef.current?.focus()
+            }}
+            aria-label="Clear search"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--tx-d)] hover:text-[var(--tx)] transition-colors"
+          >
+            <XIcon className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
-      {/* Filters + sort row */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div className="flex gap-1.5 flex-wrap">
-          {FILTERS.map((f) => (
+      {/* Tabs + sort row. Tabs match the homepage exactly; sort
+          dropdown is the explore-only crosscut. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-1 flex-wrap">
+          {TABS.map((t) => (
             <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-150 ${
-                filter === f.key
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-150 ${
+                tab === t.key
                   ? 'bg-[var(--gold)] text-[var(--bk)]'
                   : 'bg-[var(--sf)] border border-[var(--brd)] text-[var(--tx-d)] hover:border-[var(--brd2)] hover:text-[var(--tx)]'
               }`}
             >
-              {f.label}
+              {t.label}
             </button>
           ))}
         </div>
@@ -92,18 +144,18 @@ export default function ExplorePage() {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortKey)}
-          className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl px-3 py-1.5 text-xs text-[var(--tx)] focus:outline-none focus:border-[var(--gold)] cursor-pointer"
+          aria-label="Sort tokens"
+          className="bg-[var(--sf)] border border-[var(--brd)] rounded-full px-3 py-1.5 text-xs text-[var(--tx)] focus:outline-none focus:border-[var(--brd2)] cursor-pointer"
         >
           {SORTS.map((s) => (
-            <option key={s.key} value={s.key}>{s.label}</option>
+            <option key={s.key} value={s.key}>
+              Sort: {s.label}
+            </option>
           ))}
         </select>
       </div>
 
-      {/* Count */}
-      <p className="text-xs text-[var(--tx-d)] mb-4">{tokens.length} coin{tokens.length !== 1 ? 's' : ''}</p>
-
-      {/* 4-column grid */}
+      {/* 4-column grid (5 at xl) */}
       {tokens.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {tokens.map((token) => (
@@ -114,7 +166,7 @@ export default function ExplorePage() {
         <div className="text-center py-24">
           <p className="text-4xl mb-3">🔍</p>
           <p className="text-[var(--tx)] font-semibold">No coins found</p>
-          <p className="text-[var(--tx-m)] text-sm mt-1">Try a different search or filter</p>
+          <p className="text-[var(--tx-m)] text-sm mt-1">Try a different search or tab</p>
         </div>
       )}
     </div>

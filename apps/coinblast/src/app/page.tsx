@@ -103,8 +103,9 @@ export default function HomePage() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
-  const { tokens: deployed } = useDeployedTokens()
-  const { curves, latestBlock } = useDeployedCurves()
+  const { tokens: deployed, isLoading: tokensLoading } = useDeployedTokens()
+  const { curves, latestBlock, isLoading: curvesLoading } = useDeployedCurves()
+  const registryLoading = tokensLoading || curvesLoading
 
   // Volume + trader stats — scans Buy/Sell events from every curve.
   // Only the address+deploy-block is stable input; pulling those out
@@ -178,14 +179,16 @@ export default function HomePage() {
 
       {/* Live stats strip — left side is launchpad inventory, right
           side is real on-chain trade activity scanned across every
-          curve. Trade numbers blank-out while loading so we don't
-          flash zeroes that look like "nothing's happening". */}
+          curve. While the registry is mid-load we render '…' for the
+          inventory counts too (they were briefly flashing "1" before
+          the static MOCK_TOKENS merge fired in, then jumping to "4").
+          Trade numbers stay '…' for their own load. */}
       <div className="border-y border-[var(--brd)] bg-[var(--sf)]/50 py-3 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-x-8 gap-y-2 text-sm flex-wrap">
           {[
-            { label: 'coins launched', value: String(merged.length) },
-            { label: 'with bonding curve', value: String(merged.filter(t => t.curveAddress).length) },
-            { label: 'graduated to DEX', value: String(merged.filter(t => t.isGraduated).length) },
+            { label: 'coins launched', value: registryLoading ? '…' : String(merged.length) },
+            { label: 'with bonding curve', value: registryLoading ? '…' : String(merged.filter(t => t.curveAddress).length) },
+            { label: 'graduated to DEX', value: registryLoading ? '…' : String(merged.filter(t => t.isGraduated).length) },
             {
               label: 'SRX volume',
               value: trade.isLoading ? '…' : formatNumber(trade.totalVolumeSrx, trade.totalVolumeSrx < 1 ? 4 : 2),
