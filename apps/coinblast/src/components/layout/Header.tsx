@@ -90,10 +90,17 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile bottom tabs */}
+      {/* Mobile bottom tabs — `pb-[env(safe-area-inset-bottom)]` lifts
+          the strip above iPhone home-bar territory; pages should match
+          with their own `pb-[calc(5rem+env(safe-area-inset-bottom))]`
+          so content never disappears behind the strip. */}
       <div
         className="md:hidden fixed bottom-0 left-0 right-0 flex border-t border-[var(--brd)] z-50"
-        style={{ background: 'rgba(12,12,16,0.95)', backdropFilter: 'blur(20px)' }}
+        style={{
+          background: 'rgba(12,12,16,0.95)',
+          backdropFilter: 'blur(20px)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
       >
         {NAV.map((item) => {
           const active = pathname === item.href
@@ -102,7 +109,9 @@ export function Header() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex-1 py-3 text-center text-[10px] font-medium tracking-[.1em] uppercase transition-colors',
+                // 44px min-height matches the iOS HIG touch target floor —
+                // py-3 alone hit 40px on the smallest viewports.
+                'flex-1 py-3 min-h-[44px] flex items-center justify-center text-center text-[10px] font-medium tracking-[.1em] uppercase transition-colors',
                 active
                   ? 'text-[var(--gold)]'
                   : item.href === '/create'

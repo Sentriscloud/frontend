@@ -39,6 +39,11 @@ body {
   color: var(--tx);
   font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Windows Edge / Chromium-on-Windows defaults a stronger ClearType
+     than macOS — the Sora font reads heavier there. text-rendering:
+     optimizeLegibility levels it without going full grayscale. */
+  text-rendering: optimizeLegibility;
   position: relative;
 }
 
@@ -52,10 +57,26 @@ body::before {
 }
 
 /* ── Scrollbar ────────────────────────────────────────── */
+/* WebKit (Edge new, Chrome, Safari) — visible on Windows + macOS. */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bk); }
 ::-webkit-scrollbar-thumb { background: var(--brd2); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gold-d); }
+/* Firefox — separate property family. Without these, Windows Firefox
+   shows the OS-default chunky scrollbar against our dark canvas. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brd2) var(--bk);
+}
+
+/* ── Mobile bottom-nav clearance ──────────────────────── */
+/* The Header's mobile tab strip is fixed at the bottom. iPhone safari
+   renders the home-bar UI in the same band, so we push the strip up
+   by env(safe-area-inset-bottom) and pad page content below to match.
+   These vars are picked up by the mobile-nav rule in Header.tsx. */
+:root {
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
 
 /* ── Selection ────────────────────────────────────────── */
 ::selection { background: rgba(200,168,74,0.25); color: #fff; }

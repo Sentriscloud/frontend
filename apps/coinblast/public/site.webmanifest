@@ -1,0 +1,14 @@
+{
+  "name": "CoinBlast",
+  "short_name": "CoinBlast",
+  "description": "Launch your coin in seconds. Fair for everyone.",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#C8A84A",
+  "background_color": "#0A0A0F",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
+}
