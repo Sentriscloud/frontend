@@ -7,7 +7,11 @@ const toSrx = (sentri: number): number => sentri / SENTRI_PER_SRX;
 
 // DECISION: timeout is bounded by an AbortController. Default 8s for client polls (matches the
 // browser's typical idle timeout). SSR callers should pass a tight value (e.g. 1500ms) so a
-// slow upstream cannot stall page render past the user's patience window.
+// slow upstream cannot stall page render past the user's patience window. Endpoints with
+// known cold-cache slowness (`/stats/daily`, `/chain/performance` first hit ~25-30 s) override
+// to 25 s — see SLOW_TIMEOUT_MS below.
+const SLOW_TIMEOUT_MS = 25_000;
+
 async function apiFetch<T>(network: NetworkId, path: string, timeoutMs = 8000): Promise<T | null> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -731,7 +735,10 @@ export async function fetchTokenTrades(
 }
 
 export async function fetchDailyStats(network: NetworkId): Promise<DailyStat[]> {
-  const res = await apiFetch<DailyStat[]>(network, "/stats/daily");
+  // Cold cache routinely needs >20 s — backend recomputes the 14-day
+  // aggregate before serving. The default 8 s timeout was the reason the
+  // home TX-per-day chart silently rendered empty on first load.
+  const res = await apiFetch<DailyStat[]>(network, "/stats/daily", SLOW_TIMEOUT_MS);
   return res ?? [];
 }
 
@@ -757,7 +764,11 @@ export async function fetchChainPerformance(
   network: NetworkId,
   range: "1m" | "5m" | "15m" | "1h" | "24h" = "1h",
 ): Promise<ChainPerformance | null> {
-  return apiFetch<ChainPerformance>(network, `/chain/performance?range=${range}`);
+  // Cold cache for this endpoint hits ~25 s on the live edge before the
+  // backend's window aggregator fills. Default 8 s timeout silently
+  // dropped first-render perf-chart fetches into the retry-on-backoff
+  // loop, which made the chart appear broken until the warm-cache hit.
+  return apiFetch<ChainPerformance>(network, `/chain/performance?range=${range}`, SLOW_TIMEOUT_MS);
 }
 
 // ── /accounts/{addr}/tokens — SRC-20 holdings ───────────────────────────────

@@ -41,8 +41,14 @@ class WsClient {
   private connectAttempts = 0;
   private successfulConnects = 0;
   private connecting = false;
-  private closed = false;
-  private static MAX_FAILED_ATTEMPTS = 3;
+  // Cap reconnect backoff at 5 minutes. Previous version stopped retrying
+  // after 3 failed attempts with no successful open in between, which
+  // dead-ended live updates whenever the WS edge was briefly returning
+  // 502 at page-load time (mainnet `wss://rpc.sentrixchain.com/ws` was
+  // doing exactly that on 2026-05-02). The page now keeps retrying so
+  // streams self-heal once the edge recovers — without spamming the
+  // browser console because 5 min is a slow enough heartbeat.
+  private static MAX_BACKOFF_MS = 300_000;
 
   constructor(url: string) {
     this.url = url;
@@ -67,13 +73,11 @@ class WsClient {
     ws.onclose = () => {
       this.connecting = false;
       this.ws = null;
-      if (this.closed) return;
       this.connectAttempts++;
-      if (this.successfulConnects === 0 && this.connectAttempts >= WsClient.MAX_FAILED_ATTEMPTS) {
-        this.closed = true;
-        return;
-      }
-      const delay = Math.min(30_000, 500 * Math.pow(2, this.connectAttempts));
+      const delay = Math.min(
+        WsClient.MAX_BACKOFF_MS,
+        500 * Math.pow(2, Math.min(this.connectAttempts, 10)),
+      );
       setTimeout(() => this.connect(), delay);
     };
   }
