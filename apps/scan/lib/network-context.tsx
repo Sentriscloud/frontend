@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { NetworkId } from "./chain";
 
@@ -28,6 +29,13 @@ function writeCookie(value: NetworkId) {
 // next/headers and pass `initial` here. Eliminates the prior "render mainnet → useEffect →
 // setNetwork(testnet) → re-fetch" double-fetch + visual flash for testnet users.
 // Legacy localStorage values from earlier builds are migrated on mount.
+//
+// SECOND DECISION (2026-05-02): clicking the toggle has to fire `router.refresh()` AFTER
+// writing the cookie. Without that, server components stay anchored to whatever cookie
+// existed when the page first loaded — so the toggle pill flips and the toast says
+// "Switched to Testnet", but the blocks list / supply card / validators panel keep
+// rendering the previous network's data until the user navigates away or hard-reloads.
+// router.refresh() invalidates the RSC payload + re-fetches with the new cookie.
 export function NetworkProvider({
   initial = "mainnet",
   children,
@@ -36,6 +44,7 @@ export function NetworkProvider({
   children: ReactNode;
 }) {
   const [network, setNetworkState] = useState<NetworkId>(initial);
+  const router = useRouter();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -50,11 +59,17 @@ export function NetworkProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSet = useCallback((n: NetworkId) => {
-    setNetworkState(n);
-    writeCookie(n);
-    toast.success(`Switched to ${n === "mainnet" ? "Mainnet (Chain ID 7119)" : "Testnet (Chain ID 7120)"}`);
-  }, []);
+  const handleSet = useCallback(
+    (n: NetworkId) => {
+      setNetworkState(n);
+      writeCookie(n);
+      toast.success(`Switched to ${n === "mainnet" ? "Mainnet (Chain ID 7119)" : "Testnet (Chain ID 7120)"}`);
+      // RSC re-render with the new cookie. Without this the toggle UI
+      // changes but server-rendered sections stay on the old network.
+      router.refresh();
+    },
+    [router],
+  );
 
   const toggle = useCallback(() => {
     handleSet(network === "mainnet" ? "testnet" : "mainnet");
