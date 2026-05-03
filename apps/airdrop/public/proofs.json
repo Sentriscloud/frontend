@@ -1,0 +1,16 @@
+{
+  "network_chain_id": 7119,
+  "snapshot_chain_id": 7120,
+  "snapshot_height": 0,
+  "snapshot_block_hash": "0x0",
+  "merkle_root": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "phase_total_wei": "0",
+  "per_wallet_wei": "0",
+  "total_allocated_wei": "0",
+  "dust_wei": "0",
+  "eligible_count": 0,
+  "allocation": "flat",
+  "entries": {},
+  "leaf_format": "keccak256(abi.encodePacked(address, uint256))",
+  "contract_compatible": "MerkleAirdrop.sol — sentrix-labs/canonical-contracts"
+}

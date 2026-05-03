@@ -14,10 +14,12 @@ import {
 
 import { AIRDROP_CONTRACT_ADDRESS } from "@/lib/chain";
 import { MERKLE_AIRDROP_ABI } from "@/lib/airdrop-abi";
-import { EMPTY_BUNDLE, fetchProofsClient, lookupEntry, type ProofsBundle } from "@/lib/proofs";
+import { EMPTY_BUNDLE, lookupEntry, type ProofsBundle } from "@/lib/proofs";
 
 type Status =
   | "loading-proofs"
+  | "proofs-error"
+  | "no-contract"
   | "not-connected"
   | "wrong-network"
   | "not-eligible"
@@ -36,6 +38,12 @@ function shortAddr(addr: string) {
 export function ClaimWidget() {
   const [bundle, setBundle] = useState<ProofsBundle>(EMPTY_BUNDLE);
   const [status, setStatus] = useState<Status>("loading-proofs");
+  // Distinguish "still fetching" from "fetch failed/empty" — without
+  // this, a missing or HTTP-errored proofs.json leaves the widget stuck
+  // at "Loading eligibility list..." forever, since EMPTY_BUNDLE has
+  // eligible_count: 0.
+  const [proofsLoaded, setProofsLoaded] = useState(false);
+  const [proofsError, setProofsError] = useState<string | null>(null);
 
   // ── Privy login trigger + Sentrix wallet state ────────────
   // The outer SentrixPrivyProvider (in app/layout.tsx) mounts both Privy
@@ -54,14 +62,41 @@ export function ClaimWidget() {
 
   // ── Load proofs.json on mount ────────────────────────────
   useEffect(() => {
-    fetchProofsClient().then(setBundle);
+    let cancelled = false;
+    fetch("/proofs.json", { cache: "force-cache" })
+      .then(async (res) => {
+        if (cancelled) return;
+        if (!res.ok) {
+          setProofsError(`proofs.json returned HTTP ${res.status}`);
+          setProofsLoaded(true);
+          return;
+        }
+        try {
+          const json = (await res.json()) as ProofsBundle;
+          setBundle(json);
+        } catch {
+          setProofsError("proofs.json was malformed JSON");
+        } finally {
+          setProofsLoaded(true);
+        }
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setProofsError(
+          err instanceof Error ? `Failed to load proofs.json: ${err.message}` : "Failed to load proofs.json",
+        );
+        setProofsLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // ── On-chain claim state (only when contract address is set) ──
   // Uses `viewAddress` so manual-mode can see whether the queried address
   // already claimed without needing a connected wallet.
   const contractEnabled = Boolean(AIRDROP_CONTRACT_ADDRESS) && Boolean(viewAddress);
-  const { data: contractClaimed } = useReadContract({
+  const { data: contractClaimed, refetch: refetchClaimed } = useReadContract({
     address: AIRDROP_CONTRACT_ADDRESS as `0x${string}` | undefined,
     abi: MERKLE_AIRDROP_ABI,
     functionName: "claimed",
@@ -96,8 +131,26 @@ export function ClaimWidget() {
 
   // ── Status reducer ───────────────────────────────────────
   useEffect(() => {
-    if (bundle.eligible_count === 0) {
+    // Pre-deploy state: contract env var is empty. The Phase-1 banner
+    // already explains this; here we just block the "ready" path so
+    // the claim button never renders in clickable form.
+    if (!AIRDROP_CONTRACT_ADDRESS) {
+      setStatus("no-contract");
+      return;
+    }
+    // proofs.json: still loading vs failed vs loaded-empty
+    if (!proofsLoaded) {
       setStatus("loading-proofs");
+      return;
+    }
+    if (proofsError) {
+      setStatus("proofs-error");
+      return;
+    }
+    if (bundle.eligible_count === 0) {
+      // Loaded successfully but bundle is empty — pre-deploy or wrong
+      // bundle shipped. Treat as no-contract-style soft-error.
+      setStatus("proofs-error");
       return;
     }
     // No connected wallet AND no manual address → prompt to connect/enter
@@ -159,6 +212,8 @@ export function ClaimWidget() {
     setStatus("ready");
   }, [
     bundle.eligible_count,
+    proofsLoaded,
+    proofsError,
     isConnected,
     account,
     addrSource,
@@ -173,8 +228,24 @@ export function ClaimWidget() {
     writeError,
   ]);
 
-  function claim() {
+  async function claim() {
     if (!entry || !account || !AIRDROP_CONTRACT_ADDRESS) return;
+    // Double-click guard + race against another tab claiming first.
+    if (isWriting || isMining) return;
+    // Refetch claimed state immediately before write — local
+    // contractClaimed can be stale (multi-tab, slow polling). If a
+    // sibling tab already landed the claim, we want to surface
+    // "already-claimed" rather than fire a doomed second tx.
+    try {
+      const fresh = await refetchClaimed();
+      if (fresh.data === true) {
+        setStatus("already-claimed");
+        return;
+      }
+    } catch {
+      // RPC hiccup — fall through. The contract itself rejects
+      // double-claims on-chain; we just lose the friendly UI message.
+    }
     resetWrite();
     writeContract({
       address: AIRDROP_CONTRACT_ADDRESS as `0x${string}`,
@@ -259,6 +330,17 @@ export function ClaimWidget() {
         />
       )}
 
+      {status === "proofs-error" && (
+        <Stage
+          icon={<AlertCircle className="w-4 h-4 text-[var(--orange)]" />}
+          tone="warn"
+          msg={
+            proofsError ??
+            "Eligibility list is empty — Phase 1 may not have shipped yet, or the proofs file is missing."
+          }
+        />
+      )}
+
       {status === "not-connected" && (
         <Stage
           icon={<AlertCircle className="w-4 h-4 text-[var(--tx-d)]" />}
@@ -330,7 +412,8 @@ export function ClaimWidget() {
           </div>
           <button
             onClick={claim}
-            className="w-full py-3 rounded-xl font-semibold text-[14px] bg-[var(--gold)] text-[#3a2a0e] hover:bg-[var(--gold-l)]"
+            disabled={!AIRDROP_CONTRACT_ADDRESS || isWriting || isMining}
+            className="w-full py-3 rounded-xl font-semibold text-[14px] bg-[var(--gold)] text-[#3a2a0e] hover:bg-[var(--gold-l)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[var(--gold)]"
           >
             Claim {formatEther(BigInt(entry.amount))} SRX
           </button>
