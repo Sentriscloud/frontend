@@ -30,17 +30,25 @@ interface FormData {
 // Deploying through CoinBlastCurve means each launch ships with a real
 // bonding curve, fee accrual to the Ecosystem Fund, and an automatic
 // graduation path into a SentrixV2 DEX pair (LP burnt to 0xdEaD).
+// `explorerQuery` is appended AFTER the path, never before — the previous
+// shape was `explorerBase: ".../?network=testnet"` and call sites concatenated
+// `${explorerBase}/tx/<hash>` which produces `.../?network=testnet/tx/<hash>`,
+// burying the path inside the query string and rendering scan's home page
+// instead of the tx detail. Fix: keep the base bare and add the network
+// query at the end of the URL via the helper below.
 const NETWORKS = {
   7119: {
     label: 'Sentrix Mainnet',
     explorerBase: 'https://scan.sentrixchain.com',
+    explorerQuery: '',
     feeRecipient: '0xeb70fdefd00fdb768dec06c478f450c351499f14' as `0x${string}`,
     router: '0xAb67E171c0DE0Cd6dD6fE87E5E399C091F9c9dE8' as `0x${string}`,
     wsrx: '0x4693b113e523A196d9579333c4ab8358e2656553' as `0x${string}`,
   },
   7120: {
     label: 'Sentrix Testnet',
-    explorerBase: 'https://scan.sentrixchain.com/?network=testnet',
+    explorerBase: 'https://scan.sentrixchain.com',
+    explorerQuery: '?network=testnet',
     feeRecipient: '0xeb70fdefd00fdb768dec06c478f450c351499f14' as `0x${string}`,
     router: '0x2bF73491733c3b87D72b16d4f7151dA294b55cB0' as `0x${string}`,
     wsrx: '0x85d5E7694AF31C2Edd0a7e66b7c6c92C59fF949A' as `0x${string}`,
@@ -334,7 +342,7 @@ export default function CreatePage() {
             </p>
             {deployTxHash && (
               <a
-                href={`${net.explorerBase}/tx/${deployTxHash}`}
+                href={`${net.explorerBase}/tx/${deployTxHash}${net.explorerQuery}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-xs font-mono text-[var(--gold)] hover:text-[var(--gold-l)]"
@@ -391,7 +399,7 @@ export default function CreatePage() {
               )}
               {deployed && (
                 <a
-                  href={`${net.explorerBase}/address/${deployed.curve}`}
+                  href={`${net.explorerBase}/address/${deployed.curve}${net.explorerQuery}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-[var(--sf)] border border-[var(--brd)] text-sm text-[var(--tx-m)] hover:text-[var(--tx)] hover:border-[var(--brd2)] transition-colors"

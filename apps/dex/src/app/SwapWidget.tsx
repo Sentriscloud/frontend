@@ -305,7 +305,11 @@ export function SwapWidget() {
             label: `Approve ${tokenIn.symbol} for SentrixV2 Router`,
           })
           .then(setSoluxTxHash)
-          .catch(() => { /* error already in soluxSigner.error */ });
+          .catch((err: unknown) => {
+            // soluxSigner.error already surfaces in the UI via txError;
+            // log for dev visibility without bothering the user twice.
+            console.error("[swap] Solux approval rejected:", err);
+          });
       } else {
         writeContract({
           abi: ERC20_ABI,
@@ -352,7 +356,12 @@ export function SwapWidget() {
       // viem-style typing on signAndSend's args is loose; widen at call site.
       (soluxSigner.signAndSend as (p: typeof params) => Promise<`0x${string}`>)(params)
         .then(setSoluxTxHash)
-        .catch(() => {});
+        .catch((err: unknown) => {
+          // soluxSigner.error already lands in txError → user sees it.
+          // Console-log for dev visibility (silently dropping makes
+          // debugging Solux popup failures painful).
+          console.error("[swap] Solux swap rejected:", err);
+        });
     } else {
       const writeParams = value !== undefined
         ? { abi: ROUTER_ABI, address: cfg.router, functionName: fn, args: callArgs, value }
@@ -373,6 +382,13 @@ export function SwapWidget() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMined]);
 
+  // Build /tx/<hash> + ?network=testnet AFTER the path. Earlier we used
+  // "scan.sentrixchain.com/?network=testnet" as a base and concatenated
+  // "/tx/<hash>", which produced "scan.sentrixchain.com/?network=testnet/tx/<hash>"
+  // — the path got swallowed into the query string and scan rendered the
+  // home page instead of the tx. Use this helper instead of string concat.
+  const txExplorerUrl = (hash: string | undefined) =>
+    `https://scan.sentrixchain.com/tx/${hash ?? ""}${chainId === 7120 ? "?network=testnet" : ""}`;
   const explorerBase =
     chainId === 7120 ? "https://scan.sentrixchain.com/?network=testnet" : "https://scan.sentrixchain.com";
 
@@ -559,7 +575,7 @@ export function SwapWidget() {
           </button>
         ) : isMining ? (
           <a
-            href={`${explorerBase}/tx/${txHash}`}
+            href={txExplorerUrl(txHash)}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full py-3 rounded-xl bg-[var(--gold)]/30 text-[var(--bk)] font-semibold text-sm flex items-center justify-center gap-2"
@@ -591,7 +607,7 @@ export function SwapWidget() {
         </button>
       ) : isMining ? (
         <a
-          href={`${explorerBase}/tx/${txHash}`}
+          href={txExplorerUrl(txHash)}
           target="_blank"
           rel="noopener noreferrer"
           className="w-full py-3 rounded-xl bg-[var(--gold)]/30 text-[var(--bk)] font-semibold text-sm flex items-center justify-center gap-2"
@@ -623,7 +639,7 @@ export function SwapWidget() {
 
       {isMined && txHash && (
         <a
-          href={`${explorerBase}/tx/${txHash}`}
+          href={txExplorerUrl(txHash)}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-2 block text-center text-[11px] text-emerald-400 hover:text-emerald-300"

@@ -61,7 +61,7 @@ export function HomeContent() {
             <p className="text-[12px] text-[var(--tx-d)] max-w-md leading-snug break-words">
               Want to launch your own token? Visit{" "}
               <a
-                className="text-[var(--gold)] hover:text-[var(--gold-l)] break-all"
+                className="text-[var(--gold)] hover:text-[var(--gold-l)] whitespace-nowrap"
                 href="https://coinblast.sentriscloud.com"
               >
                 coinblast.sentriscloud.com
@@ -115,10 +115,12 @@ function ContractAddresses({
   wsrx: `0x${string}`;
   net: "mainnet" | "testnet";
 }) {
-  const scanBase =
-    net === "testnet"
-      ? "https://scan.sentrixchain.com/?network=testnet"
-      : "https://scan.sentrixchain.com";
+  // The query string MUST come after the path. We previously stored
+  // ".../?network=testnet" as a base and concatenated /address/<addr>
+  // — that produced ".../?network=testnet/address/<addr>" and scan
+  // rendered its homepage. Bake the query as a separate suffix instead.
+  const scanBase = "https://scan.sentrixchain.com";
+  const scanQuery = net === "testnet" ? "?network=testnet" : "";
   const verifyBase = "https://verify.sentrixchain.com";
   const rows: Array<{ label: string; addr: `0x${string}` }> = [
     { label: "Router", addr: router },
@@ -142,7 +144,7 @@ function ContractAddresses({
         <div key={r.addr} className="flex items-center justify-between text-[11px] gap-2">
           <span className="text-[var(--tx-m)] shrink-0">{r.label}</span>
           <a
-            href={`${scanBase}/address/${r.addr}`}
+            href={`${scanBase}/address/${r.addr}${scanQuery}`}
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-[var(--tx)] hover:text-[var(--gold)] truncate"
