@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
-import { METAMASK_CONFIG, SITE } from "@/data/content";
+import { METAMASK_CONFIG } from "@/data/content";
 
 const ARCH_MODULES = [
   { title: "Core Engine", desc: "blockchain.rs · block.rs · transaction.rs · account.rs · authority.rs · vm.rs · merkle.rs" },

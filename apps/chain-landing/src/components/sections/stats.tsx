@@ -13,16 +13,16 @@ const STAT_COLORS = [
 ];
 
 function Counter({ value, duration = 2 }: { value: string; duration?: number }) {
-  const [display, setDisplay] = useState("0");
+  const num = parseInt(value);
+  const isNum = !isNaN(num);
+  // Initial state covers the non-numeric case directly — avoids the
+  // setState-in-effect pattern that React 19 lint flags.
+  const [display, setDisplay] = useState(() => (isNum ? "0" : value));
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true });
-  const num = parseInt(value);
 
   useEffect(() => {
-    if (!inView || isNaN(num)) {
-      if (isNaN(num)) setDisplay(value);
-      return;
-    }
+    if (!inView || !isNum) return;
     let start = 0;
     const step = num / (duration * 60);
     const timer = setInterval(() => {
@@ -35,7 +35,7 @@ function Counter({ value, duration = 2 }: { value: string; duration?: number }) 
       }
     }, 1000 / 60);
     return () => clearInterval(timer);
-  }, [inView, num, value, duration]);
+  }, [inView, num, isNum, duration]);
 
   return <span ref={ref}>{display}</span>;
 }

@@ -8,6 +8,11 @@ export function SentrixLogo({
   className?: string;
 }) {
   return (
+    // SVG vector — next/image's bitmap pipeline (LCP/lazy
+    // optimisation) doesn't apply, and enabling it for SVG requires
+    // dangerouslyAllowSVG in next.config. Plain <img> is the right
+    // call for a 32px brand mark.
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src="/brand/sentrix-mark.svg"
       alt="Sentrix Chain"

@@ -48,10 +48,15 @@ export function LiveChain() {
 
   // When WS emits a new head, also pull fresh /chain/info so non-header
   // stats (mempool, burned, validators) advance with the block.
+  // Extracting wsHead.number to a local lets us depend on it directly
+  // instead of `wsHead?.number` inside deps array — keeps
+  // exhaustive-deps lint clean without re-firing on unrelated wsHead
+  // identity changes.
+  const wsHeadNumber = wsHead?.number;
   useEffect(() => {
-    if (!wsHead) return;
+    if (!wsHeadNumber) return;
     fetch(`${SITE.api}/chain/info`).then((r) => r.ok ? r.json() : null).then((d) => d && setData(d)).catch(() => {});
-  }, [wsHead?.number]);
+  }, [wsHeadNumber]);
 
   if (!data) return null;
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeader } from "./section-header";
@@ -99,13 +100,13 @@ export function Tokenomics() {
 
       <Reveal delay={0.3}>
         <div className="mt-16 text-center">
-          <a
+          <Link
             href="/docs/tokenomics"
             className="inline-flex items-center gap-2 text-[12px] tracking-[.1em] uppercase text-[var(--gold)] hover:text-[var(--gold-l)] transition-colors"
           >
             Full tokenomics breakdown
             <span aria-hidden>→</span>
-          </a>
+          </Link>
         </div>
       </Reveal>
     </section>

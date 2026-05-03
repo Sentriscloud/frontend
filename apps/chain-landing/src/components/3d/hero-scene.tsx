@@ -1,5 +1,13 @@
 "use client";
 
+// File-level disable: r3f's useFrame callback runs outside React's
+// render cycle (rAF), but the React 19 immutability rule treats Three.js
+// object mutation inside useFrame the same as render-time mutation.
+// Direct mutation of camera/geometry/material from useFrame is the
+// documented r3f pattern — converting to ref-then-mutate gymnastics
+// adds zero safety. Scoped here, not whole-app.
+/* eslint-disable react-hooks/immutability */
+
 import { Canvas, useFrame, useThree, extend } from "@react-three/fiber";
 import { useRef, useMemo, useEffect, useState } from "react";
 import * as THREE from "three";
@@ -106,7 +114,12 @@ function OrbitalRing({
 /* ── Particles ── */
 function Particles({ count = 500 }: { count?: number }) {
   const ref = useRef<THREE.Points>(null);
-  const { positions, colors } = useMemo(() => {
+  // Random particle layout is computed once on mount via useState's lazy
+  // initializer — useMemo with Math.random() trips the React 19
+  // react-hooks/purity rule because memos can be discarded and re-run
+  // during reconciliation, which would shuffle the field on every
+  // re-render. useState init runs exactly once, which is what we want.
+  const [{ positions, colors }] = useState(() => {
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -122,7 +135,7 @@ function Particles({ count = 500 }: { count?: number }) {
       col[i * 3 + 2] = c.b;
     }
     return { positions: pos, colors: col };
-  }, [count]);
+  });
 
   useFrame(({ clock }) => {
     if (!ref.current) return;
