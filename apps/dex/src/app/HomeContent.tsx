@@ -16,7 +16,13 @@ export function HomeContent() {
   const cfg = DEX[net];
 
   return (
-    <main className="min-h-screen flex flex-col">
+    // Drop `min-h-screen + flex-1` from the previous layout — that pinned
+    // the footer to viewport-bottom and left a tall empty void between the
+    // swap card and the footer on >=1080p screens. Now the page is just as
+    // tall as its content; the body bg fills the rest of the viewport so
+    // there's no visible "ends here" line. (Header stays sticky so it
+    // still ribbons the top during scroll.)
+    <main className="flex flex-col">
       <header className="sticky top-0 z-30 backdrop-blur-md bg-[var(--bk)]/80 border-b border-[var(--brd)]">
         <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -34,15 +40,15 @@ export function HomeContent() {
         </div>
       </header>
 
-      <section className="flex-1 max-w-5xl w-full mx-auto px-5 py-10 lg:py-14">
-        <div className="grid lg:grid-cols-[1fr_minmax(0,420px)] gap-10 lg:gap-12 items-start">
+      <section className="max-w-5xl w-full mx-auto px-5 py-6 lg:py-14">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] gap-6 lg:gap-12 items-start">
           {/* Left rail — pitch + verified contracts. Reads like a card stack
               instead of a centered hero so the swap widget is never below
               the fold on a 1366×768 viewport. */}
           <div className="space-y-6">
             <div className="space-y-3">
               <h1
-                className="text-3xl md:text-4xl font-semibold tracking-tight leading-[1.05]"
+                className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight leading-[1.1] break-words"
                 style={{ fontFamily: "Playfair Display, serif" }}
               >
                 Native swap on Sentrix Chain.
@@ -67,10 +73,10 @@ export function HomeContent() {
               net={net}
             />
 
-            <p className="text-[12px] text-[var(--tx-d)] max-w-md leading-snug">
+            <p className="text-[12px] text-[var(--tx-d)] max-w-md leading-snug break-words">
               Want to launch your own token? Visit{" "}
               <a
-                className="text-[var(--gold)] hover:text-[var(--gold-l)]"
+                className="text-[var(--gold)] hover:text-[var(--gold-l)] break-all"
                 href="https://coinblast.sentriscloud.com"
               >
                 coinblast.sentriscloud.com
@@ -80,8 +86,9 @@ export function HomeContent() {
           </div>
 
           {/* Right rail — the swap. Sticky on desktop so it stays in view as
-              the left rail scrolls. */}
-          <div className="lg:sticky lg:top-24 w-full max-w-md justify-self-end">
+              the left rail scrolls. On mobile the grid collapses to one
+              column, so center the widget instead of pinning it right. */}
+          <div className="lg:sticky lg:top-24 w-full max-w-md mx-auto lg:mx-0 lg:justify-self-end">
             <SwapWidget />
           </div>
         </div>
