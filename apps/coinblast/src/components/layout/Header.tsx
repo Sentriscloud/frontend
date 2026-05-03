@@ -23,6 +23,10 @@ export function Header() {
   const pathname = usePathname()
   const [hidden, setHidden] = useState(false)
   const [lastY, setLastY] = useState(0)
+  // Logo onError fallback — if /brand/sentrix-mark.svg ever 404s
+  // (bad deploy, asset path drift), drop the <img> and let the
+  // wordmark stand alone so the navbar never reads as broken.
+  const [logoBroken, setLogoBroken] = useState(false)
 
   useEffect(() => {
     const onScroll = () => {
@@ -57,16 +61,29 @@ export function Header() {
           {/* Logo — canonical Sentrix mark + CoinBlast wordmark (sub-brand
               pairs with the parent Sentrix mark, no longer the rocket icon). */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-            <img
-              src="/brand/sentrix-mark.svg"
-              alt="Sentrix"
-              width={26}
-              height={26}
-              className="object-contain"
-            />
-            <span className="font-serif text-sm tracking-[.25em] uppercase text-[var(--tx)] group-hover:text-[var(--gold)] transition-colors hidden sm:block">
-              Coin<span className="text-[var(--gold)]">Blast</span>
-            </span>
+            {!logoBroken && (
+              <img
+                src="/brand/sentrix-mark.svg"
+                alt="Sentrix"
+                width={26}
+                height={26}
+                className="object-contain"
+                onError={() => setLogoBroken(true)}
+              />
+            )}
+            {/* Wordmark always visible — even on small screens — so the
+                brand never disappears entirely if the SVG fails to load.
+                Falls back to plain "COINBLAST" if the mark is broken,
+                so the navbar still anchors the user. */}
+            {logoBroken ? (
+              <span className="font-serif text-sm tracking-[.25em] uppercase text-[var(--gold)] group-hover:text-[var(--gold-l)] transition-colors">
+                COINBLAST
+              </span>
+            ) : (
+              <span className="font-serif text-sm tracking-[.25em] uppercase text-[var(--tx)] group-hover:text-[var(--gold)] transition-colors hidden sm:block">
+                Coin<span className="text-[var(--gold)]">Blast</span>
+              </span>
+            )}
           </Link>
 
           {/* Nav */}

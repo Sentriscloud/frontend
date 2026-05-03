@@ -1,4 +1,13 @@
 import type { Metadata, Viewport } from 'next'
+// 2026-05-03 round 2: tried mounting SentrixPrivyProvider directly to
+// fix the "warming up..." stall — turned out direct mount IS the bug,
+// not the fix. The Header renders as a sibling of {children}, so its
+// WalletConnect (useEffectiveAddress + usePrivy) hits an empty wagmi
+// context on the first client paint and breaks Privy bootstrap. The
+// mounted-gate in PrivyProviderDynamic delays mount one tick so wagmi
+// is ready by the time WalletConnect calls useEffectiveAddress. DEX
+// doesn't need this because its Nav lives inside page.tsx (renders
+// after provider settle).
 import { PrivyProviderDynamic } from './_components/privy-provider-dynamic'
 import './globals.css'
 import { Header } from '@/components/layout/Header'

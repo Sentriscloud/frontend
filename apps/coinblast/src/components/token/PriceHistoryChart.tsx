@@ -223,7 +223,9 @@ export function PriceHistoryChart({ curveAddress }: Props) {
     // Crosshair OHLC handler — pulls the candle the cursor is over and
     // pushes it into React state so the header row reflects it. Param
     // shape: { time, seriesData: Map<series, { open,high,low,close }> }.
-    const sub = chart.subscribeCrosshairMove((p) => {
+    // chart.remove() in cleanup disposes all attached subscriptions, so
+    // we don't need to retain the handler.
+    chart.subscribeCrosshairMove((p) => {
       if (!p.time || !candleRef.current) {
         setHoverCandle(null)
         return
@@ -247,7 +249,6 @@ export function PriceHistoryChart({ curveAddress }: Props) {
 
     return () => {
       ro.disconnect()
-      sub
       chart.remove()
       chartRef.current = null
       candleRef.current = null
