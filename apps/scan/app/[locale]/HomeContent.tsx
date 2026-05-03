@@ -168,6 +168,24 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
     return () => clearInterval(id);
   }, [blocks]);
   const isChainIdle = latestBlockAgeSec !== null && latestBlockAgeSec > 120;
+
+  // 2026-05-03 incident: when the upstream RPC is fully down (Caddy returns 503
+  // because no validator is healthy), the data hooks never resolve so `blocks`
+  // stays empty and `latestBlockAgeSec` stays null forever. The "chain paused"
+  // banner only fires when we *know* the age, so the desktop home rendered all
+  // dashes silently — users couldn't tell whether the explorer was broken or
+  // the chain was down. This grace-period flag flips on after 10s of mount with
+  // no data of any shape, and shows an explicit "unreachable" banner instead.
+  const [chainUnreachable, setChainUnreachable] = useState(false);
+  useEffect(() => {
+    const haveAnyData = !!stats || (!!blocks && blocks.length > 0) || (!!txs && txs.length > 0);
+    if (haveAnyData) {
+      setChainUnreachable(false);
+      return;
+    }
+    const id = setTimeout(() => setChainUnreachable(true), 10_000);
+    return () => clearTimeout(id);
+  }, [stats, blocks, txs]);
   const liveTps = isChainIdle
     ? "Idle"
     : latestPerf
@@ -216,15 +234,19 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
           navbar. Sits above LiveTicker's flow content but below the
           fixed header (top-16 = h-16 of header). */}
       <StickyStatsBar />
-      {isChainIdle && latestBlockAgeSec !== null && (
+      {(isChainIdle || chainUnreachable) && (
         <div className="border-b border-[var(--orange)]/30 bg-[color-mix(in_oklab,var(--orange)_8%,transparent)]">
           <div className="max-w-7xl mx-auto px-4 lg:px-6 py-2 flex items-center gap-3 text-[11px]">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--orange)] animate-pulse-live" />
             <span className="font-mono uppercase tracking-[.15em] text-[var(--orange)]">
-              {network === "testnet" ? "Testnet" : "Chain"} paused
+              {chainUnreachable ? "RPC offline" : `${network === "testnet" ? "Testnet" : "Chain"} paused`}
             </span>
             <span className="font-mono text-[var(--tx-m)]">
-              Last block {latestBlockAgeSec < 3600 ? `${Math.round(latestBlockAgeSec / 60)} minutes` : `${(latestBlockAgeSec / 3600).toFixed(1)} hours`} ago — validator may be offline.
+              {chainUnreachable
+                ? "Couldn't reach the chain RPC — retrying. Operators are aware."
+                : latestBlockAgeSec !== null
+                  ? `Last block ${latestBlockAgeSec < 3600 ? `${Math.round(latestBlockAgeSec / 60)} minutes` : `${(latestBlockAgeSec / 3600).toFixed(1)} hours`} ago — validator may be offline.`
+                  : "Validator may be offline."}
             </span>
           </div>
         </div>

@@ -56,6 +56,21 @@ const STATIC_LABELS: ReadonlyArray<[string, LabelEntry]> = [
   ["0x0000000000000000000000000000000000000000", { name: "Sentrix Token Op (sentinel)", kind: "treasury" }],
   ["0x0000000000000000000000000000000000000002", { name: "Protocol Treasury (Reward Escrow)", kind: "treasury" }],
   ["0x0000000000000000000000000000000000000100", { name: "Sentrix Staking (sentinel)", kind: "treasury" }],
+
+  // Canonical DEX deployments — addresses are disjoint across mainnet
+  // (7119) and testnet (7120) so we list both. The /tokens registry refresh
+  // catches WSRX + SGC dynamically too, but seeding statics means the tags
+  // render on first paint and survive an indexer hiccup.
+  // Source of truth: apps/dex/src/lib/contracts.ts (DEX, TOKENS).
+  ["0xab67e171c0de0cd6dd6fe87e5e399c091f9c9de8", { name: "Sentrix DEX Router", kind: "token" }],
+  ["0xc5344f0dde0b9916217449ad9222e446475ad936", { name: "Sentrix DEX Factory", kind: "token" }],
+  ["0x4693b113e523a196d9579333c4ab8358e2656553", { name: "WSRX", kind: "token" }],
+  ["0xa79fc9015ae30766ab4d24a5d4d3a0c66f371504", { name: "SGC", kind: "token" }],
+
+  ["0x2bf73491733c3b87d72b16d4f7151da294b55cb0", { name: "Sentrix DEX Router (testnet)", kind: "token" }],
+  ["0x8565392086cba8d39cbba1f6f60ad1f1a17651c7", { name: "Sentrix DEX Factory (testnet)", kind: "token" }],
+  ["0x85d5e7694af31c2edd0a7e66b7c6c92c59ff949a", { name: "WtSRX (testnet)", kind: "token" }],
+  ["0x72730453f4080c6ad8def96c06f6074818fb95b5", { name: "SGC (testnet)", kind: "token" }],
 ];
 
 function buildMap(entries: Array<[string, LabelEntry]>): LabelMap {

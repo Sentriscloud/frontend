@@ -7,7 +7,8 @@ export default function AccountLeaderboardLayout({ children }: { children: React
       <SubTabs
         tabs={[
           { href: "/leaderboard/account/holders", label: "Top Holders" },
-          { href: "/leaderboard/account/active",  label: "Most Active" },
+          // "Most Active" hidden until /accounts/top?sort=tx_count ships on the indexer.
+          // The page itself stays addressable — just not advertised in the tab strip.
         ]}
       />
       {children}

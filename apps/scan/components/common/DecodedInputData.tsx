@@ -5,6 +5,7 @@ import { decodeFunctionData, type Abi } from "viem";
 import { resolveAbi } from "@/lib/abi-resolver";
 import type { NetworkId } from "@/lib/chain";
 import { Skeleton } from "@/components/ui/skeleton";
+import { lookupMethodSignature, splitInputData } from "@/lib/method-ids";
 
 interface DecodedInputDataProps {
   network: NetworkId;
@@ -72,7 +73,37 @@ export function DecodedInputData({ network, to, inputData }: DecodedInputDataPro
       </div>
     );
   }
-  if (!abi || !decoded) return null;
+
+  // Sourcify-less fallback: if ABI never resolved (contract unverified) or
+  // viem couldn't decode against the ABI, try the static 4-byte dictionary.
+  // Renders just the function name with a clear "from selector dictionary"
+  // attribution so users know args aren't authoritative — same model
+  // Etherscan uses when a contract isn't verified.
+  if (!abi || !decoded) {
+    const split = splitInputData(inputData);
+    const sig = split ? lookupMethodSignature(split.selector) : undefined;
+    if (!split || !sig) return null;
+    return (
+      <div className="mb-4 rounded-md border border-[var(--tx-d)]/30 bg-[color-mix(in_oklab,var(--tx-d)_4%,transparent)] p-3 space-y-1">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-mono tracking-[.2em] uppercase text-[var(--tx-m)]">
+            Method ID
+          </span>
+          <span className="text-[10px] font-mono text-muted-foreground">
+            from selector dictionary
+          </span>
+        </div>
+        <p className="font-mono text-xs break-all">{sig}</p>
+        <p className="font-mono text-[10px] text-muted-foreground">
+          Selector {split.selector} — verify the contract on{" "}
+          <a className="underline" href="https://verify.sentrixchain.com" target="_blank" rel="noreferrer">
+            verify.sentrixchain.com
+          </a>{" "}
+          to decode arguments.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-4 rounded-md border border-[var(--gold)]/30 bg-[color-mix(in_oklab,var(--gold)_4%,transparent)] p-3 space-y-2">
