@@ -48,12 +48,36 @@ export function SignInModal({
   isPrivyReady,
 }: SignInModalProps) {
   const [view, setView] = useState<View>('menu')
+  // If Privy stays !ready for too long after open, show an actionable
+  // diagnostic instead of leaving the user staring at "warming up…".
+  // Common causes: network blocking auth.privy.io (Starlink CGNAT,
+  // corporate firewall), App ID misconfigured, allowlist origin
+  // mismatch on the Privy dashboard.
+  const [privyTimeout, setPrivyTimeout] = useState(false)
+  // Click error — if onPrivyLogin throws synchronously we surface it.
+  const [clickError, setClickError] = useState<string | null>(null)
 
   // Reset to menu view on every open so the user doesn't get stuck on
   // the watch sub-screen across opens.
   useEffect(() => {
-    if (open) setView('menu')
+    if (open) {
+      setView('menu')
+      setClickError(null)
+      setPrivyTimeout(false)
+    }
   }, [open])
+
+  // 10s grace, then flag the timeout state. Cleared if Privy becomes
+  // ready before that.
+  useEffect(() => {
+    if (!open) return
+    if (isPrivyReady) {
+      setPrivyTimeout(false)
+      return
+    }
+    const t = setTimeout(() => setPrivyTimeout(true), 10_000)
+    return () => clearTimeout(t)
+  }, [open, isPrivyReady])
 
   // Close on Escape — standard modal hygiene.
   useEffect(() => {
@@ -102,12 +126,68 @@ export function SignInModal({
               </p>
             </div>
 
+            {/* Diagnostic — surfaces a visible banner if Privy's SDK
+                never finishes loading OR the click throws. The most
+                common cause is the user's network blocking
+                auth.privy.io (Starlink CGNAT, corporate firewall),
+                which leaves the SDK silently retrying forever and the
+                button doing nothing on click. */}
+            {(privyTimeout || clickError) && (
+              <div className="mb-4 px-3 py-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-xs leading-relaxed">
+                {clickError ? (
+                  <p className="text-amber-300 font-mono break-all">{clickError}</p>
+                ) : (
+                  <>
+                    <p className="text-amber-300 font-semibold mb-1">
+                      Privy SDK is taking long to initialise.
+                    </p>
+                    <p className="text-amber-200/80">
+                      Most often this is a network block on{' '}
+                      <span className="font-mono">auth.privy.io</span>. Try a
+                      different network (mobile hotspot), or use Solux below.
+                      Open DevTools → Console for the underlying error.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Primary: Privy — covers email/Google/Twitter and external
                 wallets in a single Privy-managed modal. */}
             <button
               onClick={() => {
-                onPrivyLogin()
-                onClose()
+                try {
+                  // login() should pop the Privy modal even if !ready
+                  // (the SDK queues internally). Wrap so any sync
+                  // throw surfaces to the user instead of being
+                  // silently swallowed by React's event boundary.
+                  // Type signature claims void, but real Privy 3.x
+                  // returns a Promise — capture either flavour.
+                  const result = onPrivyLogin() as unknown as
+                    | Promise<unknown>
+                    | void
+                  if (result && typeof (result as Promise<unknown>).then === 'function') {
+                    ;(result as Promise<unknown>).catch((e: unknown) => {
+                      console.error('[Privy] login() rejected:', e)
+                      setClickError(
+                        `Privy login failed: ${
+                          e instanceof Error ? e.message : String(e)
+                        }`,
+                      )
+                    })
+                  }
+                  // Don't close on !ready — let the user retry if the
+                  // SDK never opens its modal. Close only on success
+                  // path (Privy's modal handles its own lifecycle).
+                  if (isPrivyReady) onClose()
+                } catch (e) {
+                  console.error('[Privy] login() threw:', e)
+                  setClickError(
+                    `Privy login threw: ${
+                      e instanceof Error ? e.message : String(e)
+                    }`,
+                  )
+                }
               }}
               className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[var(--sf2)] hover:bg-[var(--sf3)] border border-[var(--brd)] hover:border-[var(--gold)]/60 transition-colors text-left"
             >
