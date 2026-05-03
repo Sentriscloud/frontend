@@ -96,12 +96,100 @@ export const ROUTER_ABI = [
     ],
     outputs: [{ name: "amounts", type: "uint256[]" }],
   },
+  // Liquidity surface — UniswapV2Router02 mirror. SRX flavour names the
+  // ETH-equivalent variants for readability ("addLiquiditySRX" reads
+  // closer to the chain's currency than "addLiquidityETH" would).
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "addLiquidity",
+    inputs: [
+      { name: "tokenA", type: "address" },
+      { name: "tokenB", type: "address" },
+      { name: "amountADesired", type: "uint256" },
+      { name: "amountBDesired", type: "uint256" },
+      { name: "amountAMin", type: "uint256" },
+      { name: "amountBMin", type: "uint256" },
+      { name: "to", type: "address" },
+      { name: "deadline", type: "uint256" },
+    ],
+    outputs: [
+      { name: "amountA", type: "uint256" },
+      { name: "amountB", type: "uint256" },
+      { name: "liquidity", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    stateMutability: "payable",
+    name: "addLiquiditySRX",
+    inputs: [
+      { name: "token", type: "address" },
+      { name: "amountTokenDesired", type: "uint256" },
+      { name: "amountTokenMin", type: "uint256" },
+      { name: "amountSRXMin", type: "uint256" },
+      { name: "to", type: "address" },
+      { name: "deadline", type: "uint256" },
+    ],
+    outputs: [
+      { name: "amountToken", type: "uint256" },
+      { name: "amountSRX", type: "uint256" },
+      { name: "liquidity", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "removeLiquidity",
+    inputs: [
+      { name: "tokenA", type: "address" },
+      { name: "tokenB", type: "address" },
+      { name: "liquidity", type: "uint256" },
+      { name: "amountAMin", type: "uint256" },
+      { name: "amountBMin", type: "uint256" },
+      { name: "to", type: "address" },
+      { name: "deadline", type: "uint256" },
+    ],
+    outputs: [
+      { name: "amountA", type: "uint256" },
+      { name: "amountB", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "removeLiquiditySRX",
+    inputs: [
+      { name: "token", type: "address" },
+      { name: "liquidity", type: "uint256" },
+      { name: "amountTokenMin", type: "uint256" },
+      { name: "amountSRXMin", type: "uint256" },
+      { name: "to", type: "address" },
+      { name: "deadline", type: "uint256" },
+    ],
+    outputs: [
+      { name: "amountToken", type: "uint256" },
+      { name: "amountSRX", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    stateMutability: "pure",
+    name: "quote",
+    inputs: [
+      { name: "amountA", type: "uint256" },
+      { name: "reserveA", type: "uint256" },
+      { name: "reserveB", type: "uint256" },
+    ],
+    outputs: [{ name: "amountB", type: "uint256" }],
+  },
 ] as const;
 
-// Pair ABI — only the views needed for price-impact calculation. Pulling the
-// full UniswapV2Pair surface is overkill for the swap UI; if we ever need
-// mint/burn here we can extend. `factory()` lets us double-check the pair
-// belongs to our deployment instead of trusting whatever address was passed.
+// Pair ABI — extended to cover the LP-token surface (totalSupply,
+// balanceOf, approve, allowance) so the liquidity flows can read user
+// share + approve LP tokens to the Router for burn. token1 added so
+// the pool list can identify the trailing side in one read instead of
+// inferring from the pair sort order.
 export const PAIR_ABI = [
   {
     type: "function",
@@ -121,6 +209,47 @@ export const PAIR_ABI = [
     inputs: [],
     outputs: [{ type: "address" }],
   },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "token1",
+    inputs: [],
+    outputs: [{ type: "address" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "totalSupply",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "balanceOf",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "allowance",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "approve",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "value", type: "uint256" },
+    ],
+    outputs: [{ type: "bool" }],
+  },
 ] as const;
 
 export const FACTORY_ABI = [
@@ -133,6 +262,30 @@ export const FACTORY_ABI = [
       { name: "tokenB", type: "address" },
     ],
     outputs: [{ type: "address" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "allPairsLength",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "allPairs",
+    inputs: [{ name: "index", type: "uint256" }],
+    outputs: [{ type: "address" }],
+  },
+  {
+    type: "function",
+    stateMutability: "nonpayable",
+    name: "createPair",
+    inputs: [
+      { name: "tokenA", type: "address" },
+      { name: "tokenB", type: "address" },
+    ],
+    outputs: [{ name: "pair", type: "address" }],
   },
 ] as const;
 
@@ -163,5 +316,26 @@ export const ERC20_ABI = [
       { name: "value", type: "uint256" },
     ],
     outputs: [{ type: "bool" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "symbol",
+    inputs: [],
+    outputs: [{ type: "string" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "decimals",
+    inputs: [],
+    outputs: [{ type: "uint8" }],
+  },
+  {
+    type: "function",
+    stateMutability: "view",
+    name: "name",
+    inputs: [],
+    outputs: [{ type: "string" }],
   },
 ] as const;

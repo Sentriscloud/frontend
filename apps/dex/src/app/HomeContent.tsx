@@ -7,7 +7,7 @@
 
 import { useChainId } from "wagmi";
 import { SwapWidget } from "./SwapWidget";
-import { WalletConnect } from "@/components/wallet/WalletConnect";
+import { Nav } from "@/components/Nav";
 import { DEX } from "@/lib/contracts";
 
 export function HomeContent() {
@@ -23,22 +23,7 @@ export function HomeContent() {
     // there's no visible "ends here" line. (Header stays sticky so it
     // still ribbons the top during scroll.)
     <main className="flex flex-col">
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-[var(--bk)]/80 border-b border-[var(--brd)]">
-        <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span
-              className="text-lg sm:text-xl font-semibold tracking-tight truncate"
-              style={{ color: "var(--gold)" }}
-            >
-              Sentrix DEX
-            </span>
-            <span className="hidden sm:inline text-[10px] uppercase tracking-[.18em] text-[var(--tx-d)]">
-              v2 · {net === "testnet" ? "testnet 7120" : "mainnet 7119"}
-            </span>
-          </div>
-          <WalletConnect />
-        </div>
-      </header>
+      <Nav />
 
       <section className="max-w-5xl w-full mx-auto px-5 py-6 lg:py-14">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] gap-6 lg:gap-12 items-start">

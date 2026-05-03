@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body className="antialiased min-h-screen bg-[var(--bk)] text-[var(--tx)]">
+      <body className="antialiased min-h-screen bg-[var(--bk)] text-[var(--tx)] overflow-x-hidden">
         <SentrixPrivyProvider mainnetOnly>
           {children}
         </SentrixPrivyProvider>
