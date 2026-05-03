@@ -463,7 +463,7 @@ export function FaucetForm({
                 </p>
                 {txHash && (
                   <a
-                    href={`${explorerUrl}/tx/${txHash}`}
+                    href={`${explorerUrl.replace(/\/$/, '')}/tx/${txHash}${network === 'testnet' ? '?network=testnet' : ''}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 mt-1.5 text-[12px] text-[var(--green)] hover:opacity-80 transition-opacity font-mono"
