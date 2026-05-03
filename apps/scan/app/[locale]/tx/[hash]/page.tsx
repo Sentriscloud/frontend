@@ -1,6 +1,7 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { Link } from "@/i18n/navigation";
 import { ArrowUpDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,11 +34,27 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
 
   // Try the currently-selected network first; the parallel cross-network
   // probe below catches the case where the user's cookie is on the wrong
-  // chain for this tx — instead of a silent 404 we render a "tx is on
-  // <other> network" prompt with a one-click switch.
+  // chain for this tx. Auto-switch to the network where the tx actually
+  // lives instead of asking the user to click a "Switch" button — when
+  // a dapp deeplinks (faucet, dex, coinblast) the right network already
+  // ends up in the ?network= query, but if a user pastes a bare hash from
+  // their wallet history or a screenshot we don't want them to see a
+  // "lives on Testnet, click to switch" wall.
   const { data: tx, loading } = useTransaction(network, hash);
   const otherNetwork = network === "mainnet" ? "testnet" : "mainnet";
   const { data: txOther, loading: loadingOther } = useTransaction(otherNetwork, hash);
+  const autoSwitched = useRef(false);
+  useEffect(() => {
+    if (autoSwitched.current) return;
+    if (loading || loadingOther) return;
+    if (tx) return;
+    if (!txOther) return;
+    autoSwitched.current = true;
+    toast.success(
+      `Found on ${otherNetwork === "mainnet" ? "Mainnet" : "Testnet"} — switching network.`,
+    );
+    setNetwork(otherNetwork);
+  }, [loading, loadingOther, tx, txOther, otherNetwork, setNetwork]);
   // BFT finality is "did a descendant block land?" — we only need the chain
   // tip to compute that; we already have everything else from the tx body.
   const { data: stats } = useStats(network);
@@ -59,27 +76,19 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
 
   if (!tx) {
     if (txOther) {
-      // Found on the other network — keep the user oriented and offer a one-
-      // click switch instead of a dead "not found" wall.
+      // The auto-switch effect above is already in flight; render a
+      // "switching..." placeholder while React commits the network change
+      // and the next-render useTransaction(network, hash) refetches against
+      // the right network. No button — see the comment on the effect for why.
       return (
         <div className="max-w-7xl mx-auto px-4 py-8">
           <Card>
             <CardContent className="p-8 text-center space-y-3">
-              <p className="text-muted-foreground">
-                This transaction lives on{" "}
-                <strong className="text-primary">
-                  {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"}
-                </strong>
-                , but you&apos;re viewing{" "}
-                {network === "mainnet" ? "Mainnet" : "Testnet"}.
-              </p>
+              <Skeleton className="h-4 w-56 mx-auto" />
               <p className="text-xs font-mono text-muted-foreground break-all">{hash}</p>
-              <button
-                onClick={() => setNetwork(otherNetwork)}
-                className="text-primary hover:underline text-sm inline-block"
-              >
-                Switch to {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"} →
-              </button>
+              <p className="text-xs text-muted-foreground">
+                Switching to {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"}…
+              </p>
             </CardContent>
           </Card>
         </div>

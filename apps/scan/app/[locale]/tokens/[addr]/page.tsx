@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Link } from "@/i18n/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,6 +56,22 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
     });
   }, [otherNetwork, addr]);
 
+  // Auto-switch when the contract lives on the other network. Same pattern
+  // as /tx and /blocks — toast + setNetwork instead of asking the user to
+  // click a button. Fire once per page lifetime.
+  const autoSwitched = useRef(false);
+  useEffect(() => {
+    if (autoSwitched.current) return;
+    if (loading || loadingOther) return;
+    if (token) return;
+    if (!tokenOther) return;
+    autoSwitched.current = true;
+    toast.success(
+      `Found on ${otherNetwork === "mainnet" ? "Mainnet" : "Testnet"} — switching network.`,
+    );
+    setNetwork(otherNetwork);
+  }, [loading, loadingOther, token, tokenOther, otherNetwork, setNetwork]);
+
   if (loading || (!token && loadingOther)) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-4">
@@ -66,25 +83,16 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
 
   if (!token) {
     if (tokenOther) {
+      // Auto-switch effect above already in flight; transient placeholder.
       return (
         <div className="max-w-7xl mx-auto px-4 py-8">
           <Card>
             <CardContent className="p-8 text-center space-y-3">
-              <p className="text-muted-foreground">
-                <strong className="text-primary">{tokenOther.symbol}</strong> ({tokenOther.name}) lives on{" "}
-                <strong className="text-primary">
-                  {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"}
-                </strong>
-                , but you&apos;re viewing{" "}
-                {network === "mainnet" ? "Mainnet" : "Testnet"}.
-              </p>
+              <Skeleton className="h-4 w-56 mx-auto" />
               <p className="text-xs font-mono text-muted-foreground break-all">{addr}</p>
-              <button
-                onClick={() => setNetwork(otherNetwork)}
-                className="text-primary hover:underline text-sm inline-block"
-              >
-                Switch to {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"} →
-              </button>
+              <p className="text-xs text-muted-foreground">
+                Switching to {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"}…
+              </p>
             </CardContent>
           </Card>
         </div>

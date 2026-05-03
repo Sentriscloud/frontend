@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Link } from "@/i18n/navigation";
 import { Blocks, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +37,23 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
   const { data: blockOther, loading: loadingOther } = useBlock(otherNetwork, blockHeight);
   const [txPage, setTxPage] = useState(1);
   const [railFilter, setRailFilter] = useState<RailFilter>("all");
+
+  // Auto-switch when the block lives on the other network (mainnet/testnet
+  // height counts are independent so this hits all the time, e.g. block
+  // #500_000 exists on both with different content). Same pattern as the
+  // tx detail page — toast + setNetwork instead of a manual button.
+  const autoSwitched = useRef(false);
+  useEffect(() => {
+    if (autoSwitched.current) return;
+    if (loading || loadingOther) return;
+    if (block) return;
+    if (!blockOther) return;
+    autoSwitched.current = true;
+    toast.success(
+      `Found on ${otherNetwork === "mainnet" ? "Mainnet" : "Testnet"} — switching network.`,
+    );
+    setNetwork(otherNetwork);
+  }, [loading, loadingOther, block, blockOther, otherNetwork, setNetwork]);
 
   // Per-rail counts surfaced on the Transactions tab so the user can see
   // at a glance "this block was 12 EVM txs, 5 native, 3 SRC-20" without
@@ -76,24 +94,15 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
 
   if (!block) {
     if (blockOther) {
+      // Auto-switch effect above already in flight; transient placeholder.
       return (
         <div className="max-w-7xl mx-auto px-4 py-8">
           <Card>
             <CardContent className="p-8 text-center space-y-3">
-              <p className="text-muted-foreground">
-                Block <span className="font-mono">#{height}</span> exists on{" "}
-                <strong className="text-primary">
-                  {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"}
-                </strong>
-                , but you&apos;re viewing{" "}
-                {network === "mainnet" ? "Mainnet" : "Testnet"}.
+              <Skeleton className="h-4 w-48 mx-auto" />
+              <p className="text-xs text-muted-foreground">
+                Switching to {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"}…
               </p>
-              <button
-                onClick={() => setNetwork(otherNetwork)}
-                className="text-primary hover:underline text-sm inline-block"
-              >
-                Switch to {otherNetwork === "mainnet" ? "Mainnet" : "Testnet"} →
-              </button>
             </CardContent>
           </Card>
         </div>
