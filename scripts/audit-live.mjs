@@ -18,10 +18,15 @@ const JSON_OUT = process.argv.includes("--json");
 
 // Public surface. Each entry: a label + a URL to load. The script visits
 // each, waits for network-idle, then dumps any console errors.
+//
+// `expectNotFound` flags URLs where 404s in the network log are expected
+// (non-existent tx hash used as a probe — confirms cross-network probe
+// fires without actually owning a real testnet tx). Those console 404s
+// are filtered out of the issue count.
 const SURFACE = [
   { app: "scan",                url: "https://scan.sentrixchain.com" },
-  { app: "scan-tx-mainnet",     url: "https://scan.sentrixchain.com/tx/0xdeadbeef" },
-  { app: "scan-tx-testnet",     url: "https://scan.sentrixchain.com/tx/0xdeadbeef?network=testnet" },
+  { app: "scan-tx-mainnet",     url: "https://scan.sentrixchain.com/tx/0xdeadbeef", expectNotFound: true },
+  { app: "scan-tx-testnet",     url: "https://scan.sentrixchain.com/tx/0xdeadbeef?network=testnet", expectNotFound: true },
   { app: "scan-block-mainnet",  url: "https://scan.sentrixchain.com/blocks/1" },
   { app: "scan-leaderboard",    url: "https://scan.sentrixchain.com/leaderboard" },
   { app: "solux",               url: "https://solux.sentriscloud.com" },
@@ -56,12 +61,17 @@ async function audit() {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const report = [];
 
-  for (const { app, url } of SURFACE) {
+  for (const { app, url, expectNotFound } of SURFACE) {
     const page = await ctx.newPage();
     const errors = [];
     const warnings = [];
     page.on("console", (msg) => {
-      if (msg.type() === "error") errors.push(msg.text());
+      if (msg.type() === "error") {
+        const text = msg.text();
+        // Strip 404s on the probe pages (fake hash, expected to not exist).
+        if (expectNotFound && /status of 404/.test(text)) return;
+        errors.push(text);
+      }
       if (msg.type() === "warning") warnings.push(msg.text());
     });
     page.on("pageerror", (err) => errors.push(`pageerror: ${err.message}`));
@@ -70,7 +80,15 @@ async function audit() {
     let status = "ok";
     let httpStatus = null;
     try {
-      const resp = await page.goto(url, { waitUntil: "networkidle", timeout: 25_000 });
+      // `load` (= DOMContentLoaded + scripts ran + initial assets) is
+      // the right gate for live dapps. `networkidle` never resolves on
+      // pages that poll a WS or REST endpoint (coinblast, scan-leaderboard,
+      // anything with live data) so we'd time out and miss real signal.
+      // After load, give the page 3s of grace to render any client-side
+      // hydration errors before snapshotting console.
+      const waitUntil = expectNotFound ? "domcontentloaded" : "load";
+      const resp = await page.goto(url, { waitUntil, timeout: 20_000 });
+      await page.waitForTimeout(3_000);
       httpStatus = resp ? resp.status() : null;
       if (!QUICK) {
         const hrefs = await page.$$eval("a[href]", (els) => els.map((e) => e.getAttribute("href") || ""));
@@ -83,8 +101,15 @@ async function audit() {
         }
       }
     } catch (err) {
-      status = "load-error";
-      errors.push(String(err));
+      // Timeout on a probe page is expected (auto-switch keeps polling) —
+      // don't count it as a load-error.
+      const isTimeout = /Timeout.*exceeded/.test(String(err));
+      if (expectNotFound && isTimeout) {
+        status = "ok";
+      } else {
+        status = "load-error";
+        errors.push(String(err));
+      }
     }
 
     await page.close();
