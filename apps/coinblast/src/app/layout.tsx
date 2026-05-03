@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { SentrixPrivyProvider } from '@sentriscloud/wallet-config'
+import { PrivyProviderDynamic } from './_components/privy-provider-dynamic'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -62,14 +62,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className="antialiased min-h-screen flex flex-col">
-        <SentrixPrivyProvider mainnetOnly>
+        <PrivyProviderDynamic>
           <Header />
           <main className="flex-1 relative z-[1]">
             {children}
           </main>
           <Footer />
           <CookieConsent />
-        </SentrixPrivyProvider>
+        </PrivyProviderDynamic>
       </body>
     </html>
   )
