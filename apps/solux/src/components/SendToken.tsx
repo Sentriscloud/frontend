@@ -64,6 +64,7 @@ export default function SendToken({
 
   useEffect(() => {
     if (!address) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTokenBalance(null);
     setSrxBalanceSentri(null);
     getTokenBalance(token.contract_address, address)
@@ -79,6 +80,7 @@ export default function SendToken({
 
   useEffect(() => {
     if (!txid) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTxStatus('pending');
     setTxBlockHeight(null);
     const startedAt = Date.now();
@@ -125,6 +127,7 @@ export default function SendToken({
   useEffect(() => {
     if (txStatus !== 'in-block' || txBlockHeight === null || wsFinalized === null) return;
     if (wsFinalized >= txBlockHeight) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTxStatus('finalized');
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
     }

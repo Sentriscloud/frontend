@@ -38,6 +38,9 @@ export default function NetworkCard() {
 
   useEffect(() => {
     let cancelled = false;
+    // Reset stale stats on network switch — synchronous setState here
+    // is intentional, fires only on user-driven network change.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStats({ height: null, finalized: null, activeValidators: null, chainId: null });
 
     const fetchStats = async () => {

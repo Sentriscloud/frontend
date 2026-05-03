@@ -50,6 +50,7 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     if (!address) return;
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBalanceSentri(null); // reset so stale balance from prev network doesn't flash
     getAddressInfo(address)
       .then((info) => {
@@ -64,6 +65,7 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
   // ── Pending tx tracker — poll until in block + finalized ─────────────
   useEffect(() => {
     if (!txid) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTxStatus('pending');
     setTxBlockHeight(null);
 
@@ -131,7 +133,7 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
     poll();
     pollRef.current = setInterval(poll, 1500);
     return stopPolling;
-  }, [txid, network]);
+  }, [txid, network, address, updateNotif]);
 
   const loadMax = () => {
     if (balanceSentri === null) return;

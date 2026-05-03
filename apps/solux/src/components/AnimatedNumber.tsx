@@ -1,6 +1,22 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+
+// Subscribe to the prefers-reduced-motion media query without setState
+// in an effect. Returns true when the user has the system setting on.
+function subscribeReducedMotion(callback: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  mq.addEventListener('change', callback);
+  return () => mq.removeEventListener('change', callback);
+}
+function getReducedMotion() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+function getReducedMotionServer() {
+  return false;
+}
 
 // Number that counts up from 0 (or the previous value) to its target
 // over `duration`ms. Used on the balance hero so refresh / unlock /
@@ -29,13 +45,16 @@ export default function AnimatedNumber({
   const fromRef = useRef(0);
   const startRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
+  // Track the OS reduced-motion preference reactively. Avoids a
+  // setState-in-effect on the early-return path.
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotion,
+    getReducedMotionServer,
+  );
 
   useEffect(() => {
-    // Skip animation when prefers-reduced-motion is set.
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setDisplay(value);
-      return;
-    }
+    if (reducedMotion) return;
 
     fromRef.current = display;
     startRef.current = null;
@@ -59,7 +78,13 @@ export default function AnimatedNumber({
     // Intentionally exclude `display` from deps — it changes on every
     // tick and would restart the animation infinitely.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, duration]);
+  }, [value, duration, reducedMotion]);
 
-  return <span className={className} style={style}>{format(display)}</span>;
+  // When reduced-motion is on, render the target value directly —
+  // bypasses the easing state entirely.
+  return (
+    <span className={className} style={style}>
+      {format(reducedMotion ? value : display)}
+    </span>
+  );
 }

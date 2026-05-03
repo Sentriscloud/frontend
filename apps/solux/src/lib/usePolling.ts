@@ -23,9 +23,15 @@ export function usePolling(
   enabled = true,
 ) {
   // Keep a stable ref to the latest tick so changing it doesn't restart the
-  // interval (caller usually re-renders on every state update).
+  // interval (caller usually re-renders on every state update). Update the
+  // ref in an effect (not in the render body) — React 19's react-hooks/refs
+  // rule flags ref mutation during render. Effects run in source order, so
+  // by the time the polling effect below executes, tickRef.current is the
+  // latest tick.
   const tickRef = useRef(tick);
-  tickRef.current = tick;
+  useEffect(() => {
+    tickRef.current = tick;
+  });
 
   useEffect(() => {
     if (!enabled) return;

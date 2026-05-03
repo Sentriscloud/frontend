@@ -16,7 +16,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useWalletStore } from "@/lib/store";
-import { signEvmTransaction, type EvmSignRequest } from "@/lib/evm-sign";
+import { signEvmTransaction } from "@/lib/evm-sign";
 import { ShieldCheck, X, AlertTriangle } from "lucide-react";
 import SrxMark from "@/components/SrxMark";
 import { formatUnits } from "viem";
@@ -87,6 +87,9 @@ export default function SignPage() {
 
   // Read the request envelope from the URL on mount. Validate before we
   // ever render a signing prompt — bad input → close popup with error.
+  // The setError/setOrigin/setReq calls are intentional bootstrapping
+  // synchronous setState (mount-only), not a render cascade.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -112,6 +115,7 @@ export default function SignPage() {
     setOrigin(o);
     setReq(parsed);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const address = useWalletStore((s) => s.address);
   const privateKey = useWalletStore((s) => s.privateKey);

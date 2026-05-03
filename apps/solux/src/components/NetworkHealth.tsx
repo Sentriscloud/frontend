@@ -33,8 +33,11 @@ export default function NetworkHealth() {
   const [showDetail, setShowDetail] = useState(false);
 
   // Reset to "unreachable" placeholder when network changes — avoids
-  // flashing stale mainnet stats while testnet data arrives.
+  // flashing stale mainnet stats while testnet data arrives. The
+  // setState fires only on user-driven network switch, not in a
+  // render-cascade loop.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState({ health: 'unreachable', height: null, finalized: null, mempool: null, validators: null });
   }, [network]);
 
@@ -67,9 +70,12 @@ export default function NetworkHealth() {
     return () => { aborted = true; };
   }, 30_000);
 
-  // Apply WS-fresh values + recompute health on every WS tick.
+  // Apply WS-fresh values + recompute health on every WS tick. The
+  // setState is gated behind real WS data deltas, so it doesn't run
+  // every render — fine despite the lint rule's blanket flag.
   useEffect(() => {
     if (wsHead?.number == null && wsFinalized == null) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState((prev) => {
       const height = wsHead?.number ?? prev.height;
       const finalized = wsFinalized ?? prev.finalized;

@@ -123,6 +123,8 @@ function NotificationRow({
   } as const;
 
   const timeAgo = (ts: number) => {
+    // Date.now() is intentionally impure — fresh "ago" text per render.
+    // eslint-disable-next-line react-hooks/purity
     const diff = Math.floor((Date.now() - ts) / 1000);
     if (diff < 60) return `${diff}s ago`;
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;

@@ -164,6 +164,12 @@ export default function Dashboard() {
     }
   }, [address, pushNotif]);
 
+  // fetchAll resets stale state synchronously (setSrxBalance(null), etc)
+  // before kicking off the async fetch — that's the intended "clear UI
+  // immediately on network/address switch" behavior. The React 19 lint
+  // rule flags any synchronous setState inside an effect, but here it's
+  // a user-driven event (deps change), not a render-cascade trigger.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchAll(); }, [fetchAll, network]);
 
   const copyAddress = () => {
@@ -187,6 +193,10 @@ export default function Dashboard() {
   };
 
   const timeAgo = (ts: number) => {
+    // Date.now() inside render is impure (different output per call).
+    // For a "X seconds ago" label this is intentional — we want fresh
+    // text on every render. Suppress the React 19 purity rule.
+    // eslint-disable-next-line react-hooks/purity
     const diff = Math.floor(Date.now() / 1000) - ts;
     if (diff < 60) return `${diff}s`;
     if (diff < 3600) return `${Math.floor(diff / 60)}m`;

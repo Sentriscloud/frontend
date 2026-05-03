@@ -23,7 +23,10 @@ export default function TxHistory({ onBack, inline = false }: { onBack?: () => v
     if (!address) return;
     let cancelled = false;
     // Clear stale tx list immediately so the previous network's history
-    // doesn't flash while the new network's data loads.
+    // doesn't flash while the new network's data loads. Synchronous
+    // setState here is intentional, fires only on user-driven address
+    // or network switch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTxs([]);
     setLoading(true);
     getTransactionHistory(address, 50)
@@ -36,6 +39,9 @@ export default function TxHistory({ onBack, inline = false }: { onBack?: () => v
   const truncate = (s: string) => s.length > 14 ? s.slice(0, 6) + '…' + s.slice(-4) : s;
 
   const timeAgo = (ts: number) => {
+    // Date.now() is intentionally impure here — we want fresh "X seconds
+    // ago" text on every render.
+    // eslint-disable-next-line react-hooks/purity
     const diff = Math.floor(Date.now() / 1000) - ts;
     if (diff < 60) return `${diff}s ago`;
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;

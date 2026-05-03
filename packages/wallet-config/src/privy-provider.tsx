@@ -35,7 +35,11 @@ import { SENTRIX_MAINNET, SENTRIX_TESTNET } from "./chain";
 // Privy App IDs are sent to the client on every auth call — they're not
 // secrets, so a baked-in default is fine. An app can still override per-
 // environment via NEXT_PUBLIC_PRIVY_APP_ID without a code change.
-const DEFAULT_PRIVY_APP_ID = "cmonc8o7p006p0ckyld5gc6kk";
+//
+// Bumped 2026-05-03 from cmonc8o7p... ("Sentrix Labs", first try) to
+// cmoq3mw8o... ("Sentrix Chain", second try) — first app's mode wasn't
+// reachable from the dashboard UI to fix; second app is the live one.
+const DEFAULT_PRIVY_APP_ID = "cmoq3mw8o006v0dl5k99ds3oi";
 
 export interface SentrixPrivyProviderOptions {
   appId?: string;
@@ -89,9 +93,10 @@ export function SentrixPrivyProvider({
     <PrivyProvider
       appId={resolvedAppId}
       config={{
-        // Login surfaces — the four the user signed off on. "wallet"
-        // covers MetaMask / Rabby / Brave / WalletConnect via Privy's
-        // built-in connector list.
+        // Login surfaces. Must be a subset of methods enabled on the
+        // Privy dashboard. Operator can extend the dashboard list
+        // (Google / Twitter / Passkey) and we just add the matching
+        // string here — runtime ordering of methods follows this array.
         loginMethods: ["email", "google", "twitter", "wallet"],
         // Sentrix gold-on-black to match the rest of the app shell.
         appearance: {
@@ -100,16 +105,12 @@ export function SentrixPrivyProvider({
           showWalletLoginFirst: false,
           ...(logo ? { logo } : {}),
         },
-        // Auto-mint a Privy embedded wallet for users who sign in via
-        // social/email and don't already have one. MPC-managed by Privy
-        // (not on-device); good enough for launchpad-style flows but
-        // worth knowing for self-custody copy. Sentrix is EVM-only, so
-        // only the ethereum side is configured.
-        embeddedWallets: {
-          ethereum: {
-            createOnLogin: "users-without-wallets",
-          },
-        },
+        // Embedded wallet config is set on the dashboard
+        // (create_on_login: users-without-wallets). Removed from client
+        // 2026-05-03 — coinblast bootstrap was hitting
+        // /apps/{id}/embedded-wallets?caid=... with 403, which kept
+        // Privy SDK stuck pre-ready forever. Server-side config still
+        // applies on actual login.
         defaultChain: SENTRIX_MAINNET,
         supportedChains: [...chains],
       }}

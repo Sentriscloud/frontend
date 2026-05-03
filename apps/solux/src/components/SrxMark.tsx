@@ -6,9 +6,11 @@
 //
 // We bundle the 512px PNG locally to avoid a runtime brand-kit dependency.
 
+import Image from 'next/image';
+
 export default function SrxMark({ className }: { className?: string }) {
   return (
-    <img
+    <Image
       src="/brand/coin-solid-512.png"
       alt=""
       aria-hidden

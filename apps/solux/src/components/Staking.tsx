@@ -82,11 +82,20 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
     }
   }, [address]);
 
+  // fetchAll resets stale state synchronously before async fetch — same
+  // pattern as Dashboard. Lint suppression is for that intentional reset.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchAll(); }, [fetchAll, network]);
 
   // ── Pending tx tracker — polls until finalized or expires ────────────
+  // Capture pending.txid + pending.startedAt as effect-scoped locals so
+  // exhaustive-deps stays clean without re-firing on every status flip
+  // (which would restart the poll mid-flight and lose the in-block
+  // state). The effect re-fires only when a NEW pending tx starts.
+  const pendingTxid = pending?.txid;
+  const pendingStartedAt = pending?.startedAt;
   useEffect(() => {
-    if (!pending) return;
+    if (!pendingTxid || pendingStartedAt === undefined) return;
     const stopPolling = () => {
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
     };
@@ -99,13 +108,13 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
     txNetworkRef.current = network;
 
     const poll = async () => {
-      if (Date.now() - pending.startedAt > PENDING_TIMEOUT_MS) {
+      if (Date.now() - pendingStartedAt > PENDING_TIMEOUT_MS) {
         setPending((p) => (p && p.status === 'pending' ? { ...p, status: 'expired' } : p));
         stopPolling();
         return;
       }
       try {
-        const detail = await getTransactionDetail(pending.txid);
+        const detail = await getTransactionDetail(pendingTxid);
         if (!detail) return;
         const blockIdx = detail.block_index ?? detail.block?.index;
         if (typeof blockIdx === 'number') {
@@ -128,13 +137,14 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
     poll();
     pollRef.current = setInterval(poll, 1500);
     return stopPolling;
-  }, [pending?.txid, pending?.startedAt, fetchAll, network]);
+  }, [pendingTxid, pendingStartedAt, fetchAll, network]);
 
   // WS fast-path: when sentrix_finalized advances past the staking tx's
   // block, mark finalized immediately. The 1.5s poll stays as backup.
   useEffect(() => {
     if (!pending || pending.status !== 'in-block' || !pending.blockHeight || wsFinalized === null) return;
     if (wsFinalized >= pending.blockHeight) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPending((p) => (p ? { ...p, status: 'finalized' } : p));
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
       setTimeout(() => setPending(null), 4000);

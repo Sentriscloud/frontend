@@ -39,6 +39,7 @@ export default function ConnectPage() {
     const params = new URLSearchParams(window.location.search);
     const o = params.get("origin");
     if (!o || !/^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError("Missing or malformed `origin` parameter.");
       return;
     }
