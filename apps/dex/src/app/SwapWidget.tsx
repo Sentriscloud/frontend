@@ -389,8 +389,6 @@ export function SwapWidget() {
   // home page instead of the tx. Use this helper instead of string concat.
   const txExplorerUrl = (hash: string | undefined) =>
     `https://scan.sentrixchain.com/tx/${hash ?? ""}${chainId === 7120 ? "?network=testnet" : ""}`;
-  const explorerBase =
-    chainId === 7120 ? "https://scan.sentrixchain.com/?network=testnet" : "https://scan.sentrixchain.com";
 
   // Network gate — render the swap UI but disable submission when chain
   // is unsupported. Avoids the silent "no code at address" failure where
