@@ -26,6 +26,7 @@ import { ReadContract } from "@/components/common/ReadContract";
 import { WriteContract } from "@/components/common/WriteContract";
 import { ApprovalsTab } from "@/components/common/ApprovalsTab";
 import { InternalTxsPlaceholder } from "@/components/common/InternalTxsPlaceholder";
+import { AddressAnalytics } from "@/components/common/AddressAnalytics";
 import { CountBadge } from "@/components/common/CountBadge";
 import { WatchButton } from "@/components/common/WatchButton";
 import { downloadCsv } from "@/lib/csv";
@@ -210,6 +211,7 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
           <TabsTrigger value="events">
             Events <CountBadge count={eventLogs?.length ?? null} />
           </TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="contract">Contract</TabsTrigger>
         </TabsList>
 
@@ -510,6 +512,10 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <AddressAnalytics history={history ?? null} address={addr} />
         </TabsContent>
 
         <TabsContent value="contract" className="space-y-4">
