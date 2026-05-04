@@ -571,13 +571,24 @@ async function fetchEvmTokensFromFactory(network: NetworkId): Promise<TokenData[
     let supply = 0;
     try {
       // Layout: offset_name (32B), offset_symbol (32B), supply (32B),
-      //         then the two string blobs at their offsets.
+      //         then the two string blobs at their offsets. Each 32-byte
+      //         field needs 64 hex chars. Anything shorter = malformed
+      //         event data — skip rather than crash with BigInt("0x") or
+      //         render binary bytes as DC4/STX/ETX control chars in the UI.
+      if (data.length < 192) continue;
       const offName = parseInt(data.slice(0, 64), 16) * 2;
       const offSym = parseInt(data.slice(64, 128), 16) * 2;
       const supplyHex = data.slice(128, 192);
+      if (!Number.isFinite(offName) || !Number.isFinite(offSym) || !/^[0-9a-fA-F]{64}$/.test(supplyHex)) continue;
       supply = Number(BigInt("0x" + supplyHex)) / 1e18; // 18-decimal display
       name = decodeAbiString(data, offName);
       symbol = decodeAbiString(data, offSym);
+      // If either string came back as binary garbage (e.g. the on-chain
+      // symbol slot is uninitialised or the contract emitted bytes that
+      // aren't valid UTF-8), drop the entry rather than render DC4/BTH/
+      // STX placeholders. A token with an unprintable symbol is unusable
+      // in the UI anyway and the user gets a cleaner empty list.
+      if (!isPrintable(name) || !isPrintable(symbol)) continue;
     } catch {
       // Skip malformed event — never break the whole page render
       continue;
@@ -596,16 +607,36 @@ async function fetchEvmTokensFromFactory(network: NetworkId): Promise<TokenData[
 }
 
 function decodeAbiString(data: string, offset: number): string {
+  if (!Number.isFinite(offset) || offset < 0 || offset + 64 > data.length) return "";
   const lenHex = data.slice(offset, offset + 64);
   const len = parseInt(lenHex, 16);
+  if (!Number.isFinite(len) || len < 0 || len > 1024) return ""; // sanity cap
   const start = offset + 64;
   const end = start + len * 2;
+  if (end > data.length) return "";
   const bytes = data.slice(start, end);
   let s = "";
   for (let i = 0; i < bytes.length; i += 2) {
-    s += String.fromCharCode(parseInt(bytes.slice(i, i + 2), 16));
+    const code = parseInt(bytes.slice(i, i + 2), 16);
+    if (Number.isNaN(code)) return "";
+    s += String.fromCharCode(code);
   }
   return s;
+}
+
+// "Printable enough to render as a token name/symbol." Allows
+// ASCII printable + common Latin extended; rejects strings with any
+// control characters (which is what produces "DC4"/"STX"/"BTH" in the
+// UI when binary data is decoded as if it were UTF-8 string).
+function isPrintable(s: string): boolean {
+  if (!s || s.length === 0) return false;
+  // C0 controls (0-31), DEL (127), C1 controls (128-159), and the
+  // Unicode replacement char (U+FFFD) all disqualify the string.
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 32 || c === 127 || (c >= 128 && c <= 159) || c === 0xFFFD) return false;
+  }
+  return true;
 }
 
 export async function fetchToken(network: NetworkId, address: string): Promise<TokenData | null> {
