@@ -197,8 +197,8 @@
   },
   "not_found_page": {
     "eyebrow": "Tidak Ditemukan",
-    "title": "Chain ini tidak mengenal blok tersebut.",
-    "description": "Halaman yang Anda minta tidak ditemukan. Mungkin dipindahkan, atau alamat / hash yang diketik belum lengkap.",
+    "title": "Halaman tidak ditemukan.",
+    "description": "Rute ini tidak ada di explorer, atau alamat / hash yang diketik belum lengkap. Bilah pencarian di atas menerima nomor blok, hash transaksi (64 karakter), dan alamat 0x.",
     "browse_blocks": "Lihat blok"
   },
   "footer": {

@@ -226,13 +226,68 @@ export async function fetchChainInfo(network: NetworkId): Promise<ChainInfo | nu
   return normalizeChainInfo(await apiFetch<ChainInfo>(network, "/chain/info"));
 }
 
-export function fetchBlock(network: NetworkId, index: number) {
-  return apiFetch<BlockData>(network, `/chain/blocks/${index}`);
+// DECISION: backend `/chain/blocks/<n>` embeds transactions in their raw
+// chain shape (`txid` / `from_address` / `to_address` / `amount` in sentri).
+// The TransactionData interface and every UI consumer expect the
+// `id` / `from` / `to` / `amount` (in SRX) shape that the standalone
+// `/transactions/<txid>` endpoint already serves via `normalizeTx`. Without
+// this normalisation the block detail Transactions tab rendered empty
+// columns (id/from/to all undefined) and the amount column showed raw
+// sentri (e.g. "100000000 SRX" instead of "1 SRX"). Normalise here so
+// downstream is uniform regardless of which endpoint the data came from.
+interface RawEmbeddedTx {
+  txid?: string;
+  from_address?: string;
+  to_address?: string;
+  amount?: number;
+  fee?: number;
+  timestamp?: number;
+  nonce?: number;
+  signature?: string;
+  data?: string;
+  chain_id?: number;
+}
+
+function normalizeEmbeddedTx(raw: RawEmbeddedTx): TransactionData {
+  return {
+    id: raw.txid ?? "",
+    from: raw.from_address ?? "",
+    to: raw.to_address ?? "",
+    amount: toSrx(raw.amount ?? 0),
+    fee: toSrx(raw.fee ?? 0),
+    timestamp: String(raw.timestamp ?? 0),
+    nonce: raw.nonce ?? 0,
+    signature: raw.signature ?? "",
+    input_data: raw.data,
+  };
+}
+
+function normalizeBlockTransactions(block: BlockData | null): BlockData | null {
+  if (!block) return block;
+  // Defensive: if `transactions` is already in the normalised shape (e.g.
+  // an indexer pre-mapped it), the field-level fallbacks make the call
+  // a no-op. We only re-shape when at least one raw field is present.
+  if (Array.isArray(block.transactions)) {
+    block.transactions = block.transactions.map((t) => {
+      const raw = t as unknown as RawEmbeddedTx & TransactionData;
+      const looksRaw =
+        raw.txid !== undefined ||
+        raw.from_address !== undefined ||
+        raw.to_address !== undefined;
+      return looksRaw ? normalizeEmbeddedTx(raw) : (t as TransactionData);
+    });
+  }
+  return block;
+}
+
+export async function fetchBlock(network: NetworkId, index: number) {
+  const res = await apiFetch<BlockData>(network, `/chain/blocks/${index}`);
+  return normalizeBlockTransactions(res);
 }
 
 export async function fetchLatestBlocks(network: NetworkId, count = 10) {
   const res = await apiFetch<{ blocks: BlockData[] }>(network, `/chain/blocks?limit=${count}`);
-  return res?.blocks ?? [];
+  return (res?.blocks ?? []).map((b) => normalizeBlockTransactions(b)!);
 }
 
 export interface BlocksPage {

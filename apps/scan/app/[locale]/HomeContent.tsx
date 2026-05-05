@@ -133,18 +133,32 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
   const txCountSpark = performance?.points?.map((p) => p.tx_count) ?? [];
 
   // Etherscan-style delta % computed across the spark window (first vs last
-  // point). We only show it when the window has enough data and the chain
-  // isn't paused — otherwise the percent is meaningless or misleading.
-  function pctDelta(arr: number[]): number | null {
-    if (arr.length < 2) return null;
+  // point). We only show it when the window is statistically honest:
+  //   - need ≥ 6 samples (anything shorter shows wild jumps on a single block)
+  //   - both endpoints non-zero (avoid divide-by-near-zero amplification)
+  //   - |delta| ≤ 200% (above that the denominator was tiny — noise, not signal,
+  //     e.g. TPS rising from 0.05 → 0.4 reports +700% which reads as catastrophic
+  //     even though the chain just woke up from idle)
+  // Returns null when any guard trips → StatCard hides the chip cleanly.
+  function pctDelta(arr: number[], minBase = 0): number | null {
+    if (arr.length < 6) return null;
     const a = arr[0];
     const b = arr[arr.length - 1];
-    if (!Number.isFinite(a) || !Number.isFinite(b) || a === 0) return null;
-    return ((b - a) / Math.abs(a)) * 100;
+    if (!Number.isFinite(a) || !Number.isFinite(b) || a === 0 || b === 0) return null;
+    if (Math.abs(a) < minBase) return null;
+    const pct = ((b - a) / Math.abs(a)) * 100;
+    if (Math.abs(pct) > 200) return null;
+    return pct;
   }
-  const tpsDelta = pctDelta(tpsSpark);
-  const blockTimeDelta = pctDelta(blockTimeSpark);
-  const txCountDelta = pctDelta(txCountSpark);
+  // Minimum base 0.5 tps for TPS — below that the percent swings on noise,
+  // not a real load shift. Block time floors at the chain's 1s target.
+  const tpsDelta = pctDelta(tpsSpark, 0.5);
+  const blockTimeDelta = pctDelta(blockTimeSpark, 1);
+  // Total Transactions card shows a cumulative counter — a window-relative
+  // percent on cumulative data reads as if the chain "lost" txs. Hide it.
+  // Re-enable once we wire a tx-per-window metric (different field).
+  const txCountDelta: number | null = null;
+  void txCountSpark;
 
   // Freshness — every successful poll bumps `lastFetched`. The chip ticks
   // every second, so users can watch the data age.
@@ -335,7 +349,10 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               loading={!blocks}
               accent={isChainIdle ? "var(--orange)" : "var(--gold-l)"}
               spark={isChainIdle ? undefined : blockTimeSpark}
-              delta={isChainIdle ? null : blockTimeDelta != null ? -blockTimeDelta : null}
+              // No sign flip — `+15%` on block time is just "blocks took 15%
+              // longer over the window." Reading negative-as-bad on a
+              // strictly positive duration metric was confusing users.
+              delta={isChainIdle ? null : blockTimeDelta}
               subline={t("stats.subline_target_1s")}
               title={isChainIdle ? "Chain paused — block time stale" : undefined}
             />

@@ -197,8 +197,8 @@
   },
   "not_found_page": {
     "eyebrow": "Not Found",
-    "title": "This chain has no such block.",
-    "description": "The page you requested could not be found. It may have been moved, or the address / hash you typed is incomplete.",
+    "title": "We couldn't find that page.",
+    "description": "The route doesn't exist on this explorer, or the address / hash you typed is incomplete. The search bar above accepts block heights, 64-char tx hashes, and 0x addresses.",
     "browse_blocks": "Browse blocks"
   },
   "footer": {
