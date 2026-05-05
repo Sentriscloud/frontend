@@ -1,13 +1,14 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
-import { FileCode, ExternalLink, Search, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { FileCode, ExternalLink, Search, CheckCircle2, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DetailCard } from "@/components/common/DetailCard";
 import { Address } from "@/components/common/Address";
 import { useNetwork } from "@/lib/network-context";
 import { useSourcifyStatus } from "@/lib/sourcify";
+import { fetchRecentContracts, type RecentContract } from "@/lib/api";
 
 // DECISION: until our self-hosted Sourcify exposes the
 // `getPaginatedContractAddresses` API (currently disabled at our verifier
@@ -148,6 +149,9 @@ export default function ContractsPage() {
         </div>
       </DetailCard>
 
+      {/* ── Recently deployed (indexer-backed) ───── */}
+      <RecentlyDeployed network={network} />
+
       {/* ── Verify your own ─────────────────────── */}
       <DetailCard title="Verify your own contract">
         <div className="text-sm leading-relaxed py-2 space-y-3">
@@ -256,4 +260,84 @@ function VerifyBadge({
     );
   }
   return <span className="text-xs text-muted-foreground">Unverified</span>;
+}
+
+// Recently deployed — feeds off the indexer's `/contracts/recent` endpoint,
+// which serves `addresses WHERE is_contract = true ORDER BY first_seen_block
+// DESC`. Marked `is_contract = true` is set lazily by the contract-detect
+// worker (4s tick, eth_getCode probe), so a freshly-deployed contract
+// surfaces here within seconds even before the chain-wide backfill has
+// reached its block. Complements /contracts/stats which requires indexed
+// call history (lags backfill).
+function RecentlyDeployed({ network }: { network: "mainnet" | "testnet" }) {
+  const [rows, setRows] = useState<RecentContract[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setRows(null);
+    setError(null);
+    fetchRecentContracts(network, 25)
+      .then((r) => {
+        if (!cancelled) setRows(r);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [network]);
+
+  return (
+    <DetailCard
+      title={
+        <span className="inline-flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-[var(--gold)]" /> Recently deployed
+        </span>
+      }
+    >
+      {error ? (
+        <p className="text-xs text-muted-foreground py-2">
+          Couldn&apos;t reach the indexer right now. Try again in a moment.
+        </p>
+      ) : rows === null ? (
+        <p className="text-xs text-muted-foreground py-2">Loading…</p>
+      ) : rows.length === 0 ? (
+        <p className="text-xs text-muted-foreground py-2">
+          No user-deployed contracts indexed on {network} yet.
+        </p>
+      ) : (
+        <div className="overflow-x-auto -mx-6">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-muted-foreground border-b border-border/60">
+                <th className="px-6 py-2 font-medium">Address</th>
+                <th className="px-6 py-2 font-medium">First seen</th>
+                <th className="px-6 py-2 font-medium">Code hash</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr
+                  key={r.address}
+                  className="border-b border-border/30 last:border-0 hover:bg-muted/30"
+                >
+                  <td className="px-6 py-3">
+                    <Address address={r.address} />
+                  </td>
+                  <td className="px-6 py-3 text-xs text-muted-foreground font-mono">
+                    #{r.first_seen_block.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-3 text-xs text-muted-foreground font-mono break-all max-w-[16rem]">
+                    {r.code_hash ? `${r.code_hash.slice(0, 18)}…` : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </DetailCard>
+  );
 }

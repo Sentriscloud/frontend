@@ -1217,6 +1217,31 @@ export async function fetchContractStats(
   return res?.contracts ?? [];
 }
 
+// ── /contracts/recent ───────────────────────────────────────────────────────
+// User-deployed contracts ordered by deployment height. Indexer-served from
+// `addresses WHERE is_contract = true` — surfaces every contract the chain
+// has indexed, regardless of whether it's been called yet (so freshly-deployed
+// contracts show immediately, while /contracts/stats requires indexed call
+// history that may lag behind by hours during initial backfill).
+export interface RecentContract {
+  rank: number;
+  address: string;
+  first_seen_block: number;
+  last_seen_block: number;
+  code_hash: string | null;
+}
+
+export async function fetchRecentContracts(
+  network: NetworkId,
+  limit = 100,
+): Promise<RecentContract[]> {
+  const res = await apiFetch<{ contracts: RecentContract[] }>(
+    network,
+    `/contracts/recent?limit=${limit}`,
+  );
+  return res?.contracts ?? [];
+}
+
 // ── /whale/tx ───────────────────────────────────────────────────────────────
 // Largest transfers — backend-served (was previously computed client-side
 // from the rolling 100-block window in useBlocks). Indexer scans the full
