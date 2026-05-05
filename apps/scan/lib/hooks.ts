@@ -12,6 +12,7 @@ import {
   fetchAccountTokens, fetchValidatorRewards, fetchValidatorBlocksOverTime,
   fetchValidatorDelegators, fetchMempool, fetchCurrentEpoch, fetchChainStatus,
   fetchEventLogs, fetchDailyStats, fetchAccountsTop,
+  fetchActiveAccounts, fetchContractStats, fetchWhaleTransfers,
   type ChainInfo, type BlockData, type TransactionData,
   type ValidatorData, type AccountBalance, type TokenData,
   type TopHolder, type TokenHolder, type TokenTransfer,
@@ -19,6 +20,7 @@ import {
   type AccountTokenHolding, type ValidatorReward, type ValidatorBlocksPoint,
   type ValidatorDelegator, type MempoolSnapshot, type EpochInfo, type ChainStatus,
   type EventLog, type DailyStat,
+  type ActiveAccount, type ContractStat, type WhaleTransfer,
 } from "./api";
 
 interface UsePollingReturn<T> {
@@ -208,9 +210,13 @@ export function useAddressHistory(
   page = 1,
   limit = 20,
 ) {
+  // Live-poll the first page only — deeper pages are historical and don't
+  // need refresh. Without this the address detail page felt frozen
+  // ("checked my address, no new tx showing up") and required a manual
+  // reload to see new activity. 10s matches the rest of the cooler hooks.
   return usePolling<TransactionData[]>(
     () => fetchAccountHistory(network, address, page, limit),
-    0,
+    page === 1 ? 10_000 : 0,
     [network, address, page, limit]
   );
 }
@@ -265,6 +271,42 @@ export function useAccountsTop(network: NetworkId, limit = 100) {
   return usePolling<TopHolder[]>(
     () => fetchAccountsTop(network, limit),
     30_000,
+    [network, limit],
+  );
+}
+
+// Most-active senders (indexer-served, GROUP BY from_addr count). 30s
+// matches useAccountsTop cadence.
+export function useActiveAccounts(network: NetworkId, limit = 100) {
+  return usePolling<ActiveAccount[]>(
+    () => fetchActiveAccounts(network, limit),
+    30_000,
+    [network, limit],
+  );
+}
+
+// Top contracts by call count or summed gas_used. Same 30s poll. Sort
+// flips per page (calls vs gas_used) so the dep list pulls it in.
+export function useContractStats(
+  network: NetworkId,
+  sort: "calls" | "gas_used" = "calls",
+  limit = 100,
+) {
+  return usePolling<ContractStat[]>(
+    () => fetchContractStats(network, sort, limit),
+    30_000,
+    [network, sort, limit],
+  );
+}
+
+// Whale transfers — top tx by value across the full chain. Backend-served
+// (was previously computed client-side from the recent 100-block window).
+// 15s poll because new whales are rarer than block tip but the page IS a
+// live ticker; users keep this open during launch events.
+export function useWhaleTransfers(network: NetworkId, limit = 50) {
+  return usePolling<WhaleTransfer[]>(
+    () => fetchWhaleTransfers(network, limit),
+    15_000,
     [network, limit],
   );
 }

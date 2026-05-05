@@ -1,20 +1,20 @@
 "use client";
 
 import { Link, usePathname } from "@/i18n/navigation";
-import { Users, Coins, Shield, Fish, GitCompare } from "lucide-react";
+import { Users, Coins, Shield, Fish, GitCompare, FileCode } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // DECISION: category list is static (not i18n'd for the labels here — keys translate, short
 // category names stay English for technical clarity). Path matching is "startsWith" so every
 // sub-page lights up the parent category.
 //
-// "Contract" was here too — both its sub-pages (calls, gas) are TODO empty states waiting on
-// /contracts/stats endpoints. Surfacing a category in nav that lands on a "coming soon" empty
-// state is worse than not surfacing it. Reinstate when the indexer ships those endpoints.
+// Contract was previously hidden because both sub-pages were TODO. Reinstated 2026-05-05
+// after /contracts/stats shipped on the indexer (Caddy edge route → 127.0.0.1:8081).
 const CATEGORIES = [
   { base: "/leaderboard/account",   label: "Account",   icon: Users,      color: "text-[var(--blue)]" },
   { base: "/leaderboard/token",     label: "Token",     icon: Coins,      color: "text-yellow-500" },
   { base: "/leaderboard/validator", label: "Validator", icon: Shield,     color: "text-purple-500" },
+  { base: "/leaderboard/contract",  label: "Contract",  icon: FileCode,   color: "text-cyan-500" },
   { base: "/leaderboard/whale",     label: "Whale",     icon: Fish,       color: "text-green-500" },
   { base: "/leaderboard/compare",   label: "Compare",   icon: GitCompare, color: "text-pink-500" },
 ] as const;

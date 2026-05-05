@@ -895,13 +895,20 @@ export async function fetchValidatorRewards(
     network,
     `/validators/${normalizeAddress(address)}/rewards?page=${page}&limit=${limit}`,
   );
-  // 2026-04-30 audit: backend `amount` is in sentri (1e8) for parity with
-  // /staking/validators.pending_rewards. The hook layer would otherwise
-  // render rewards with 8 phantom decimals.
+  // Backend (crates/sentrix-rpc/src/explorer_api.rs:448-453) returns BOTH
+  // `amount_sentri` (raw u64) AND `amount` (already SRX f64). Prefer the
+  // raw sentri so the SRX conversion is owned by us — single source of
+  // truth — and we never accidentally double-divide. The earlier shape
+  // (`amount_srx ?? toSrx(amount)`) had a path where, if backend ever
+  // dropped `amount_sentri`, `toSrx(amount)` would render 10^8× too
+  // small because `amount` is already SRX.
   const rewards: ValidatorReward[] = (res?.rewards ?? []).map((r) => ({
     block_height: r.block_height ?? r.height ?? 0,
     timestamp: r.timestamp ?? 0,
-    amount: r.amount_srx ?? (r.amount_sentri !== undefined ? toSrx(r.amount_sentri) : toSrx(r.amount ?? 0)),
+    amount:
+      r.amount_sentri !== undefined
+        ? toSrx(r.amount_sentri)
+        : (r.amount ?? 0),
   }));
   return { rewards, hasMore: res?.pagination?.has_more ?? false };
 }
@@ -1097,6 +1104,68 @@ export async function fetchAccountsTop(network: NetworkId, limit = 100): Promise
     label: a.name ?? undefined,
     tx_count: a.tx_count,
   }));
+}
+
+// ── /accounts/active ────────────────────────────────────────────────────────
+// Most-active senders by tx_count. Served by the indexer (Caddy edge route
+// /accounts/active → 127.0.0.1:8081). Distinct from /accounts/top which
+// stays on chain native and ranks by balance.
+export interface ActiveAccount {
+  rank: number;
+  address: string;
+  tx_count: number;
+}
+
+export async function fetchActiveAccounts(network: NetworkId, limit = 100): Promise<ActiveAccount[]> {
+  const res = await apiFetch<{ accounts: ActiveAccount[] }>(network, `/accounts/active?limit=${limit}`);
+  return res?.accounts ?? [];
+}
+
+// ── /contracts/stats ────────────────────────────────────────────────────────
+// Top contracts by tx-count (?sort=calls) or summed gas_used (?sort=gas_used).
+// Indexer-served — joins transactions × addresses.is_contract = true.
+export interface ContractStat {
+  rank: number;
+  address: string;
+  calls: number;
+  gas_used: number;
+}
+
+export async function fetchContractStats(
+  network: NetworkId,
+  sort: "calls" | "gas_used" = "calls",
+  limit = 100,
+): Promise<ContractStat[]> {
+  const res = await apiFetch<{ contracts: ContractStat[] }>(
+    network,
+    `/contracts/stats?sort=${sort}&limit=${limit}`,
+  );
+  return res?.contracts ?? [];
+}
+
+// ── /whale/tx ───────────────────────────────────────────────────────────────
+// Largest transfers — backend-served (was previously computed client-side
+// from the rolling 100-block window in useBlocks). Indexer scans the full
+// `transactions` table by `value` desc. Optional ?threshold=<wei> filters.
+export interface WhaleTransfer {
+  hash: string;
+  from: string;
+  to: string | null;
+  value: string;          // raw wei (18-decimal numeric on the indexer)
+  block_height: number;
+  timestamp: number;      // unix seconds
+}
+
+export async function fetchWhaleTransfers(
+  network: NetworkId,
+  limit = 50,
+  thresholdWei?: string,
+): Promise<WhaleTransfer[]> {
+  const q = thresholdWei
+    ? `?limit=${limit}&threshold=${thresholdWei}`
+    : `?limit=${limit}`;
+  const res = await apiFetch<{ transfers: WhaleTransfer[] }>(network, `/whale/tx${q}`);
+  return res?.transfers ?? [];
 }
 
 // ── SSR home bundle ─────────────────────────────────────────────────────────
