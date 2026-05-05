@@ -85,6 +85,19 @@ function formatCompact(n: number): string {
   return n.toLocaleString('en-US', { maximumFractionDigits: 2 })
 }
 
+// Sanity cap for the running totalDistributed counter. Above this we
+// know the counter has been polluted (test fixture seeded a vanity
+// base, JSON store edited manually, etc.) — the chain's hard cap is
+// 315 M SRX, so any total above that is mathematically impossible.
+// Render "—" rather than a fabricated number; per "yang real2 aja"
+// principle, an honest blank beats a misleading figure.
+const MAX_SUPPLY_SRX = 315_000_000
+
+function formatTotalDistributed(n: number): string {
+  if (!isFinite(n) || n < 0 || n > MAX_SUPPLY_SRX) return '—'
+  return formatCompact(n)
+}
+
 function formatHHMMSS(seconds: number) {
   const h = Math.floor(seconds / 3600).toString().padStart(2, '0')
   const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0')
@@ -511,7 +524,7 @@ export function FaucetForm({
             <p className="text-[18px] font-bold text-[var(--tx)] tabular-nums whitespace-nowrap">
               {stats ? (
                 <>
-                  <AnimatedNumber value={stats.totalDistributed} format={formatCompact} />
+                  <AnimatedNumber value={stats.totalDistributed} format={formatTotalDistributed} />
                   <span className="text-[var(--tx-m)] ml-1.5 text-[12px] font-semibold">SRX</span>
                 </>
               ) : '—'}

@@ -113,7 +113,12 @@ export function NetworkCard({ network, restUrl, explorerUrl }: Props) {
           />
           <Stat
             label="Finalized"
-            value={lag !== null ? (lag === 0 ? 'live' : `−${lag}`) : '—'}
+            // Finalized lag rendered as "live" (caught up) or "N behind"
+            // (positive count of blocks behind tip). The earlier `−N`
+            // prefix read as a negative number to users — chain BFT
+            // finality lag is always non-negative, so the explicit
+            // "behind" suffix removes the ambiguity.
+            value={lag !== null ? (lag === 0 ? 'live' : `${lag} behind`) : '—'}
             tone={lag === 0 ? 'green' : 'tx'}
           />
           <Stat
