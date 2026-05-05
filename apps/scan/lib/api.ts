@@ -495,15 +495,33 @@ export async function fetchValidators(network: NetworkId) {
   const namedList = namedRes
     ? (Array.isArray(namedRes) ? namedRes : (namedRes.validators ?? []))
     : [];
-  const nameByAddr = new Map(
+  // Index legacy /validators by address — we pull `name` from it
+  // unconditionally, and `blocks_produced` when /staking/validators
+  // returns blocks_signed === 0 (post-restart counter reset). Without
+  // the blocks fallback the validators list shows 0 blocks for every
+  // proposer even when the chain is actively rotating through them.
+  const legacyByAddr = new Map(
     namedList
-      .filter((v) => v.address && v.name)
-      .map((v) => [v.address.toLowerCase(), v.name]),
+      .filter((v) => v.address)
+      .map((v) => [v.address.toLowerCase(), v]),
   );
-  const list = stakingList.map((v) => ({
-    ...v,
-    name: v.name ?? nameByAddr.get((v.address ?? "").toLowerCase()) ?? "",
-  }));
+  const list = stakingList.map((v) => {
+    const legacy = legacyByAddr.get((v.address ?? "").toLowerCase());
+    return {
+      ...v,
+      name: v.name ?? legacy?.name ?? "",
+      // Prefer the larger of the two block counters. /staking/validators
+      // tracks blocks_signed which can reset on chain restart; legacy
+      // /validators carries the cumulative blocks_produced. Take whichever
+      // has actual data so neither restart wipes nor missing fields zero
+      // the column.
+      blocks_produced: Math.max(
+        v.blocks_produced ?? 0,
+        v.blocks_signed ?? 0,
+        legacy?.blocks_produced ?? 0,
+      ) || undefined,
+    };
+  });
   return list.map((v) => {
     const stake =
       v.stake !== undefined

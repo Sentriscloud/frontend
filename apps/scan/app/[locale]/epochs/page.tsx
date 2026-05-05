@@ -38,8 +38,11 @@ export default function EpochsPage() {
   const { data: epoch } = useCurrentEpoch(network);
   const { data: validators } = useValidators(network);
 
-  const totalBonded = useMemo(() => {
-    if (!validators) return 0;
+  // null while the validators query is in-flight — the StatCard
+  // accepts null as "show em-dash" rather than rendering "0 SRX",
+  // which previously read as if no one was bonded on the chain.
+  const totalBonded = useMemo<number | null>(() => {
+    if (!validators) return null;
     return validators.reduce((s, v) => s + (v.stake ?? 0), 0);
   }, [validators]);
 
@@ -56,7 +59,13 @@ export default function EpochsPage() {
     return out;
   }, [epoch]);
 
-  const currentBlocksIn = stats && epoch ? stats.height - epoch.start_height + 1 : 0;
+  // Raw difference can exceed EPOCH_LENGTH when /epoch/current is stale
+  // (chain restarted past an epoch boundary, counter didn't refresh).
+  // Clamp the displayed "blocks-in" so the "X of EPOCH_LENGTH" hint
+  // doesn't read as nonsense (we were rendering "347,604 of 28,800").
+  const rawBlocksIn = stats && epoch ? stats.height - epoch.start_height + 1 : 0;
+  const epochStale = rawBlocksIn > EPOCH_LENGTH;
+  const currentBlocksIn = Math.min(rawBlocksIn, EPOCH_LENGTH);
   const currentProgressPct = epoch
     ? Math.min(100, Math.max(0, (currentBlocksIn / EPOCH_LENGTH) * 100))
     : 0;
@@ -87,7 +96,8 @@ export default function EpochsPage() {
         />
         <StatCard
           label="Total bonded"
-          value={formatSRX(totalBonded)}
+          value={totalBonded != null ? formatSRX(totalBonded) : "—"}
+          loading={totalBonded == null}
           accent="var(--green)"
         />
         <StatCard
@@ -110,7 +120,11 @@ export default function EpochsPage() {
                   {epoch.end_height.toLocaleString()}
                 </span>
               }
-              hint={`${currentBlocksIn.toLocaleString()} of ${EPOCH_LENGTH.toLocaleString()} blocks produced — ${currentProgressPct.toFixed(1)}% complete.`}
+              hint={
+                epochStale
+                  ? `Epoch boundary passed — chain is at #${stats.height.toLocaleString()} but /epoch/current still reports #${epoch.epoch_number}. Refreshing soon.`
+                  : `${currentBlocksIn.toLocaleString()} of ${EPOCH_LENGTH.toLocaleString()} blocks produced — ${currentProgressPct.toFixed(1)}% complete.`
+              }
             />
             <div className="py-3 border-b border-border/60">
               <div className="h-2 rounded-full bg-muted overflow-hidden">
