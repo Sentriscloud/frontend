@@ -15,12 +15,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNetwork } from "@/lib/network-context";
 import { useDailyStats } from "@/lib/hooks";
 
-// 14-day TX-per-day line chart. Backed by the chain's `/stats/daily`
-// endpoint (5-min cache server-side), which already returns 14 entries
-// padded with zeros for days before genesis on a fresh chain. Emerald
-// accent because the spec called it out explicitly — the rest of the
-// app's gold/orange palette is reserved for stats/finality/idle states.
+// 14-day TX-per-day line chart. Used to read straight from the chain's
+// `/stats/daily` (which always returned 14 entries, zero-padded). After
+// 2026-05-05 we moved the endpoint onto the Postgres indexer — the
+// indexer returns ALL days that exist in its DB (ranges from 1 row on
+// a fresh deploy to all-time once backfill catches up). Pad client-side
+// to a fixed 14-day window ending today so the chart shape stays stable
+// regardless of how much history the indexer has materialised yet.
 const ACCENT = "#10B981"; // emerald-500
+const WINDOW_DAYS = 14;
 
 interface DataPoint {
   date: string;       // raw ISO date (e.g. "2026-04-29")
@@ -47,12 +50,23 @@ export function TxChart14d() {
   const { data, loading } = useDailyStats(network);
 
   const points: DataPoint[] = useMemo(() => {
-    if (!data) return [];
-    return data.map((d) => ({
-      date: d.date,
-      short: shortDate(d.date),
-      transactions: d.transactions,
-    }));
+    // Index whatever the indexer gave us by ISO date string.
+    const byDate = new Map((data ?? []).map((d) => [d.date, d]));
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const out: DataPoint[] = [];
+    for (let i = WINDOW_DAYS - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setUTCDate(today.getUTCDate() - i);
+      const iso = d.toISOString().slice(0, 10);
+      const row = byDate.get(iso);
+      out.push({
+        date: iso,
+        short: shortDate(iso),
+        transactions: row?.transactions ?? 0,
+      });
+    }
+    return out;
   }, [data]);
 
   return (
