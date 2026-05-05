@@ -15,15 +15,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNetwork } from "@/lib/network-context";
 import { useDailyStats } from "@/lib/hooks";
 
-// 14-day TX-per-day line chart. Used to read straight from the chain's
-// `/stats/daily` (which always returned 14 entries, zero-padded). After
-// 2026-05-05 we moved the endpoint onto the Postgres indexer — the
-// indexer returns ALL days that exist in its DB (ranges from 1 row on
-// a fresh deploy to all-time once backfill catches up). Pad client-side
-// to a fixed 14-day window ending today so the chart shape stays stable
-// regardless of how much history the indexer has materialised yet.
+// All-time TX-per-day line chart. Used to read the chain's `/stats/daily`
+// which capped at 14 days; after 2026-05-05 the endpoint moved onto the
+// Postgres indexer and now returns the full chain history. We render it
+// as-is — no client-side window cap — so the chart grows with the chain.
+// As coverage gets long the X-axis density gets dense; recharts handles
+// label collision, but we may want to add a range toggle (7d/30d/all)
+// once the chain has months of history.
 const ACCENT = "#10B981"; // emerald-500
-const WINDOW_DAYS = 14;
 
 interface DataPoint {
   date: string;       // raw ISO date (e.g. "2026-04-29")
@@ -50,29 +49,22 @@ export function TxChart14d() {
   const { data, loading } = useDailyStats(network);
 
   const points: DataPoint[] = useMemo(() => {
-    // Index whatever the indexer gave us by ISO date string.
-    const byDate = new Map((data ?? []).map((d) => [d.date, d]));
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    const out: DataPoint[] = [];
-    for (let i = WINDOW_DAYS - 1; i >= 0; i--) {
-      const d = new Date(today);
-      d.setUTCDate(today.getUTCDate() - i);
-      const iso = d.toISOString().slice(0, 10);
-      const row = byDate.get(iso);
-      out.push({
-        date: iso,
-        short: shortDate(iso),
-        transactions: row?.transactions ?? 0,
-      });
-    }
-    return out;
+    if (!data) return [];
+    // Sort ascending by date — backend already returns ordered, but defensive
+    // since the chart's X-axis assumes left-to-right oldest-to-newest.
+    return [...data]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((d) => ({
+        date: d.date,
+        short: shortDate(d.date),
+        transactions: d.transactions,
+      }));
   }, [data]);
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Transactions — last 14 days</CardTitle>
+        <CardTitle className="text-base">Transactions per day</CardTitle>
       </CardHeader>
       <CardContent className="p-2 md:p-4">
         {loading && !data ? (
