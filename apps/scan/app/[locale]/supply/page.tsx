@@ -157,8 +157,8 @@ export default function SupplyPage() {
             <p>
               <strong>Max supply</strong> is fixed by the on-chain tokenomics-v2 fork at{" "}
               <span className="font-mono text-foreground">315,000,000 SRX</span>. Anything above
-              that cannot be minted by any path on the protocol — it&apos;s enforced in{" "}
-              <span className="font-mono">crates/sentrix-core/src/blockchain.rs</span>.
+              that cannot be minted by any path on the protocol — the cap is enforced inside the
+              consensus layer, not by an off-chain audit.
             </p>
             <p>
               <strong>Total minted</strong> is what the chain has issued so far across genesis +

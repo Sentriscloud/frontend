@@ -11,9 +11,9 @@ import { useNetwork } from "@/lib/network-context";
 import { useStats, useCurrentEpoch, useValidators } from "@/lib/hooks";
 import { formatNumber, formatSRX } from "@/lib/format";
 
-// Same constant as `crates/sentrix-staking/src/epoch.rs`. Epochs are 28,800
-// blocks long — at 1s blocks that's exactly 8 hours — so we can derive every
-// past epoch's height range from a single counter without a dedicated API.
+// Mirrors the staking-layer constant. Epochs are 28,800 blocks long — at 1s
+// blocks that's exactly 8 hours — so we can derive every past epoch's height
+// range from a single counter without a dedicated API.
 const EPOCH_LENGTH = 28_800;
 const PAST_TO_SHOW = 12;
 
@@ -202,8 +202,8 @@ export default function EpochsPage() {
           </p>
           <p>
             Length is fixed at <span className="font-mono">28,800 blocks</span> (≈ 8 hours at
-            our 1-second block target), defined in{" "}
-            <span className="font-mono">crates/sentrix-staking/src/epoch.rs</span>.
+            our 1-second block target), set by the staking layer at the
+            consensus level — not a parameter the scan can override.
           </p>
         </div>
       </DetailCard>
