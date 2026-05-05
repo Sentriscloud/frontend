@@ -81,11 +81,23 @@ export function NetworkProvider({
       // If we're on one of the pinned sentrixchain hosts, the toggle
       // means "go to the other host" — preserve pathname + query so a
       // deeplink (e.g. /tx/<hash>?network=testnet) survives the jump.
-      // The cookie write happens on the destination host's first render
-      // through readNetwork() in app/[locale]/layout.tsx.
+      // Cross-host nav is a full page load and there's no avoiding the
+      // white flash, so we (1) flip the toggle pill optimistically so
+      // the click feels instant, (2) write the cookie pre-nav as a
+      // belt-and-suspenders signal — the destination's layout still
+      // pins from the host header, but the cookie keeps any other tab
+      // on the destination host coherent — and (3) show a loading
+      // toast so the user has visible feedback before the new host
+      // takes over the viewport.
       if (typeof window !== "undefined") {
         const target = crossHostTarget(n, window.location.hostname.toLowerCase());
         if (target) {
+          setNetworkState(n);
+          writeCookie(n);
+          toast.loading(
+            `Switching to ${n === "mainnet" ? "Mainnet" : "Testnet"}…`,
+            { duration: 4000 },
+          );
           window.location.href = `https://${target}${window.location.pathname}${window.location.search}`;
           return;
         }
