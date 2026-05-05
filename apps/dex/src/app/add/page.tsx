@@ -25,7 +25,7 @@ import {
 import { parseEther, formatEther, type Address } from 'viem'
 import { ArrowLeft, Check, Plus } from 'lucide-react'
 import { DEX, ROUTER_ABI, FACTORY_ABI, ERC20_ABI, TOKENS, type Token } from '@/lib/contracts'
-import { usePair } from '@/lib/usePools'
+import { usePair, formatPriceRatio } from '@/lib/usePools'
 import { Nav } from '@/components/Nav'
 
 export const dynamic = 'force-dynamic'
@@ -395,16 +395,22 @@ function AddLiquidityInner() {
           />
         </div>
 
-        {/* Pool ratio hint when an existing pair is selected. */}
-        {pairInfo && pairInfo.reserve0 > 0n && pairInfo.reserve1 > 0n && (
-          <div className="text-[11px] text-[var(--tx-d)] mb-3 px-1">
-            Pool rate: 1 {tokenA.symbol} ={' '}
-            {((Number(pairInfo.reserve1) / Number(pairInfo.reserve0)) *
-              (pairInfo.token0.toLowerCase() === tokenAResolved.toLowerCase() ? 1 : 1 / (Number(pairInfo.reserve1) / Number(pairInfo.reserve0)) ** 2)).toExponential(3)}{' '}
-            {tokenB.symbol} ·{' '}
-            <span className="text-emerald-400">slippage 0.5%</span>
-          </div>
-        )}
+        {/* Pool ratio hint when an existing pair is selected. The
+            previous form computed ratio × (1/ratio² when inverted) which
+            was correct but unreadable; this version picks the right
+            direction directly off the reserves. */}
+        {pairInfo && pairInfo.reserve0 > 0n && pairInfo.reserve1 > 0n && (() => {
+          const aIs0 = pairInfo.token0.toLowerCase() === tokenAResolved.toLowerCase()
+          const rate = aIs0
+            ? Number(pairInfo.reserve1) / Number(pairInfo.reserve0)
+            : Number(pairInfo.reserve0) / Number(pairInfo.reserve1)
+          return (
+            <div className="text-[11px] text-[var(--tx-d)] mb-3 px-1">
+              Pool rate: 1 {tokenA.symbol} = {formatPriceRatio(rate)} {tokenB.symbol} ·{' '}
+              <span className="text-emerald-400">slippage 0.5%</span>
+            </div>
+          )
+        })()}
 
         {/* Action stack — approve A, approve B, add. Approve buttons
             collapse once their allowance is sufficient. */}

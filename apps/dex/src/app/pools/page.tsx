@@ -13,7 +13,7 @@
 // router.addLiquidity for a non-existent pair).
 
 import Link from 'next/link'
-import { usePoolList, formatUnits18, type PoolInfo } from '@/lib/usePools'
+import { usePoolList, formatUnits18, formatPriceRatio, type PoolInfo } from '@/lib/usePools'
 import { Plus, ArrowRightLeft, Droplet } from 'lucide-react'
 import { Nav } from '@/components/Nav'
 
@@ -59,7 +59,7 @@ function PoolRow({ p }: { p: PoolInfo }) {
       </div>
 
       <div className="text-xs text-[var(--tx-m)] tabular-nums hidden md:block">
-        {price > 0 ? price.toExponential(3) : '—'}
+        {formatPriceRatio(price)}
         <span className="text-[var(--tx-d)] ml-1">
           {p.symbol1}/{p.symbol0}
         </span>

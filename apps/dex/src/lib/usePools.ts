@@ -305,3 +305,16 @@ export function formatUnits18(n: bigint, decimals = 4): string {
   const fracStr = frac.toString().padStart(18, '0').slice(0, decimals)
   return `${whole}.${fracStr}`
 }
+
+// Spot-price ratio formatter. Was previously `n.toExponential(3)` which
+// rendered 10000 SGC/SRX as "1.000e+4" — accurate but unreadable for the
+// median user. Fall back to scientific only for the extremes (<0.0001
+// or >=1e9) where locale formatting would lose meaning.
+export function formatPriceRatio(n: number): string {
+  if (!isFinite(n) || n <= 0) return '—'
+  if (n < 0.0001) return n.toExponential(3)
+  if (n >= 1e9) return n.toExponential(3)
+  if (n >= 1000) return n.toLocaleString('en-US', { maximumFractionDigits: 2 })
+  if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 })
+  return n.toLocaleString('en-US', { maximumFractionDigits: 6 })
+}

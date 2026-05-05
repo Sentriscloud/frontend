@@ -4,7 +4,7 @@ import { use } from 'react'
 import Link from 'next/link'
 import { useAccount, useReadContract } from 'wagmi'
 import type { Address } from 'viem'
-import { usePair, formatUnits18 } from '@/lib/usePools'
+import { usePair, formatUnits18, formatPriceRatio } from '@/lib/usePools'
 import { PAIR_ABI } from '@/lib/contracts'
 import { ArrowLeft, ArrowRightLeft, Minus, Plus } from 'lucide-react'
 import { Nav } from '@/components/Nav'
@@ -146,7 +146,7 @@ export default function PoolDetailPage({ params }: Props) {
             1 {info.symbol0} ≈
           </p>
           <p className="text-base font-bold text-[var(--tx)] tabular-nums">
-            {price > 0 ? price.toExponential(3) : '—'}{' '}
+            {formatPriceRatio(price)}{' '}
             <span className="text-[var(--tx-d)] text-sm">{info.symbol1}</span>
           </p>
         </div>
@@ -155,7 +155,7 @@ export default function PoolDetailPage({ params }: Props) {
             1 {info.symbol1} ≈
           </p>
           <p className="text-base font-bold text-[var(--tx)] tabular-nums">
-            {priceInv > 0 ? priceInv.toExponential(3) : '—'}{' '}
+            {formatPriceRatio(priceInv)}{' '}
             <span className="text-[var(--tx-d)] text-sm">{info.symbol0}</span>
           </p>
         </div>
