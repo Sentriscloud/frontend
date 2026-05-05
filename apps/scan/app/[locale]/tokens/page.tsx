@@ -26,7 +26,15 @@ export default function TokensPage() {
   const { data: tokens, loading } = useTokens(network);
   const [sortKey, setSortKey] = useState<SortKey>("none");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [standardFilter, setStandardFilter] = useState<StandardFilter>("all");
+  // ?standard=tokenop|evm pre-selects the filter so the Native rail's
+  // "SRC-20 Tokens" link and the EVM rail's "ERC-20 Tokens" link don't both
+  // dump users into the same /tokens page with no filter — they used to,
+  // which read as "why is SRC-20 separate from Native? SRC-20 IS native."
+  const initialStandard = ((): StandardFilter => {
+    const s = searchParams.get("standard");
+    return s === "evm" || s === "tokenop" ? s : "all";
+  })();
+  const [standardFilter, setStandardFilter] = useState<StandardFilter>(initialStandard);
   const [page, setPage] = useState(1);
   // ?search= populated by the global search bar in header.tsx when the
   // query was an unknown string (not a tx/address/block). Local state so
@@ -38,6 +46,13 @@ export default function TokensPage() {
     const incoming = searchParams.get("search") ?? "";
     setSearch(incoming);
     setPage(1);
+  }, [searchParams]);
+  useEffect(() => {
+    const s = searchParams.get("standard");
+    if (s === "evm" || s === "tokenop" || s === "all") {
+      setStandardFilter(s);
+      setPage(1);
+    }
   }, [searchParams]);
 
   // Counts before filtering — drive the pill row labels so the user sees

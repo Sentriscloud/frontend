@@ -192,19 +192,24 @@ export function Header() {
     { href: "/", key: "home" },
   ];
 
+  // Token nav uses ?standard= so the same /tokens page lands pre-filtered to
+  // the rail the user clicked from. Used to share /tokens with no query, so
+  // a click under EVM and a click under Native felt like the same destination
+  // ("kenapa ada Native dan SRC-20 — kan SRC-20 itu native?"). Now Native
+  // SRC-20 → /tokens?standard=tokenop, EVM ERC-20 → /tokens?standard=evm.
   const EVM_ITEMS = [
-    { href: "/evm" as const,        label: "EVM Dashboard", icon: Cpu,      color: "text-[var(--cyan)]",   hint: "Latest EVM-rail activity" },
-    { href: "/contracts" as const,  label: "Contracts",     icon: FileCode, color: "text-[var(--cyan)]",   hint: "Verified Solidity sources" },
-    { href: "/tokens" as const,     label: "ERC-20 Tokens", icon: Coins,    color: "text-[var(--gold)]",   hint: "Token list — filter to EVM" },
+    { href: "/evm" as const,                          label: "EVM Dashboard", icon: Cpu,      color: "text-[var(--cyan)]",   hint: "Latest EVM-rail activity" },
+    { href: "/contracts" as const,                    label: "Contracts",     icon: FileCode, color: "text-[var(--cyan)]",   hint: "Verified Solidity sources" },
+    { href: "/tokens?standard=evm" as const,          label: "ERC-20 Tokens", icon: Coins,    color: "text-[var(--gold)]",   hint: "Smart-contract tokens deployed via TokenFactory" },
   ] as const;
 
   const NATIVE_ITEMS = [
-    { href: "/native" as const,     label: "Native Dashboard", icon: Boxes,    color: "text-[var(--green)]",  hint: "SRX transfers + StakingOps + SRC-20" },
-    { href: "/validators" as const, label: "Validators",       icon: Shield,   color: "text-[var(--purple)]", hint: "Active set, stake, jail state" },
-    { href: "/accounts" as const,   label: "Top Accounts",     icon: Users,    color: "text-[var(--cyan)]",   hint: "Richlist by SRX balance" },
-    { href: "/epochs" as const,     label: "Epochs",           icon: Layers,   color: "text-[var(--purple)]", hint: "Reward distribution + rotation" },
-    { href: "/tokens" as const,     label: "SRC-20 Tokens",    icon: Coins,    color: "text-[var(--gold)]",   hint: "Token list — filter to Native" },
-    { href: "/supply" as const,     label: "Supply",           icon: PieChart, color: "text-[var(--gold)]",   hint: "315M cap + halving curve" },
+    { href: "/native" as const,                       label: "Native Dashboard", icon: Boxes,    color: "text-[var(--green)]",  hint: "SRX transfers + StakingOps + SRC-20" },
+    { href: "/validators" as const,                   label: "Validators",       icon: Shield,   color: "text-[var(--purple)]", hint: "Active set, stake, jail state" },
+    { href: "/accounts" as const,                     label: "Top Accounts",     icon: Users,    color: "text-[var(--cyan)]",   hint: "Richlist by SRX balance" },
+    { href: "/epochs" as const,                       label: "Epochs",           icon: Layers,   color: "text-[var(--purple)]", hint: "Reward distribution + rotation" },
+    { href: "/tokens?standard=tokenop" as const,      label: "SRC-20 Tokens",    icon: Coins,    color: "text-[var(--gold)]",   hint: "Native protocol-level TokenOps (Mint/Burn/Transfer)" },
+    { href: "/supply" as const,                       label: "Supply",           icon: PieChart, color: "text-[var(--gold)]",   hint: "315M cap + halving curve" },
   ] as const;
 
   const CHAIN_ITEMS = [
