@@ -151,9 +151,17 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
     return pct;
   }
   // Minimum base 0.5 tps for TPS — below that the percent swings on noise,
-  // not a real load shift. Block time floors at the chain's 1s target.
+  // not a real load shift.
   const tpsDelta = pctDelta(tpsSpark, 0.5);
-  const blockTimeDelta = pctDelta(blockTimeSpark, 1);
+  // Block time delta is hidden: StatCard colours negative red / positive
+  // green, but block-time getting smaller is *good* (closer to the 1s
+  // target). The earlier `-blockTimeDelta` workaround flipped the sign
+  // so the colour read right, but the rendered percent was then
+  // mathematically nonsense ("-450%" on a value going up). Cleanest
+  // answer is to hide the chip until StatCard learns an inverse-delta
+  // mode; the "target 1s" subline gives users the context they need.
+  const blockTimeDelta: number | null = null;
+  void blockTimeSpark;
   // Total Transactions card shows a cumulative counter — a window-relative
   // percent on cumulative data reads as if the chain "lost" txs. Hide it.
   // Re-enable once we wire a tx-per-window metric (different field).
