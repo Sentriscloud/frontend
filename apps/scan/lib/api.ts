@@ -1106,6 +1106,45 @@ export async function fetchChainStatus(network: NetworkId): Promise<ChainStatus 
   return apiFetch<ChainStatus>(network, "/sentrix_status");
 }
 
+// ── /sentrix_status_extended (operator dashboard) ──────────────────────────
+// Same chain handler, single state.read snapshot, additional fields. Backs the
+// /sentinel HUD + the Telegram alerter. Cache no-store (live data); poll
+// at the operator's preferred cadence.
+export interface SentrixStatusExtended {
+  chain_id: number;
+  consensus: string;
+  native_token: string;
+  uptime_seconds: number;
+  version: { version: string; build: string };
+  health: "green" | "yellow" | "red" | string;
+  sync_info: {
+    earliest_block_height: number;
+    latest_block_height: number;
+    latest_block_hash: string;
+    latest_block_time: number;
+    chain_age_seconds: number;
+    block_time_avg_recent_seconds: number;
+  };
+  mempool: { size: number };
+  validators: {
+    active_count: number;
+    total_active_stake_sentri: number;
+    top: Array<{ address: string; stake_sentri: number; active: boolean }>;
+  };
+  supply: {
+    minted_sentri: number;
+    burned_sentri: number;
+    circulating_sentri: number;
+  };
+  ecosystem: { deployed_tokens: number };
+}
+
+export async function fetchSentrixStatusExtended(
+  network: NetworkId,
+): Promise<SentrixStatusExtended | null> {
+  return apiFetch<SentrixStatusExtended>(network, "/sentrix_status_extended");
+}
+
 // ── JSON-RPC: eth_getLogs for event history ─────────────────────────────────
 export interface EventLog {
   address: string;
