@@ -59,17 +59,22 @@ export default function AnalyticsPage() {
     <div className="max-w-7xl mx-auto px-4 lg:px-6 py-8 space-y-6 animate-fade-in">
       <PageHeader icon={BarChart3} eyebrow="Analytics" title="Network Analytics" />
 
-      {/* Headline stats — one row showing chain health at a glance */}
+      {/* Headline stats — one row showing chain health at a glance.
+          `daily` distinguishes three states: null (still loading), [] (indexer
+          reachable but no rows for this network — mainnet indexer is the
+          source for /stats/daily and may be cold-starting / backfilling),
+          and populated. Render an em-dash for the first two so the card
+          doesn't read "Blocks 7d: 0" on a chain at h≈1.5M. */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
         <StatCard
           label="Blocks (7d)"
-          value={daily ? formatNumber(blocksWeek) : "—"}
+          value={daily && daily.length > 0 ? formatNumber(blocksWeek) : "—"}
           loading={!daily}
           accent="var(--cyan)"
         />
         <StatCard
           label="Transactions (7d)"
-          value={daily ? formatNumber(txWeek) : "—"}
+          value={daily && daily.length > 0 ? formatNumber(txWeek) : "—"}
           loading={!daily}
           accent="var(--blue)"
         />
