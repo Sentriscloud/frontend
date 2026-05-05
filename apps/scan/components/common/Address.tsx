@@ -61,8 +61,14 @@ export function Address({
     };
   }, [address]);
 
+  // When truncate=false (full hex shown on detail pages), allow break-all so the
+  // 42-char address wraps mid-string on narrow viewports instead of overflowing
+  // the parent. shortenAddress output (truncate=true) already fits.
+  const fullHexClass = !truncate ? "break-all" : "";
+
   const linkClasses = cn(
     "font-mono text-sm hover:underline rounded px-0.5 -mx-0.5 transition-colors",
+    fullHexClass,
     muted ? "text-muted-foreground hover:text-primary" : "text-primary",
     className,
   );
@@ -83,7 +89,7 @@ export function Address({
       ref={ref}
       data-address={address}
       title={address}
-      className={cn("font-mono text-sm", muted && "text-muted-foreground", className)}
+      className={cn("font-mono text-sm", fullHexClass, muted && "text-muted-foreground", className)}
     >
       {display}
     </span>
