@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { ThemeProvider } from "@/components/theme-provider";
 import { NetworkProvider } from "@/lib/network-context";
 import type { NetworkId } from "@/lib/chain";
@@ -18,14 +18,28 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-async function readNetworkCookie(): Promise<NetworkId> {
+async function readNetwork(): Promise<NetworkId> {
+  // Host wins: scan-testnet.sentrixchain.com is the testnet-locked variant.
+  // We pin the network from the request host so a fresh visitor lands on
+  // the right rail without depending on a cookie that may carry over from
+  // a different host. Prevents "scan-testnet shows mainnet balances" UX
+  // mismatch when the cookie is stale or absent.
+  const h = await headers();
+  const host = (h.get("host") ?? "").toLowerCase();
+  if (host.startsWith("scan-testnet.") || host.startsWith("testnet-scan.")) {
+    return "testnet";
+  }
+  if (host === "scan.sentrixchain.com" || host.startsWith("scan.")) {
+    return "mainnet";
+  }
+  // Unknown host (local dev, custom domain): fall back to cookie.
   const cookieStore = await cookies();
   const stored = cookieStore.get("sentrix-network")?.value;
   return stored === "testnet" ? "testnet" : "mainnet";
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const network = await readNetworkCookie();
+  const network = await readNetwork();
   const chainId = network === "testnet" ? 7120 : 7119;
   const label = network === "testnet" ? "Testnet" : "Mainnet";
   return {
@@ -45,7 +59,7 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const initialNetwork = await readNetworkCookie();
+  const initialNetwork = await readNetwork();
 
   return (
     <html lang={locale} suppressHydrationWarning>

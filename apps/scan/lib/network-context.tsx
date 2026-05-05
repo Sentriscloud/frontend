@@ -20,9 +20,26 @@ const NetworkContext = createContext<NetworkContextValue>({
 const COOKIE_NAME = "sentrix-network";
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
+// Etherscan-style two-host pattern: scan.sentrixchain.com is mainnet-only,
+// scan-testnet.sentrixchain.com is testnet-only. Toggle on either host
+// redirects to the sibling instead of just flipping the cookie — keeps
+// the host and the data rail aligned, so a deep-linked tx hash on testnet
+// can never land on mainnet API mid-render.
+const HOST_MAINNET = "scan.sentrixchain.com";
+const HOST_TESTNET = "scan-testnet.sentrixchain.com";
+
 function writeCookie(value: NetworkId) {
   if (typeof document === "undefined") return;
   document.cookie = `${COOKIE_NAME}=${value}; path=/; max-age=${ONE_YEAR}; samesite=lax`;
+}
+
+function crossHostTarget(next: NetworkId, currentHost: string): string | null {
+  // Only auto-redirect on the two pinned sentrixchain.com hosts. Every
+  // other host (sentriscloud.com explorer-v2, localhost, custom domains)
+  // keeps the cookie-only flow.
+  if (currentHost !== HOST_MAINNET && currentHost !== HOST_TESTNET) return null;
+  const want = next === "testnet" ? HOST_TESTNET : HOST_MAINNET;
+  return currentHost === want ? null : want;
 }
 
 // DECISION: network preference lives in a cookie so the server layout can read it via
@@ -61,6 +78,18 @@ export function NetworkProvider({
 
   const handleSet = useCallback(
     (n: NetworkId) => {
+      // If we're on one of the pinned sentrixchain hosts, the toggle
+      // means "go to the other host" — preserve pathname + query so a
+      // deeplink (e.g. /tx/<hash>?network=testnet) survives the jump.
+      // The cookie write happens on the destination host's first render
+      // through readNetwork() in app/[locale]/layout.tsx.
+      if (typeof window !== "undefined") {
+        const target = crossHostTarget(n, window.location.hostname.toLowerCase());
+        if (target) {
+          window.location.href = `https://${target}${window.location.pathname}${window.location.search}`;
+          return;
+        }
+      }
       setNetworkState(n);
       writeCookie(n);
       toast.success(`Switched to ${n === "mainnet" ? "Mainnet (Chain ID 7119)" : "Testnet (Chain ID 7120)"}`);
