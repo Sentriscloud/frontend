@@ -32,7 +32,7 @@ export const sentrixTestnet = defineChain({
     },
   },
   blockExplorers: {
-    default: { name: "Sentrix Scan Testnet", url: "https://scan.sentrixchain.com" },
+    default: { name: "Sentrix Scan Testnet", url: "https://scan-testnet.sentrixchain.com" },
   },
   testnet: true,
 });

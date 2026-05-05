@@ -802,9 +802,10 @@ export async function fetchTokenTrades(
 }
 
 export async function fetchDailyStats(network: NetworkId): Promise<DailyStat[]> {
-  // Cold cache routinely needs >20 s — backend recomputes the 14-day
-  // aggregate before serving. The default 8 s timeout was the reason the
-  // home TX-per-day chart silently rendered empty on first load.
+  // /stats/daily is served by the indexer (Caddy edge route → :8081 on
+  // mainnet, :8083 on testnet — see indexer-deploy/docker-compose.testnet.yml).
+  // Cold cache on the indexer is sub-second, so the long SLOW_TIMEOUT_MS
+  // budget is now legacy / defensive against future reroute back to chain.
   const res = await apiFetch<DailyStat[]>(network, "/stats/daily", SLOW_TIMEOUT_MS);
   return res ?? [];
 }
