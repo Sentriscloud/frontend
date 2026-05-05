@@ -5,6 +5,18 @@ import { getApiUrl, type NetworkId } from "./chain";
 const SENTRI_PER_SRX = 100_000_000;
 const toSrx = (sentri: number): number => sentri / SENTRI_PER_SRX;
 
+// Tokenomics-v2 fixed supply cap. Chain returns this in `chain.info.max_supply_srx`
+// today (post-fork, Voyager+EVM active), but we lock the constant client-side so
+// any upstream regression — e.g. a node serving pre-fork state, or an indexer
+// shipping a stale schema — doesn't surface a wrong cap in the UI.
+export const MAX_SUPPLY_SRX = 315_000_000;
+
+function normalizeChainInfo(info: ChainInfo | null): ChainInfo | null {
+  if (!info) return null;
+  info.max_supply_srx = MAX_SUPPLY_SRX;
+  return info;
+}
+
 // Backend's address index is keyed on the lowercased 0x-prefixed form
 // it stores in chain.db. Bare hex (no 0x) is treated as a *different*
 // address — `/accounts/4fec…/balance` returns 0 even when the same
@@ -210,8 +222,8 @@ export interface DailyStat {
   transactions: number;
 }
 
-export function fetchChainInfo(network: NetworkId) {
-  return apiFetch<ChainInfo>(network, "/chain/info");
+export async function fetchChainInfo(network: NetworkId): Promise<ChainInfo | null> {
+  return normalizeChainInfo(await apiFetch<ChainInfo>(network, "/chain/info"));
 }
 
 export function fetchBlock(network: NetworkId, index: number) {
@@ -1103,7 +1115,7 @@ export interface HomeBundle {
 }
 
 export async function fetchHomeBundle(network: NetworkId, timeoutMs = 1500): Promise<HomeBundle> {
-  const [stats, blocksRaw, txsRaw, status, mempool, epoch, performance] = await Promise.all([
+  const [statsRaw, blocksRaw, txsRaw, status, mempool, epoch, performance] = await Promise.all([
     apiFetch<ChainInfo>(network, "/chain/info", timeoutMs),
     apiFetch<{ blocks: BlockData[] }>(network, "/chain/blocks?limit=10", timeoutMs),
     apiFetch<{ transactions: Array<{ txid: string; from: string; to: string; amount: number; fee: number; block_index: number; block_timestamp: number; timestamp?: number; is_coinbase?: boolean; status?: string }> } | Array<{ txid: string; from: string; to: string; amount: number; fee: number; block_index: number; block_timestamp: number; timestamp?: number; is_coinbase?: boolean; status?: string }>>(network, "/transactions?limit=10", timeoutMs),
@@ -1129,5 +1141,6 @@ export async function fetchHomeBundle(network: NetworkId, timeoutMs = 1500): Pro
     tx_type: t.is_coinbase ? "coinbase" : undefined,
   }));
 
+  const stats = normalizeChainInfo(statsRaw);
   return { stats, blocks, txs, status, mempool: mempool ?? null, epoch, performance };
 }
