@@ -97,9 +97,12 @@ export function StatCard({ label, value, loading = false, accent = "var(--gold)"
 
       {/* Eyebrow label ABOVE the number — landing-style editorial hierarchy.
           Delta chip docks to the right of the eyebrow (top-right of the card)
-          so it doesn't crowd the headline number — Etherscan/Solscan pattern. */}
+          so it doesn't crowd the headline number — Etherscan/Solscan pattern.
+          On <375px viewports the wide letter-spacing was clipping labels mid-
+          word ("LIVE _" / "BLOCK_" / "TOTAL_") — drop the spacing on small
+          screens, restore at sm+. */}
       <div className="flex items-center justify-between gap-2 mb-3 min-w-0">
-        <div className="font-mono text-[10px] text-[var(--tx-d)] tracking-[.22em] uppercase group-hover:text-[var(--tx-m)] transition-colors truncate flex-1">
+        <div className="font-mono text-[10px] text-[var(--tx-d)] tracking-[.12em] sm:tracking-[.22em] uppercase group-hover:text-[var(--tx-m)] transition-colors truncate flex-1">
           {label}
         </div>
         {showDelta && !loading && (

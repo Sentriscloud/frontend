@@ -44,7 +44,16 @@
       "tokens_deployed": "Token Tersebar",
       "block_reward": "Reward Blok",
       "chain_id": "Chain ID",
-      "tps": "TPS Live"
+      "tps": "TPS Live",
+      "subline_window": "vs window {range}",
+      "subline_bft_live": "BFT-finalized · live",
+      "subline_bft_lag": "BFT-finalized · −{lag}",
+      "subline_epoch": "Epoch #{n}",
+      "subline_target_1s": "target 1s",
+      "subline_active_bft": "aktif di set BFT",
+      "subline_src20_contracts": "kontrak SRC-20",
+      "subline_fee_burn": "50% dari setiap fee",
+      "subline_claimable": "claim via StakingOp"
     },
     "latest_blocks": "Blok Terbaru",
     "latest_transactions": "Transaksi Terbaru",
@@ -147,7 +156,7 @@
     "not_found": "Validator tidak ditemukan"
   },
   "tokens": {
-    "title": "Token SRC-20",
+    "title": "Token",
     "total": "{count} total",
     "subtitle_mainnet": "Token yang tersebar di Mainnet",
     "subtitle_testnet": "Token yang tersebar di Testnet",

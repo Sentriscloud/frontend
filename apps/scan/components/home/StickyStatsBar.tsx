@@ -102,7 +102,11 @@ function Cell({
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="font-mono text-[9px] tracking-[.2em] uppercase text-[var(--tx-d)] truncate">
+        {/* On 375-class viewports the labels were getting cut to "LIVE _" /
+            "BLOCK_" / "TOTAL_" because the truncate clipped the second word.
+            Tighten letter-spacing + font on small screens, restore the
+            original at md+ where the cards have room. */}
+        <div className="font-mono text-[8px] sm:text-[9px] tracking-[.12em] sm:tracking-[.2em] uppercase text-[var(--tx-d)] truncate">
           {label}
         </div>
         <div className="text-sm font-medium text-[var(--tx-l)] truncate font-mono">{value}</div>

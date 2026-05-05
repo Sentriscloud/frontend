@@ -308,7 +308,7 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               accent={tpsAccent}
               spark={isChainIdle ? undefined : tpsSpark}
               delta={isChainIdle ? null : tpsDelta}
-              subline={isChainIdle ? undefined : `vs ${perfRange} window`}
+              subline={isChainIdle ? undefined : t("stats.subline_window", { range: perfRange })}
               title={isChainIdle && latestBlockAgeSec !== null ? `Chain paused — last block ${latestBlockAgeSec < 3600 ? `${Math.round(latestBlockAgeSec / 60)}m` : `${(latestBlockAgeSec / 3600).toFixed(1)}h`} ago` : undefined}
             />
             <StatCard
@@ -318,10 +318,10 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               accent="var(--gold)"
               subline={
                 finalityLag === 0
-                  ? "BFT-finalized · live"
+                  ? t("stats.subline_bft_live")
                   : finalityLag != null
-                    ? `BFT-finalized · −${finalityLag}`
-                    : (stats ? `Epoch #${epoch?.epoch_number ?? "—"}` : undefined)
+                    ? t("stats.subline_bft_lag", { lag: finalityLag })
+                    : (stats ? t("stats.subline_epoch", { n: epoch?.epoch_number ?? "—" }) : undefined)
               }
               title={
                 wsFinalized != null
@@ -336,7 +336,7 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               accent={isChainIdle ? "var(--orange)" : "var(--gold-l)"}
               spark={isChainIdle ? undefined : blockTimeSpark}
               delta={isChainIdle ? null : blockTimeDelta != null ? -blockTimeDelta : null}
-              subline="target 1s"
+              subline={t("stats.subline_target_1s")}
               title={isChainIdle ? "Chain paused — block time stale" : undefined}
             />
             <StatCard
@@ -354,14 +354,14 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               value={stats ? String(stats.active_validators) : "—"}
               loading={statsLoading}
               accent="var(--gold)"
-              subline="active in BFT set"
+              subline={t("stats.subline_active_bft")}
             />
             <StatCard
               label={t("stats.tokens_deployed")}
               value={stats ? String(stats.deployed_tokens) : "—"}
               loading={statsLoading}
               accent="var(--gold-l)"
-              subline="SRC-20 contracts"
+              subline={t("stats.subline_src20_contracts")}
             />
             <StatCard
               label={t("stats.total_burned")}
@@ -369,14 +369,14 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               title={stats ? `${stats.total_burned_srx.toLocaleString(undefined, { maximumFractionDigits: 8 })} SRX` : undefined}
               loading={statsLoading}
               accent="var(--red)"
-              subline="50% of every fee"
+              subline={t("stats.subline_fee_burn")}
             />
             <StatCard
               label={t("stats.block_reward")}
               value={stats ? `${stats.next_block_reward_srx} SRX` : "—"}
               loading={statsLoading}
               accent="var(--gold)"
-              subline="claimable via StakingOp"
+              subline={t("stats.subline_claimable")}
             />
           </>
         )}

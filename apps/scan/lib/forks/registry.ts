@@ -138,9 +138,11 @@ export const FORKS: ForkEntry[] = [
     title: "NFT_TOKENOP_HEIGHT",
     summary: "SRC-721 + SRC-1155 dispatch (DO NOT activate yet).",
     description:
-      "Wire format + Pass-1 gate shipped; Pass-2 dispatch + storage layer is still " +
-      "`unreachable!()`, so any non-`u64::MAX` value here would crash every validator at apply " +
-      "time. Stays dormant until the follow-up PR ships the apply path.",
+      "Wire format + Pass-1 gate shipped; the dispatch + storage layer that turns " +
+      "the parsed payload into state is not yet implemented, so activating this " +
+      "fork before the apply path lands would halt every validator on the first " +
+      "matching transaction. Stays dormant until the follow-up release ships " +
+      "the apply path.",
     heights: { mainnet: null, testnet: null },
     state: "danger",
   },

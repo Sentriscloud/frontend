@@ -44,7 +44,16 @@
       "tokens_deployed": "Tokens Deployed",
       "block_reward": "Block Reward",
       "chain_id": "Chain ID",
-      "tps": "Live TPS"
+      "tps": "Live TPS",
+      "subline_window": "vs {range} window",
+      "subline_bft_live": "BFT-finalized · live",
+      "subline_bft_lag": "BFT-finalized · −{lag}",
+      "subline_epoch": "Epoch #{n}",
+      "subline_target_1s": "target 1s",
+      "subline_active_bft": "active in BFT set",
+      "subline_src20_contracts": "SRC-20 contracts",
+      "subline_fee_burn": "50% of every fee",
+      "subline_claimable": "claimable via StakingOp"
     },
     "latest_blocks": "Latest Blocks",
     "latest_transactions": "Latest Transactions",
@@ -147,7 +156,7 @@
     "not_found": "Validator not found"
   },
   "tokens": {
-    "title": "SRC-20 Tokens",
+    "title": "Tokens",
     "total": "{count} total",
     "subtitle_mainnet": "Deployed tokens on Mainnet",
     "subtitle_testnet": "Deployed tokens on Testnet",
