@@ -25,7 +25,15 @@ const client = createPublicClient({
   transport: http(),
 });
 
-const CHUNK_SIZE = 5000n;
+// Bumped 5K -> 50K. Sentrix RPC `eth_getLogs` happily handles ranges
+// up to ~10K-50K blocks (caps below the wider Ethereum-mainnet 50K limit
+// some providers enforce). Larger chunks = 10x fewer round trips =
+// 10x lower chance of cumulative chunk-burst CORS / rate-limit hits.
+// Discovered 2026-05-06: with 5K chunks the holder scan was making
+// ~102 sequential RPC calls per token (1.6M chain), 30% intermittent
+// failure rate, single failed chunk silently aborted the entire scan
+// (catch-all in load() set state to empty, "Holders —" on stats grid).
+const CHUNK_SIZE = 50000n;
 
 const TRANSFER_EVENT = {
   type: "event",
@@ -70,12 +78,34 @@ export function useTopHolders(
 
         for (let from = fromBlock; from <= latest; from += CHUNK_SIZE) {
           const to = from + CHUNK_SIZE - 1n > latest ? latest : from + CHUNK_SIZE - 1n;
-          const logs = await client.getLogs({
-            address: addr,
-            event: TRANSFER_EVENT,
-            fromBlock: from,
-            toBlock: to,
-          });
+          // Per-chunk try/catch with one retry. Single transient
+          // failure (CORS, rate-limit, validator failover) used to
+          // bail the entire load() via the outer catch and silently
+          // strand "Holders —" on the stats grid even though most
+          // chunks succeeded. Now we just skip the broken chunk —
+          // partial holder map is way better than empty.
+          let logs: Awaited<ReturnType<typeof client.getLogs>> = [];
+          try {
+            logs = await client.getLogs({
+              address: addr,
+              event: TRANSFER_EVENT,
+              fromBlock: from,
+              toBlock: to,
+            });
+          } catch {
+            // One retry with a small backoff. If still fails, skip.
+            try {
+              await new Promise((r) => setTimeout(r, 250));
+              logs = await client.getLogs({
+                address: addr,
+                event: TRANSFER_EVENT,
+                fromBlock: from,
+                toBlock: to,
+              });
+            } catch {
+              continue;
+            }
+          }
           if (cancelled) return;
           for (const log of logs as Array<Log<bigint, number, false, typeof TRANSFER_EVENT>>) {
             const args = log.args;

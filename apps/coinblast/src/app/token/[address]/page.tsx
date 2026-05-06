@@ -1,12 +1,14 @@
 'use client'
 import { notFound } from 'next/navigation'
-import { use } from 'react'
+import { use, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { formatEther } from 'viem'
+import { useBlockNumber } from 'wagmi'
 import { MOCK_TOKENS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
 import { useDeployedCurves } from '@/lib/useDeployedCurves'
 import { useTopHolders } from '@/lib/useTopHolders'
+import { useTradesByCurve } from '@/lib/useCoinblastIndexer'
 import { useCurveState } from '@/lib/useCoinBlastCurve'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import { Badge } from '@/components/ui/Badge'
@@ -91,6 +93,44 @@ export default function TokenDetailPage({ params }: Props) {
     live.srxRaised !== undefined ? Number(formatEther(live.srxRaised)) : null
   const liveCurveSupply =
     live.curveSupply !== undefined ? Number(formatEther(live.curveSupply)) : null
+
+  // Lifted from <TopHoldersPanel> (was duplicated): top-of-page stats
+  // grid renders the holder count, panel below renders the full list.
+  // Single useTopHolders call feeds both. token.address is set as soon
+  // as the merge resolves, so the hook gates internally until then.
+  const topHoldersData = useTopHolders(token?.address as `0x${string}` | undefined)
+
+  // 24h volume + unique trader count both derived from indexer trades
+  // for the curve. 1-second blocks on Sentrix → 86,400 blocks ≈ 24 h.
+  // Polls every 5 s — same cadence as the chart so the stats grid
+  // stays in sync with the candle stream.
+  //
+  // Holder count: bonding-curve tokens have only one acquisition path
+  // (buying via curve), so unique trader_address from cb_trades is
+  // exact for stats-grid display purposes. Beats useTopHolders for the
+  // count because (a) /api/cb/* is same-origin (no CORS races during
+  // burst eth_getLogs) and (b) one fetch vs ~30 chunked Transfer-event
+  // calls. The full TopHoldersPanel below still uses useTopHolders to
+  // sort by balance — intermittent partial failure there is OK
+  // because the count is shown elsewhere.
+  const { trades: tradesForVol } = useTradesByCurve(token?.curveAddress, 500, 5000)
+  const { data: tipBlock } = useBlockNumber({ watch: true, chainId: 7119 })
+  const volume24h = useMemo(() => {
+    if (!tradesForVol || tradesForVol.length === 0 || !tipBlock) return 0
+    const dayAgoBlock = tipBlock - 86400n
+    return tradesForVol
+      .filter((t) => t.type !== 'graduated' && BigInt(t.block_number) >= dayAgoBlock)
+      .reduce((sum, t) => sum + Number(formatEther(BigInt(t.srx_amount))), 0)
+  }, [tradesForVol, tipBlock])
+  const uniqueTraders = useMemo(() => {
+    if (!tradesForVol || tradesForVol.length === 0) return 0
+    const set = new Set(
+      tradesForVol
+        .filter((t) => t.type === 'buy' && t.trader_address)
+        .map((t) => t.trader_address.toLowerCase()),
+    )
+    return set.size
+  }, [tradesForVol])
 
   if (!token) {
     if (isLoading) {
@@ -225,8 +265,25 @@ export default function TokenDetailPage({ params }: Props) {
             {[
               { label: 'Price', value: formatPrice(token.price), icon: <BarChart2 className="w-4 h-4 text-[var(--gold)]" /> },
               { label: 'Market Cap', value: formatSRX(srxRaised), icon: <TrendingUp className="w-4 h-4 text-[var(--gold-l)]" /> },
-              { label: '24h Volume', value: formatSRX(token.volume24h), icon: <BarChart2 className="w-4 h-4 text-emerald-400" /> },
-              { label: 'Holders', value: '—', icon: <Users className="w-4 h-4 text-[var(--tx-m)]" /> },
+              // Real 24h volume from indexer cb_trades (was reading the
+              // static token.volume24h seed which never updated).
+              { label: '24h Volume', value: formatSRX(volume24h), icon: <BarChart2 className="w-4 h-4 text-emerald-400" /> },
+              // Holder count via unique buyer addresses from indexer
+              // trades (same-origin /api/cb/, no CORS race). Falls
+              // through to useTopHolders length only when curve has
+              // zero indexer trades but the on-chain Transfer scan
+              // surfaced something — covers the rare edge case of a
+              // CoinBlast token whose bonding curve isn't tracked by
+              // the indexer (shouldn't happen for tokens listed here).
+              {
+                label: 'Holders',
+                value: uniqueTraders > 0
+                  ? String(uniqueTraders)
+                  : topHoldersData.holders.length > 0
+                    ? String(topHoldersData.holders.length)
+                    : '—',
+                icon: <Users className="w-4 h-4 text-[var(--tx-m)]" />,
+              },
             ].map((s) => (
               <div key={s.label} className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -325,7 +382,7 @@ export default function TokenDetailPage({ params }: Props) {
           </div>
 
           {/* Holders — live from Transfer events (no indexer required) */}
-          <TopHoldersPanel tokenAddress={token.address as `0x${string}`} />
+          <TopHoldersPanel data={topHoldersData} />
 
           {/* Stat row pulls Holders count from the same hook below. */}
 
@@ -379,8 +436,8 @@ export default function TokenDetailPage({ params }: Props) {
   )
 }
 
-function TopHoldersPanel({ tokenAddress }: { tokenAddress: `0x${string}` }) {
-  const { holders, totalSupply, isLoading } = useTopHolders(tokenAddress)
+function TopHoldersPanel({ data }: { data: ReturnType<typeof useTopHolders> }) {
+  const { holders, totalSupply, isLoading } = data
   return (
     <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">

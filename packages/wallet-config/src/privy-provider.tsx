@@ -16,18 +16,22 @@
 
 import { ReactNode, useState } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
-// Import WagmiProvider from `wagmi` directly (NOT `@privy-io/wagmi`).
-// pnpm resolves `@privy-io/wagmi`'s wagmi peer to a different instance
-// than the one apps consume directly, so a WagmiProvider exported from
-// `@privy-io/wagmi` sets context on a different wagmi instance — apps
-// calling `useAccount` from `wagmi` then can't find that context and
-// throw `WagmiProviderNotFoundError`. Importing WagmiProvider directly
-// from `wagmi` puts the context on the same instance the apps use.
-// `createConfig` from `@privy-io/wagmi` is still needed for the Privy
-// connector wiring; the config object itself is plain data and crosses
-// the instance boundary fine.
-import { WagmiProvider } from "wagmi";
-import { createConfig } from "@privy-io/wagmi";
+// Import BOTH WagmiProvider + createConfig from @privy-io/wagmi.
+// Privy's WagmiProvider wires its embedded-wallet connectors into
+// wagmi's connector registry on mount — without it, Privy auth
+// succeeds but `useAccount()` never sees the embedded wallet
+// (symptom: "logged in but UI still shows Sign in", reported
+// 2026-05-06). The earlier workaround imported WagmiProvider from
+// `wagmi` directly to dodge a `WagmiProviderNotFoundError` caused by
+// pnpm resolving two physical wagmi instances (one for apps, one
+// for @privy-io/wagmi's peer tree). The proper fix is at the
+// package level: `dedupe-peer-dependents: true` in
+// `pnpm-workspace.yaml` collapses the two virtualized instances
+// into one shared physical install. With dedupe in place,
+// importing WagmiProvider from @privy-io/wagmi sets context on the
+// same wagmi instance the apps consume — both context lookup and
+// connector visibility work.
+import { WagmiProvider, createConfig } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http } from "viem";
 import { SENTRIX_MAINNET, SENTRIX_TESTNET } from "./chain";
