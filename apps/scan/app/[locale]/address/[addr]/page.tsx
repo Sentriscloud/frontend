@@ -21,12 +21,35 @@ import { Link } from "@/i18n/navigation";
 import { useAddressLabel, toneForKind } from "@/lib/labels";
 import { AddressNote } from "@/components/common/AddressNote";
 import { SourcifyBadge } from "@/components/common/SourcifyBadge";
-import { SourcifyViewer } from "@/components/common/SourcifyViewer";
-import { ReadContract } from "@/components/common/ReadContract";
-import { WriteContract } from "@/components/common/WriteContract";
-import { ApprovalsTab } from "@/components/common/ApprovalsTab";
 import { InternalTxsPlaceholder } from "@/components/common/InternalTxsPlaceholder";
-import { AddressAnalytics } from "@/components/common/AddressAnalytics";
+
+// Tab-only components — none of them are visible until the user clicks
+// the matching tab, so eager-importing them inflated /address/[addr]
+// First Load JS (409 KB) by ~50–100 KB. AddressAnalytics drags in
+// recharts; SourcifyViewer + ReadContract + WriteContract drag in viem
+// ABI-encoder + sourcify code-fetch. next/dynamic splits each into its
+// own async chunk that downloads only when its tab is selected.
+import dynamic from "next/dynamic";
+const AddressAnalytics = dynamic(
+  () => import("@/components/common/AddressAnalytics").then((m) => ({ default: m.AddressAnalytics })),
+  { ssr: false, loading: () => <div className="h-[280px] rounded-xl bg-muted/30 animate-pulse" /> },
+);
+const SourcifyViewer = dynamic(
+  () => import("@/components/common/SourcifyViewer").then((m) => ({ default: m.SourcifyViewer })),
+  { ssr: false, loading: () => <div className="h-[200px] rounded-xl bg-muted/30 animate-pulse" /> },
+);
+const ReadContract = dynamic(
+  () => import("@/components/common/ReadContract").then((m) => ({ default: m.ReadContract })),
+  { ssr: false, loading: () => <div className="h-[200px] rounded-xl bg-muted/30 animate-pulse" /> },
+);
+const WriteContract = dynamic(
+  () => import("@/components/common/WriteContract").then((m) => ({ default: m.WriteContract })),
+  { ssr: false, loading: () => <div className="h-[200px] rounded-xl bg-muted/30 animate-pulse" /> },
+);
+const ApprovalsTab = dynamic(
+  () => import("@/components/common/ApprovalsTab").then((m) => ({ default: m.ApprovalsTab })),
+  { ssr: false, loading: () => <div className="h-[200px] rounded-xl bg-muted/30 animate-pulse" /> },
+);
 import { CountBadge } from "@/components/common/CountBadge";
 import { WatchButton } from "@/components/common/WatchButton";
 import { downloadCsv } from "@/lib/csv";
