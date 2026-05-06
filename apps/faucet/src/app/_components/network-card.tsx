@@ -48,8 +48,15 @@ export function NetworkCard({ network, restUrl, explorerUrl }: Props) {
   const wsValidators = useValidatorSet(wsUrl)
 
   useEffect(() => {
+    // One-shot mount fetch only. The 60-second backstop interval that
+    // used to live here became redundant once useLatestBlock /
+    // useLatestFinalized / useValidatorSet started polling REST every
+    // 2-5 s themselves (the earlier WS subs they relied on don't exist
+    // on the chain — see lib/ws.ts). This call now exists only to fill
+    // dashes during the ~1-second window before those hooks land their
+    // first response.
     let cancelled = false
-    const fetchStats = async () => {
+    ;(async () => {
       try {
         const [info, fh] = await Promise.all([
           fetch(`${restUrl}/chain/info`, { signal: AbortSignal.timeout(4_000) })
@@ -66,10 +73,8 @@ export function NetworkCard({ network, restUrl, explorerUrl }: Props) {
           validators: info?.active_validators ?? null,
         })
       } catch { /* keep dashes */ }
-    }
-    fetchStats()
-    const id = setInterval(fetchStats, 60_000)
-    return () => { cancelled = true; clearInterval(id) }
+    })()
+    return () => { cancelled = true }
   }, [restUrl])
 
   // WS-fresh values win over REST when present.
