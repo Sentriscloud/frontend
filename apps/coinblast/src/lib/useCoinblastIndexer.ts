@@ -139,6 +139,58 @@ export function useTrades(args: UseTradesArgs = {}) {
   return { trades, isLoading, error };
 }
 
+/**
+ * Whale trades — buys/sells whose srx_amount crosses a threshold (default
+ * 100 SRX). Backed by `/coinblast/whales` on the indexer; ordered by
+ * size desc so the largest single trade in the window leads. Graduations
+ * are excluded server-side (one-shot supply migrations, not user trades).
+ */
+export function useWhales(
+  thresholdSrx = 100,
+  limit = 25,
+  pollMs = 0,
+  refetchTick = 0,
+) {
+  const [trades, setTrades] = useState<IndexerTrade[]>([]);
+  const [isLoading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const tick = async () => {
+      try {
+        const qs = new URLSearchParams();
+        qs.set("threshold", String(thresholdSrx));
+        qs.set("limit", String(limit));
+        const d = await fetchJson<{ trades: IndexerTrade[] }>(
+          `/api/cb/whales?${qs.toString()}`,
+        );
+        if (!cancelled) {
+          setTrades(d.trades);
+          setError(null);
+        }
+      } catch (e) {
+        if (!cancelled) setError(e as Error);
+      } finally {
+        if (!cancelled) setLoading(false);
+        if (!cancelled && pollMs > 0) {
+          timer = setTimeout(tick, pollMs);
+        }
+      }
+    };
+
+    tick();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [thresholdSrx, limit, pollMs, refetchTick]);
+
+  return { trades, isLoading, error };
+}
+
 export function useTradesByCurve(
   curve: string | undefined,
   limit = 100,

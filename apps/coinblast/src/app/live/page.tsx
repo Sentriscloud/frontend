@@ -24,7 +24,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useBlockNumber } from 'wagmi'
-import { useTrades, type IndexerTrade } from '@/lib/useCoinblastIndexer'
+import { useTrades, useWhales, type IndexerTrade } from '@/lib/useCoinblastIndexer'
 import { useTokens } from '@/lib/useCoinblastIndexer'
 import { useEthSubscribeLogs, TOPIC } from '@/lib/ws'
 import { formatAddress } from '@/lib/utils'
@@ -170,6 +170,12 @@ export default function LivePage() {
     refetchTick: wsTick,
   })
 
+  // Whales — buys/sells ≥ 100 SRX. Same WS tick triggers a refresh, so
+  // a whale-sized trade pops the panel in real time alongside the main
+  // feed. No fixed poll: we already get a tick on every Buy/Sell log,
+  // and whale rarity means standalone polling would mostly be no-ops.
+  const { trades: whales } = useWhales(100, 5, 0, wsTick)
+
   // Chain tip for relative-time math. Without this, the row's "X secs
   // ago" was computed against the highest *trade* block, which made
   // the freshest trade always read "just now" even hours after it
@@ -228,9 +234,48 @@ export default function LivePage() {
           Live Trades
         </h1>
         <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-[var(--tx-d)]">
-          <Radio className="w-3 h-3" /> polling every {POLL_MS / 1000}s
+          <Radio className="w-3 h-3" /> live · WS push
         </span>
       </div>
+
+      {/* Whale strip — only renders when there's at least one trade above
+          the threshold. Empty-state hidden so a quiet chain doesn't push a
+          dead panel. */}
+      {whales.length > 0 && (
+        <div className="mb-4 bg-gradient-to-br from-[var(--sf)] to-[var(--sf2,var(--sf))] border border-[var(--brd)] rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-base">🐋</span>
+            <p className="text-xs font-semibold text-[var(--tx)] uppercase tracking-wide">Whale Activity</p>
+            <span className="text-[10px] text-[var(--tx-d)] ml-1">≥ 100 SRX</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1">
+            {whales.map((w) => {
+              const meta = byCurve.get(w.curve_address.toLowerCase())
+              const srx = Number(formatEther(BigInt(w.srx_amount)))
+              const symbol = meta?.symbol ?? '???'
+              const isBuy = w.type === 'buy'
+              return (
+                <Link
+                  key={w.id}
+                  href={meta ? `/token/${meta.tokenAddress}` : '#'}
+                  className="shrink-0 inline-flex items-center gap-1.5 bg-[var(--bk-2,var(--sf))] border border-[var(--brd)] rounded-lg px-2.5 py-1.5 text-xs hover:border-[var(--gold)] transition-colors"
+                >
+                  {isBuy
+                    ? <ArrowUp className="w-3 h-3 text-emerald-400" />
+                    : <ArrowDown className="w-3 h-3 text-red-400" />
+                  }
+                  <span className="font-semibold text-[var(--tx)]">{symbol}</span>
+                  <span className="text-[var(--tx-d)]">·</span>
+                  <span className="font-mono tabular-nums text-[var(--tx)]">
+                    {srx >= 1000 ? `${(srx / 1000).toFixed(1)}K` : srx.toFixed(0)} SRX
+                  </span>
+                  <span className="text-[var(--tx-d)] hidden sm:inline">· {formatAddress(w.trader_address)}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl overflow-hidden">
         {error ? (
