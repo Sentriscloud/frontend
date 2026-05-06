@@ -45,12 +45,27 @@ function normalizeTxHash(h: string): string {
 // to 25 s — see SLOW_TIMEOUT_MS below.
 const SLOW_TIMEOUT_MS = 25_000;
 
-async function apiFetch<T>(network: NetworkId, path: string, timeoutMs = 8000): Promise<T | null> {
+async function apiFetch<T>(
+  network: NetworkId,
+  path: string,
+  timeoutMs = 8000,
+  revalidateSeconds: number | null = null,
+): Promise<T | null> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const base = getApiUrl(network);
-    const res = await fetch(`${base}${path}`, { cache: "no-store", signal: ctrl.signal });
+    // `revalidateSeconds` opts the call into Next.js's data cache: the
+    // first SSR per period hits upstream, subsequent renders within the
+    // window read the cached body and skip the network round-trip. Used
+    // for the home-bundle hot path where 1-2 s of staleness is fine and
+    // avoids pegging upstream at every page view. Default stays
+    // `cache: "no-store"` for any caller that needs live data (block
+    // detail, address detail, mempool, etc.).
+    const init: RequestInit & { next?: { revalidate?: number } } = revalidateSeconds == null
+      ? { cache: "no-store", signal: ctrl.signal }
+      : { next: { revalidate: revalidateSeconds }, signal: ctrl.signal };
+    const res = await fetch(`${base}${path}`, init);
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -1338,15 +1353,27 @@ export interface HomeBundle {
 }
 
 export async function fetchHomeBundle(network: NetworkId, timeoutMs = 1500): Promise<HomeBundle> {
-  const [statsRaw, blocksRaw, txsRaw, status, mempool, epoch, performance] = await Promise.all([
-    apiFetch<ChainInfo>(network, "/chain/info", timeoutMs),
-    apiFetch<{ blocks: BlockData[] }>(network, "/chain/blocks?limit=10", timeoutMs),
-    apiFetch<{ transactions: Array<{ txid: string; from: string; to: string; amount: number; fee: number; block_index: number; block_timestamp: number; timestamp?: number; is_coinbase?: boolean; status?: string }> } | Array<{ txid: string; from: string; to: string; amount: number; fee: number; block_index: number; block_timestamp: number; timestamp?: number; is_coinbase?: boolean; status?: string }>>(network, "/transactions?limit=10", timeoutMs),
-    apiFetch<ChainStatus>(network, "/sentrix_status", timeoutMs),
-    apiFetch<MempoolSnapshot>(network, "/mempool", timeoutMs),
-    apiFetch<EpochInfo>(network, "/epoch/current", timeoutMs),
-    apiFetch<ChainPerformance>(network, "/chain/performance?range=1h", timeoutMs),
+  // 2-second revalidate window. First viewer in any 2 s slice eats the
+  // ~200-300 ms upstream hop; the next ~6-10 viewers (Sentrix's scan
+  // typical concurrency) get HTML in <50 ms. A 2 s freshness budget is
+  // imperceptible on a 1 s-block chain — the live feed re-syncs on the
+  // client side via WS push/poll within milliseconds anyway.
+  const REVALIDATE = 2;
+  // `/chain/performance` is the slowest non-status upstream and only
+  // feeds the home spark chart, which the client component already
+  // refetches client-side. Drop it from the initial SSR bundle so the
+  // serial bottleneck shrinks; HomeContent falls back to a skeleton
+  // for the chart while it hydrates. Rest of the bundle is small +
+  // visible above the fold so they stay in the SSR pull.
+  const [statsRaw, blocksRaw, txsRaw, status, mempool, epoch] = await Promise.all([
+    apiFetch<ChainInfo>(network, "/chain/info", timeoutMs, REVALIDATE),
+    apiFetch<{ blocks: BlockData[] }>(network, "/chain/blocks?limit=10", timeoutMs, REVALIDATE),
+    apiFetch<{ transactions: Array<{ txid: string; from: string; to: string; amount: number; fee: number; block_index: number; block_timestamp: number; timestamp?: number; is_coinbase?: boolean; status?: string }> } | Array<{ txid: string; from: string; to: string; amount: number; fee: number; block_index: number; block_timestamp: number; timestamp?: number; is_coinbase?: boolean; status?: string }>>(network, "/transactions?limit=10", timeoutMs, REVALIDATE),
+    apiFetch<ChainStatus>(network, "/sentrix_status", timeoutMs, REVALIDATE),
+    apiFetch<MempoolSnapshot>(network, "/mempool", timeoutMs, REVALIDATE),
+    apiFetch<EpochInfo>(network, "/epoch/current", timeoutMs, REVALIDATE),
   ]);
+  const performance: ChainPerformance | null = null;
 
   const blocks = blocksRaw?.blocks ?? null;
   const txsArr = !txsRaw ? null : (Array.isArray(txsRaw) ? txsRaw : (txsRaw.transactions ?? []));
