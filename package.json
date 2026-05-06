@@ -28,7 +28,8 @@
       }
     },
     "overrides": {
-      "porto>zod": "^4.4.2"
+      "porto>zod": "^4.4.2",
+      "wagmi": "2.19.5"
     }
   }
 }

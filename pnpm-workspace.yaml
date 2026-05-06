@@ -1,3 +1,15 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Force a single physical instance of wagmi across the workspace.
+# Without this, pnpm's per-consumer peer-tree resolution creates two
+# distinct `wagmi@2.19.5` instances (different hash suffixes) — one
+# resolved from coinblast/faucet/airdrop, another from inside
+# @privy-io/wagmi's peer tree. Privy registers its embedded-wallet
+# connectors on its instance; apps' useAccount() reads from theirs.
+# Different React Context = isConnected stays false even after
+# Privy login succeeds. Symptom: "logged in but UI says Sign in".
+# `dedupe-peer-dependents` collapses the two virtualized instances
+# into one shared physical install. Discovered 2026-05-06.
+dedupe-peer-dependents: true
