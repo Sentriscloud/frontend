@@ -1,9 +1,20 @@
 'use client'
 
-// Live trade feed — polls the indexer (via the /api/cb proxy) every 3s
-// and renders newest-first. Trades that appear since the last tick get
-// a brief highlight so the eye lands on them. No WebSocket: the
-// indexer doesn't expose one yet, polling is honest about latency.
+// Live trade feed — hybrid push + poll.
+//
+// Push: eth_subscribe(logs) on the union of every known curve address,
+// filtered by the Buy/Sell topic0 hashes. Each matching log increments a
+// `tick` counter that the indexer fetcher uses as a refetch trigger,
+// dropping perceived latency from the polling cadence (3 s) down to the
+// chain RPC's WS push window (~50–200 ms). The indexer pull stays the
+// source of truth — it's already correctly enriched with token metadata,
+// price, fee — so we coalesce the WS signal with a re-fetch instead of
+// decoding the log client-side.
+//
+// Poll: kept at 3 s as a backstop for the WS reconnect window and the
+// initial mount before the subscription is registered. If the chain RPC
+// is unreachable for a while the page degrades to plain polling
+// gracefully.
 //
 // Empty state is real today (zero trades on chain) — the page should
 // look healthy, not broken, in that case. We show a "waiting for the
@@ -15,6 +26,7 @@ import Link from 'next/link'
 import { useBlockNumber } from 'wagmi'
 import { useTrades, type IndexerTrade } from '@/lib/useCoinblastIndexer'
 import { useTokens } from '@/lib/useCoinblastIndexer'
+import { useEthSubscribeLogs, TOPIC } from '@/lib/ws'
 import { formatAddress } from '@/lib/utils'
 import { TokenAvatar } from '@/components/ui/TokenAvatar'
 import { ArrowDown, ArrowUp, GraduationCap, Radio } from 'lucide-react'
@@ -124,8 +136,39 @@ function TradeRow({ trade, symbol, imageUrl, tokenAddress, headBlock, isFresh }:
 }
 
 export default function LivePage() {
-  const { trades, isLoading, error } = useTrades({ pollMs: POLL_MS, limit: 50 })
   const { tokens } = useTokens()
+
+  // Build the WS-subscribe filter from every known curve address. We pass
+  // ALL curves up front rather than a per-token re-subscribe pattern —
+  // the chain RPC handles the multi-address filter server-side, and the
+  // page only re-runs the effect when the curve set actually changes
+  // (token list pulls happen at most once per mount).
+  const curveAddresses = useMemo(
+    () =>
+      tokens
+        .map((t) => t.curve_address as `0x${string}`)
+        .filter((a): a is `0x${string}` => typeof a === 'string' && a.startsWith('0x')),
+    [tokens],
+  )
+  const subOpts = useMemo(
+    () =>
+      curveAddresses.length > 0
+        ? {
+            address: curveAddresses,
+            // Match topic0 ∈ {Buy, Sell}. Graduations are rarer; the
+            // 3-second poll picks them up without a separate sub.
+            topics: [[TOPIC.buy, TOPIC.sell]],
+          }
+        : null,
+    [curveAddresses],
+  )
+  const { tick: wsTick } = useEthSubscribeLogs(subOpts)
+
+  const { trades, isLoading, error } = useTrades({
+    pollMs: POLL_MS,
+    limit: 50,
+    refetchTick: wsTick,
+  })
 
   // Chain tip for relative-time math. Without this, the row's "X secs
   // ago" was computed against the highest *trade* block, which made
