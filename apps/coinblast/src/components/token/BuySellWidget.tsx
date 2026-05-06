@@ -9,6 +9,7 @@ import { useWalletStore } from '@/store/wallet'
 import { ArrowDown, Info, ExternalLink, Loader } from 'lucide-react'
 import { parseEther, formatEther } from 'viem'
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useEthSubscribeFinalized } from '@/lib/ws'
 import { useEffectiveAddress, useSoluxSigner } from '@sentriscloud/wallet-config'
 import {
   useCurveState,
@@ -156,6 +157,24 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
     approveReceipt.isSuccess ||
     soluxReceipt.isSuccess
   const txError = buyHook.error ?? sellHook.error ?? (soluxSigner.error ? new Error(soluxSigner.error) : null)
+
+  // BFT-finalized indicator. Mining = "block produced + receipt available";
+  // BFT finality = "2/3+1 stake-weighted supermajority precommit landed",
+  // which closes a ~1-block reorg window unique to BFT chains. The
+  // sentrix_finalized WS push fires within ~1 s of the next block after
+  // mining; we capture the mined receipt's blockNumber and flip the badge
+  // once finality crosses that height.
+  const finalizedEvent = useEthSubscribeFinalized()
+  const minedBlockNumber: bigint | null =
+    (buyHook.receipt?.blockNumber as bigint | undefined) ??
+    (sellHook.receipt?.blockNumber as bigint | undefined) ??
+    (approveReceipt.data?.blockNumber as bigint | undefined) ??
+    (soluxReceipt.data?.blockNumber as bigint | undefined) ??
+    null
+  const isBftFinalized =
+    isMined && minedBlockNumber !== null && finalizedEvent !== null
+      ? finalizedEvent.height >= Number(minedBlockNumber)
+      : false
 
   // Refetch allowance once the approve mines so the button label flips
   // from "Approve ..." to "Sell ..." automatically.
@@ -361,7 +380,10 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
             rel="noopener noreferrer"
             className="block text-center text-[11px] text-emerald-400 hover:text-emerald-300"
           >
-            ✓ confirmed — view on Scan <ExternalLink className="inline w-3 h-3" />
+            {isBftFinalized
+              ? <>✓ BFT finalized — view on Scan <ExternalLink className="inline w-3 h-3" /></>
+              : <>✓ confirmed · awaiting BFT finality… <ExternalLink className="inline w-3 h-3" /></>
+            }
           </a>
         )}
 

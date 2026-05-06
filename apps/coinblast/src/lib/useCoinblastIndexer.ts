@@ -83,10 +83,16 @@ export interface UseTradesArgs {
   trader?: string;
   type?: "buy" | "sell" | "graduated";
   limit?: number;
+  /** Refetch trigger from a WS push hook. Increment to force a refetch
+   *  outside the regular pollMs cadence — used to coalesce a chain-level
+   *  Buy/Sell log with a fresh indexer pull within ~50-200 ms instead of
+   *  waiting up to pollMs for the next tick. Pass 0 (default) when no WS
+   *  layer is wired. */
+  refetchTick?: number;
 }
 
 export function useTrades(args: UseTradesArgs = {}) {
-  const { pollMs = 0, curve, trader, type, limit = 50 } = args;
+  const { pollMs = 0, curve, trader, type, limit = 50, refetchTick = 0 } = args;
   const [trades, setTrades] = useState<IndexerTrade[]>([]);
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -126,7 +132,9 @@ export function useTrades(args: UseTradesArgs = {}) {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [pollMs]);
+    // refetchTick is in the dep list so a WS log push triggers a fresh
+    // fetch outside the polling cadence.
+  }, [pollMs, refetchTick]);
 
   return { trades, isLoading, error };
 }
@@ -135,6 +143,7 @@ export function useTradesByCurve(
   curve: string | undefined,
   limit = 100,
   pollMs = 0,
+  refetchTick = 0,
 ) {
   const [trades, setTrades] = useState<IndexerTrade[]>([]);
   const [isLoading, setLoading] = useState(true);
@@ -172,7 +181,9 @@ export function useTradesByCurve(
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [curve, limit, pollMs]);
+    // refetchTick triggers an extra refetch outside pollMs when a WS log
+    // push arrives — see useEthSubscribeLogs in lib/ws.ts.
+  }, [curve, limit, pollMs, refetchTick]);
 
   return { trades, isLoading, error };
 }

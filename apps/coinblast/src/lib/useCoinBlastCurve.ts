@@ -116,6 +116,7 @@ export function useBuy(address: Address | undefined) {
     isPending,
     isConfirming: receipt.isLoading,
     isConfirmed: receipt.isSuccess,
+    receipt: receipt.data ?? null,
     error: error ?? receipt.error,
   };
 }
@@ -142,6 +143,7 @@ export function useSell(address: Address | undefined) {
     isPending,
     isConfirming: receipt.isLoading,
     isConfirmed: receipt.isSuccess,
+    receipt: receipt.data ?? null,
     error: error ?? receipt.error,
   };
 }
