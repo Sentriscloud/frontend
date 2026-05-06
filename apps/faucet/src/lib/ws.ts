@@ -133,30 +133,79 @@ export function useLatestBlock(wsUrl: string): NewHeadEvent | null {
   return head;
 }
 
+// Convert the wsUrl back to its sister REST endpoint so the polling hooks
+// below stay drop-in for callers that already have a wsUrl in hand.
+//   wss://rpc.sentrixchain.com/ws        → https://api.sentrixchain.com
+//   wss://testnet-rpc.sentrixchain.com/ws → https://testnet-api.sentrixchain.com
+function wsUrlToRestUrl(wsUrl: string): string {
+  try {
+    const u = new URL(wsUrl);
+    const host = u.host
+      .replace(/^rpc\./, "api.")
+      .replace(/^testnet-rpc\./, "testnet-api.");
+    return `https://${host}`;
+  } catch {
+    return wsUrl;
+  }
+}
+
+// `sentrix_subscribe` channels (`sentrix_finalized`, `sentrix_validatorSet`)
+// were proposed but never landed on the chain RPC — every subscribe attempt
+// hits `-32601 method not found` and the callback never fires, so the
+// faucet's success → finalized flip never resolved (the previous WS
+// implementation kept `submitFinalizedAt` captured as null forever).
+//
+// Switch to REST polling against `/chain/finalized-height` and `/chain/info`,
+// which both exist and are cheap (single state.read on the chain side).
+// 2s cadence is fast enough that the success → finalized flip lands within
+// one block of the tx finalising; 5s is fine for the validator-count chip.
+
 export function useLatestFinalized(wsUrl: string): number | null {
+  const restUrl = wsUrlToRestUrl(wsUrl);
   const [height, setHeight] = useState<number | null>(null);
   useEffect(() => {
-    const client = getClient(wsUrl);
-    const unsub = client.subscribe("sentrix_subscribe", "sentrix_finalized", (msg) => {
-      const m = msg as Record<string, unknown>;
-      const h = typeof m.height === "number" ? m.height : 0;
-      if (h > 0) setHeight(h);
-    });
-    return () => { unsub(); };
-  }, [wsUrl]);
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const r = await fetch(`${restUrl}/chain/finalized-height`, {
+          signal: AbortSignal.timeout(3_000),
+        });
+        if (!r.ok || cancelled) return;
+        const j = (await r.json()) as { finalized_height?: number };
+        if (cancelled) return;
+        if (typeof j.finalized_height === "number" && j.finalized_height > 0) {
+          setHeight(j.finalized_height);
+        }
+      } catch { /* swallow — keep last known height */ }
+    };
+    tick();
+    const id = setInterval(tick, 2_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [restUrl]);
   return height;
 }
 
 export function useValidatorSet(wsUrl: string): number | null {
+  const restUrl = wsUrlToRestUrl(wsUrl);
   const [count, setCount] = useState<number | null>(null);
   useEffect(() => {
-    const client = getClient(wsUrl);
-    const unsub = client.subscribe("sentrix_subscribe", "sentrix_validatorSet", (msg) => {
-      const m = msg as Record<string, unknown>;
-      const validators = Array.isArray(m.validators) ? m.validators : null;
-      if (validators) setCount(validators.length);
-    });
-    return () => { unsub(); };
-  }, [wsUrl]);
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const r = await fetch(`${restUrl}/chain/info`, {
+          signal: AbortSignal.timeout(3_000),
+        });
+        if (!r.ok || cancelled) return;
+        const j = (await r.json()) as { active_validators?: number };
+        if (cancelled) return;
+        if (typeof j.active_validators === "number") {
+          setCount(j.active_validators);
+        }
+      } catch { /* swallow */ }
+    };
+    tick();
+    const id = setInterval(tick, 5_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [restUrl]);
   return count;
 }
