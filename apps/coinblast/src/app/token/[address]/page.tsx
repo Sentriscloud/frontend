@@ -1,6 +1,7 @@
 'use client'
 import { notFound } from 'next/navigation'
 import { use } from 'react'
+import dynamic from 'next/dynamic'
 import { formatEther } from 'viem'
 import { MOCK_TOKENS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
@@ -10,11 +11,35 @@ import { useCurveState } from '@/lib/useCoinBlastCurve'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import { Badge } from '@/components/ui/Badge'
 import { Progress } from '@/components/ui/Progress'
-import { BondingCurveChart } from '@/components/token/BondingCurveChart'
 import { BuySellWidget } from '@/components/token/BuySellWidget'
-import { PriceHistoryChart } from '@/components/token/PriceHistoryChart'
 import { TradeHistoryTable } from '@/components/token/TradeHistoryTable'
 import { ShareButtons } from '@/components/token/ShareButtons'
+
+// Lazy-load both charts. PriceHistoryChart imports lightweight-charts,
+// BondingCurveChart imports recharts — together those two libraries
+// were landing ~600 KB of First Load JS on this route (969 KB total
+// before this change). The buy/sell widget + trade table + holders
+// list are the interaction-critical surfaces; the charts are below
+// the fold on mobile and useful but not blocking. Deferring them past
+// first paint keeps the buy flow responsive from page mount.
+const BondingCurveChart = dynamic(
+  () => import('@/components/token/BondingCurveChart').then((m) => ({ default: m.BondingCurveChart })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[200px] w-full bg-[var(--sf)] border border-[var(--brd)] rounded-xl animate-pulse" />
+    ),
+  },
+)
+const PriceHistoryChart = dynamic(
+  () => import('@/components/token/PriceHistoryChart').then((m) => ({ default: m.PriceHistoryChart })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[300px] w-full bg-[var(--sf)] border border-[var(--brd)] rounded-xl animate-pulse" />
+    ),
+  },
+)
 import { TokenAvatar } from '@/components/ui/TokenAvatar'
 import { formatAddress, formatNumber, formatPrice, formatSRX } from '@/lib/utils'
 import { GRADUATION_THRESHOLD as GRADUATION_THRESHOLD_FALLBACK } from '@/lib/bonding-curve'
