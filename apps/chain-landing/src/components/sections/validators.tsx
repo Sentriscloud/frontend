@@ -18,12 +18,12 @@ const VALIDATOR_BENEFITS = [
   {
     icon: "security",
     title: "Encrypted Keystores",
-    desc: "AES-256-GCM encrypted keystores with PBKDF2. Private keys never touch the command line or environment variables.",
+    desc: "AES-256-GCM encrypted keystores with Argon2id KDF (memory-hard, GPU-resistant). Private keys never touch the command line or environment variables.",
   },
   {
     icon: "uptime",
     title: "High Uptime, Low Overhead",
-    desc: "Single 4.4MB static binary. No JVM, no runtime dependencies. Runs on a modest validator host with minimal resources.",
+    desc: "Single 22MB static binary (release build, no runtime deps). No JVM, no runtime dependencies. Runs on a modest validator host with minimal resources.",
   },
   {
     icon: "bft",

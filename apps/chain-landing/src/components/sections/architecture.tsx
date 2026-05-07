@@ -7,7 +7,7 @@ import { METAMASK_CONFIG } from "@/data/content";
 
 const ARCH_MODULES = [
   { title: "Core Engine", desc: "blockchain.rs · block.rs · transaction.rs · account.rs · authority.rs · vm.rs · merkle.rs" },
-  { title: "Wallet", desc: "wallet.rs (keygen, Keccak-256) · keystore.rs (AES-256-GCM, PBKDF2)" },
+  { title: "Wallet", desc: "wallet.rs (keygen, Keccak-256) · keystore.rs (AES-256-GCM, Argon2id)" },
   { title: "Network", desc: "node.rs (TCP, length-prefixed JSON, 10MB max) · sync.rs (incremental sync, 100 blocks/chunk)" },
   { title: "API Layer", desc: "routes.rs (REST/axum) · jsonrpc.rs (RPC) · explorer.rs (web UI)" },
 ];

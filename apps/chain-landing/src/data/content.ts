@@ -140,11 +140,11 @@ export const TOKENS = [
 ];
 
 export const TOKENOMICS_BARS = [
-  { label: "Block Rewards", pct: 40, value: "40% — 84M SRX" },
-  { label: "Founder", pct: 10, value: "10% — 21M SRX" },
-  { label: "Ecosystem Fund", pct: 10, value: "10% — 21M SRX" },
-  { label: "Early Validators", pct: 5, value: "5% — 10.5M SRX" },
-  { label: "Reserve", pct: 5, value: "5% — 10.5M SRX" },
+  { label: "Block Rewards (post-v2-fork)", pct: 80, value: "80% — 252M SRX" },
+  { label: "Founder", pct: 6.67, value: "6.67% — 21M SRX" },
+  { label: "Ecosystem Fund", pct: 6.67, value: "6.67% — 21M SRX" },
+  { label: "Early Validators", pct: 3.33, value: "3.33% — 10.5M SRX" },
+  { label: "Reserve", pct: 3.33, value: "3.33% — 10.5M SRX" },
 ];
 
 export const TOKENOMICS_CARDS = [
