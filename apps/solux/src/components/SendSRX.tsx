@@ -17,6 +17,12 @@ type TxStatus = 'pending' | 'in-block' | 'finalized' | 'expired' | 'orphaned';
 // the tx from mempool and it will not be included. Stop polling.
 const PENDING_TIMEOUT_MS = 60 * 60 * 1000;
 
+// Module-scope balance cache per address+network. Same pattern as
+// TxHistory / Dashboard / Staking. Keeps the balance display from
+// blanking to "—" on every network switch — show last-known balance
+// while the new fetch is in flight, swap on success, keep on error.
+const balanceCache = new Map<string, number>();
+
 export default function SendSRX({ onBack }: { onBack: () => void }) {
   const { address, privateKey, watchOnly } = useWalletStore();
   const { entries: addressBook } = useAddressBookStore();
@@ -50,14 +56,22 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     if (!address) return;
     let cancelled = false;
+    const cacheKey = `${network}-${address}`;
+    const cached = balanceCache.get(cacheKey);
+    // Show cached balance immediately if we have one — no "—" flash
+    // during refetch on tab return / network switch back.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBalanceSentri(null); // reset so stale balance from prev network doesn't flash
+    setBalanceSentri(cached ?? null);
     getAddressInfo(address)
       .then((info) => {
         if (cancelled) return;
         const bal = info?.balance_sentri ?? Math.round((info?.balance_srx ?? 0) * SENTRI);
         setBalanceSentri(bal);
+        balanceCache.set(cacheKey, bal);
       })
+      // Transient API error: keep whatever we already showed (cached or
+      // null). Don't blank the user's balance just because the indexer
+      // hiccupped during a chain recovery window.
       .catch(() => {});
     return () => { cancelled = true; };
   }, [address, network]);
@@ -251,6 +265,7 @@ export default function SendSRX({ onBack }: { onBack: () => void }) {
           .then((info) => {
             const bal = info?.balance_sentri ?? Math.round((info?.balance_srx ?? 0) * SENTRI);
             setBalanceSentri(bal);
+            balanceCache.set(`${network}-${address}`, bal);
           })
           .catch(() => {});
       } else {

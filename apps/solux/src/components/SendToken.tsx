@@ -27,6 +27,12 @@ type TxStatus = 'pending' | 'in-block' | 'finalized' | 'expired' | 'orphaned';
 
 const PENDING_TIMEOUT_MS = 60 * 60 * 1000;
 
+// Module-scope balance caches per address+network. Keep balances visible
+// across re-mount / network switch instead of blanking to null while the
+// new fetch is in flight. Same pattern as SendSRX / Dashboard.
+const tokenBalanceCache = new Map<string, number>(); // key: `${network}-${contract}-${address}`
+const srxBalanceCache = new Map<string, number>();   // key: `${network}-${address}`
+
 export default function SendToken({
   token, onBack,
 }: {
@@ -64,18 +70,33 @@ export default function SendToken({
 
   useEffect(() => {
     if (!address) return;
+    const tokenKey = `${network}-${token.contract_address}-${address}`;
+    const srxKey = `${network}-${address}`;
+    const cachedToken = tokenBalanceCache.get(tokenKey);
+    const cachedSrx = srxBalanceCache.get(srxKey);
+
+    // Show cached balances immediately if available — prevents the "—"
+    // flash on every re-mount / network switch.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTokenBalance(null);
-    setSrxBalanceSentri(null);
+    setTokenBalance(cachedToken ?? null);
+    setSrxBalanceSentri(cachedSrx ?? null);
+
     getTokenBalance(token.contract_address, address)
-      .then((b) => setTokenBalance(b.balance))
-      .catch(() => setTokenBalance(null));
+      .then((b) => {
+        setTokenBalance(b.balance);
+        tokenBalanceCache.set(tokenKey, b.balance);
+      })
+      // Transient indexer error: keep whatever we already showed (cached
+      // or null). Don't blank — chain recovery can take seconds, no need
+      // to flash the user.
+      .catch(() => { /* keep last-shown value */ });
     getAddressInfo(address)
       .then((info) => {
         const bal = info?.balance_sentri ?? Math.round((info?.balance_srx ?? 0) * SENTRI);
         setSrxBalanceSentri(bal);
+        srxBalanceCache.set(srxKey, bal);
       })
-      .catch(() => setSrxBalanceSentri(null));
+      .catch(() => { /* keep last-shown value */ });
   }, [address, token.contract_address, network]);
 
   useEffect(() => {

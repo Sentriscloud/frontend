@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { useWalletStore } from "@/lib/store";
 import SrxMark from "@/components/SrxMark";
 import { ShieldCheck, X, ArrowUpRight, Wallet } from "lucide-react";
+import { isAllowedOrigin } from "@/lib/allowed-origins";
 
 interface PendingMessage {
   type: "sentrix:connect-result";
@@ -43,23 +44,10 @@ export default function ConnectPage() {
       setError("Missing or malformed `origin` parameter.");
       return;
     }
-    // Allowlist — only Sentrix-official domains can request a connect.
-    // Add more here when new apps go live.
-    const ALLOWED = [
-      "https://airdrop.sentrixchain.com",
-      "https://faucet.sentrixchain.com",
-      "https://dex.sentrixchain.com",
-      "https://coinblast.sentriscloud.com",
-      // local-dev convenience — only ports we use
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://localhost:3002",
-      "http://localhost:3003",
-      "http://localhost:3006",
-      "http://localhost:3008",
-      "http://localhost:3009",
-    ];
-    if (!ALLOWED.includes(o)) {
+    // Allowlist lives in @/lib/allowed-origins so /connect and /sign
+    // share the same source of truth — adding a new dApp to one
+    // endpoint can't accidentally lock the other out.
+    if (!isAllowedOrigin(o)) {
       setError(`Origin not allowed: ${o}`);
       return;
     }
