@@ -25,6 +25,19 @@ import toast from 'react-hot-toast';
 const STAKING_ADDRESS = '0x0000000000000000000000000000000000000100';
 const PENDING_TIMEOUT_MS = 60 * 60 * 1000;
 
+// Module-scope cache for staking data per address+network. Same pattern as
+// TxHistory.tsx + Dashboard.tsx — keeps validators / delegations / unbonding
+// visible across refetch on transient API errors. 2026-05-07: closes
+// "staking page kadang kosong" — fetchAll was setting all three lists to
+// [] when ANY of the four parallel fetches errored, leaving the page
+// empty during chain recovery windows.
+type StakingCache = {
+  validators: StakingValidator[];
+  delegations: Delegation[];
+  unbonding: UnbondingEntry[];
+};
+const stakingCache = new Map<string, StakingCache>();
+
 type TxStatus = 'pending' | 'in-block' | 'finalized' | 'expired' | 'orphaned';
 
 interface PendingTx {
@@ -65,6 +78,17 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
 
   const fetchAll = useCallback(async () => {
     if (!address) return;
+    const cacheKey = `${network}-${address}`;
+    const cached = stakingCache.get(cacheKey);
+
+    // Show cached data immediately if available — no flash to empty
+    // during refetch. Cache miss → render starts empty (existing
+    // initial state).
+    if (cached !== undefined) {
+      setValidators(cached.validators);
+      setDelegations(cached.delegations);
+      setUnbonding(cached.unbonding);
+    }
     setLoading(true);
     try {
       const [v, d, u, info] = await Promise.all([
@@ -73,14 +97,30 @@ export default function Staking({ onBack, inline = false }: { onBack?: () => voi
         getUnbonding(address).catch(() => null),
         getAddressInfo(address).catch(() => null),
       ]);
-      setValidators(v?.validators ?? []);
-      setDelegations(d?.delegations ?? []);
-      setUnbonding(u?.unbonding ?? []);
+      // Only overwrite each list when its fetch actually succeeded —
+      // otherwise keep the cached/previous value so a transient API
+      // error during chain recovery doesn't blank the page.
+      const newValidators = v?.validators;
+      const newDelegations = d?.delegations;
+      const newUnbonding = u?.unbonding;
+
+      if (newValidators !== undefined) setValidators(newValidators);
+      if (newDelegations !== undefined) setDelegations(newDelegations);
+      if (newUnbonding !== undefined) setUnbonding(newUnbonding);
       setBalance(info?.balance_sentri ?? Math.round((info?.balance_srx ?? 0) * SENTRI));
+
+      // Update cache with the most recent state we've shown — combines
+      // freshly-fetched (if success) with cached (if fetch failed for that
+      // particular endpoint) so partial-success refresh still caches.
+      stakingCache.set(cacheKey, {
+        validators: newValidators ?? cached?.validators ?? [],
+        delegations: newDelegations ?? cached?.delegations ?? [],
+        unbonding: newUnbonding ?? cached?.unbonding ?? [],
+      });
     } finally {
       setLoading(false);
     }
-  }, [address]);
+  }, [address, network]);
 
   // fetchAll resets stale state synchronously before async fetch — same
   // pattern as Dashboard. Lint suppression is for that intentional reset.
