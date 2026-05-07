@@ -51,6 +51,42 @@ interface Candle {
   volume: number
 }
 
+// Subscript-zero price formatter, the convention every major DEX UI
+// uses for sub-cent prices: `0.0₅234` reads as 0 . 0 0 0 0 0 234 =
+// 0.00000234. The subscript digit counts the leading zeros after the
+// decimal point. For prices ≥ 0.001 falls back to plain decimal so
+// "normal" tokens don't read as cryptic. ≥ 1 gets thousands
+// separators. lightweight-charts' default rendering scientific
+// notation (`1.010e-4`) reads as dev-output rather than market-data.
+//
+// Used both by the candlestick-axis priceFormat option (axis ticks +
+// crosshair label + last-price line) and by the summary row's `fmt`
+// helper so header + axis stay in sync.
+function subscriptPriceFormatter(n: number): string {
+  if (!isFinite(n) || n <= 0) return '—'
+  if (n >= 1000) return n.toLocaleString('en-US', { maximumFractionDigits: 2 })
+  if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 })
+  if (n >= 0.001) {
+    // Trim trailing zeros so 0.5 doesn't render as 0.500000.
+    const fixed = n.toFixed(6)
+    return fixed.replace(/0+$/, '').replace(/\.$/, '')
+  }
+  // Sub-0.001: subscript-zero notation. Count zeros AFTER the decimal
+  // point and BEFORE the first non-zero digit. e.g. 0.000234 → 3 zeros.
+  const s = n.toFixed(20).replace(/0+$/, '')
+  const m = s.match(/^0\.(0+)([1-9]\d{0,3})/)
+  if (!m) return n.toExponential(3) // shouldn't hit; safety
+  const zeroCount = m[1].length
+  const sigDigits = m[2].slice(0, 4)
+  // U+2080..U+2089 = subscript 0..9. zeroCount up to ~20 always fits
+  // in 1-2 chars (the formatter clamps below 1e-20).
+  const subscriptDigits = String(zeroCount)
+    .split('')
+    .map((d) => String.fromCharCode(0x2080 + parseInt(d, 10)))
+    .join('')
+  return `0.0${subscriptDigits}${sigDigits}`
+}
+
 function buildCandles(
   trades: IndexerTrade[],
   tipBlock: bigint,
@@ -182,6 +218,18 @@ export function PriceHistoryChart({ curveAddress }: Props) {
       borderDownColor: '#EF4444',
       wickUpColor: '#10B981',
       wickDownColor: '#EF4444',
+      // Custom price-axis formatter — kills the lightweight-charts
+      // default scientific notation (`1.010e-4`) that doesn't read
+      // like other DEX UIs. Uniswap / GeckoTerminal / pump.fun all
+      // use subscript-zero notation for sub-cent prices: e.g.
+      // 0.000234 → `0.0₃234` (the `₃` means "3 leading zeros after
+      // the decimal point"). Falls back to plain decimal for prices
+      // ≥ 0.001 and to thousands-separator format for ≥ 1.
+      priceFormat: {
+        type: 'custom',
+        minMove: 0.000000001,
+        formatter: subscriptPriceFormatter,
+      },
     })
 
     volumeRef.current = chart.addSeries(HistogramSeries, {
@@ -307,21 +355,10 @@ export function PriceHistoryChart({ curveAddress }: Props) {
   const showOverlay =
     !curveAddress || !!error || isLoading || trades.length === 0 || candles.length === 0
 
-  // Format helpers for the OHLC + price summary row. Locale-formatted
-  // for normal range, scientific only at extremes (<1e-6 or >=1e9).
-  // Mirrors apps/dex/src/lib/usePools.ts#formatPriceRatio — was using
-  // n.toExponential(3) at <0.01 which surfaced as "1.010e-4" on the
-  // CBLAST detail page (1 SRX → 9899 tokens = price 1.01e-4 SRX/CBLAST).
-  // Discovered 2026-05-07 pre-launch audit; same fix already shipped
-  // for DEX in PR #29.
-  const fmt = (n: number) => {
-    if (n === 0 || !isFinite(n)) return '—'
-    if (n < 0.000001) return n.toExponential(3)
-    if (n >= 1e9) return n.toExponential(3)
-    if (n >= 1000) return n.toLocaleString('en-US', { maximumFractionDigits: 2 })
-    if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 })
-    return n.toLocaleString('en-US', { maximumFractionDigits: 6 })
-  }
+  // Format helpers for the OHLC + price summary row. Same shape the
+  // axis formatter uses, kept inline so summary header + axis read
+  // identically. See `subscriptPriceFormatter` below.
+  const fmt = (n: number) => subscriptPriceFormatter(n)
 
   return (
     <div>
