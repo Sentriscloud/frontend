@@ -79,7 +79,7 @@ export const FEATURES = [
   {
     icon: "wallet",
     title: "Ethereum Compatible",
-    desc: "JSON-RPC 2.0 with 25 methods including the native sentrix_* namespace. Chain ID 7119 (0x1bcf). Connect MetaMask, ethers.js, web3.js, or Hardhat directly.",
+    desc: "JSON-RPC 2.0 with 22 methods including the native sentrix_* namespace. Chain ID 7119 (0x1bcf). Connect MetaMask, ethers.js, web3.js, or Hardhat directly.",
   },
   {
     icon: "clock",
@@ -140,11 +140,11 @@ export const TOKENS = [
 ];
 
 export const TOKENOMICS_BARS = [
-  { label: "Block Rewards", pct: 40, value: "40% — 84M SRX" },
-  { label: "Founder", pct: 10, value: "10% — 21M SRX" },
-  { label: "Ecosystem Fund", pct: 10, value: "10% — 21M SRX" },
-  { label: "Early Validators", pct: 5, value: "5% — 10.5M SRX" },
-  { label: "Reserve", pct: 5, value: "5% — 10.5M SRX" },
+  { label: "Block Rewards (post-v2-fork)", pct: 80, value: "80% — 252M SRX" },
+  { label: "Founder", pct: 6.67, value: "6.67% — 21M SRX" },
+  { label: "Ecosystem Fund", pct: 6.67, value: "6.67% — 21M SRX" },
+  { label: "Early Validators", pct: 3.33, value: "3.33% — 10.5M SRX" },
+  { label: "Reserve", pct: 3.33, value: "3.33% — 10.5M SRX" },
 ];
 
 export const TOKENOMICS_CARDS = [
@@ -193,7 +193,7 @@ export const API_CARDS = [
   },
   {
     title: "JSON-RPC 2.0",
-    count: "25 Methods · Ethereum Compatible",
+    count: "22 Methods · Ethereum Compatible",
     items: [
       { path: "eth_chainId" },
       { path: "eth_getBalance" },
@@ -202,7 +202,7 @@ export const API_CARDS = [
       { path: "eth_blockNumber" },
       { path: "sentrix_*" },
     ],
-    more: "+ 19 more methods (incl. native sentrix_* namespace)",
+    more: "+ 16 more methods (incl. native sentrix_* namespace)",
   },
   {
     title: "Block Explorer",
@@ -233,7 +233,7 @@ export const ROADMAP = [
     status: "done" as const,
     statusText: "✓ Complete",
     title: "PoA Genesis",
-    items: ["Core blockchain engine, ECDSA wallets, MDBX storage", "SRC-20 token standard, block explorer, JSON-RPC 2.0", "libp2p networking, validator fleet bootstrap", "Mainnet h=0…579,058 — succeeded by Voyager 2026-04-25"],
+    items: ["Core blockchain engine, ECDSA wallets, MDBX storage", "SRC-20 token standard, block explorer, JSON-RPC 2.0", "libp2p networking, validator fleet bootstrap", "Mainnet h=0…579,046 — succeeded by Voyager 2026-04-25"],
   },
   {
     phase: "Voyager",
@@ -245,14 +245,14 @@ export const ROADMAP = [
   {
     phase: "Frontier",
     status: "planned" as const,
-    statusText: "○ 2027",
+    statusText: "○ TBD",
     title: "Performance & Scale",
     items: ["Parallel transaction execution (F-1 scaffold landed)", "Sub-1s block time experiments", "Mainnet hard fork governance", "Developer SDKs and documentation portal"],
   },
   {
     phase: "Odyssey",
     status: "planned" as const,
-    statusText: "○ 2027–2028",
+    statusText: "○ TBD",
     title: "Cross-chain & Light Clients",
     items: ["Cross-chain bridges to major L1s/L2s", "Light client implementation", "Mature ecosystem, global validator network", "Foundation governance"],
   },
