@@ -24,7 +24,12 @@ export const MOCK_TOKENS: Token[] = [
     symbol: 'CBLAST',
     description:
       "First on-chain CoinBlast bonding-curve launch. Linear curve, 1B supply, 0.0001 SRX base price, K = 0.5, graduation at 1000 SRX raised. Fees accrue to the SentrisCloud Ecosystem Fund.",
-    imageUrl: '',
+    // Owner of CBLAST genesis is the zero address (deployed direct via
+    // useDeployContract pre-factory) so the sig-gated POST /coinblast/
+    // metadata endpoint can never accept an icon for it. Seed via
+    // MOCK_TOKENS instead so the genesis card has visual parity with
+    // the factory-deployed launches.
+    imageUrl: 'ipfs://bafkreic35xrbrthns6txvswf3cbk4uor2fbdfdpvlxalwdmxlxylop4jo4',
     creator: '0x5acb04058fc4dfa258f29ce318282377cac176fd',
     totalSupply: 1_000_000_000,
     tokensSold: 0,
@@ -41,12 +46,32 @@ export const MOCK_TOKENS: Token[] = [
     progress: 0,
     graduationThresholdSrx: 1000, // matches CoinBlastCurve.graduationSrxThreshold = 1000 SRX
   },
-  // User-launched tokens (e.g. Tecucoin) used to land here manually as
-  // a stop-gap. They're now auto-discovered via useDeployedTokens()
-  // which reads TokenDeployed events from TokenFactory v1.1.0 directly.
-  // Static seeds are reserved for tokens with rich metadata (description,
-  // image, social links, curveAddress) that the chain registry can't
-  // surface on its own — currently just CBLAST.
+  {
+    // JST — bare ERC-20 deployed early (pre-metadata-endpoint). Owner
+    // wallet (0x4fec…34b7) lives in operator's MetaMask, not on the
+    // build host, so the sig-gated POST flow can't be run from a
+    // script. Seed via MOCK_TOKENS so the card has visual parity with
+    // factory-deployed launches. Same pattern CBLAST genesis uses.
+    address: '0xc9Ff6CedfBd00B6aB647777A558423Bef4E055A8',
+    curveAddress: '0xc4a8157b1dc0129618892d038460b324e0c145fe',
+    name: 'Just token',
+    symbol: 'JST',
+    description:
+      'Just token. Bare ERC-20 deployed early on Sentrix Chain — predates the canonical CoinBlast bonding-curve flow.',
+    imageUrl: 'ipfs://bafkreif6m53yyc7x3xab5yg3sw2tjcijunnk3dig53hmxothzupp4hm4oy',
+    creator: '0x4fecfdaf3711caee67ad916b6213436feb1c34b7',
+    totalSupply: 1_000_000_000,
+    tokensSold: 0,
+    createdAt: 0,
+    volume24h: 0,
+    isGraduated: false,
+    isWarned: false,
+    isVerified: false,
+    price: 0.0001,
+    marketCap: 0,
+    progress: 0,
+    graduationThresholdSrx: 10000,
+  },
 ]
 
 export const MOCK_HOLDERS: Holder[] = []
