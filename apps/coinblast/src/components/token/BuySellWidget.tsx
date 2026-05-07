@@ -61,11 +61,19 @@ export function BuySellWidget({ token }: BuySellWidgetProps) {
 
 // ─── On-chain ──────────────────────────────────────────────────────
 
+// Default slippage tolerance for buy/sell — 1%. Industry-standard sane
+// default. Users can adjust 0.1-15% via SlippageControl. Anything > 5%
+// shows a warning. 2026-05-07: was effectively infinite (minOut=0n
+// hardcoded) — sandwich-attack window for any meaningful launch volume.
+const DEFAULT_SLIPPAGE_PCT = 1.0
+const SLIPPAGE_PRESETS = [0.5, 1.0, 5.0] as const
+
 function OnChainWidget({ token }: BuySellWidgetProps) {
   const curveAddr = token.curveAddress!
   const tokenAddr = token.address as `0x${string}`
   const [tab, setTab] = useState<'buy' | 'sell'>('buy')
   const [amount, setAmount] = useState('')
+  const [slippagePct, setSlippagePct] = useState<number>(DEFAULT_SLIPPAGE_PCT)
   const { isConnected, connect, address } = useWalletStore()
   const { source: addrSource, manualAddress } = useEffectiveAddress('coinblast')
   // Real-wallet path wins on isConnected; Solux/manual path takes over
@@ -101,6 +109,19 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
 
   const buyQuote = useQuoteBuy(curveAddr, tab === 'buy' ? estimatedTokensOut : undefined)
 
+  // Apply slippage tolerance to the displayed expected-out → minimum
+  // amount we'll accept on-chain. BigInt arithmetic with bps to avoid
+  // float precision loss on large amounts.
+  // 2026-05-07: closes the MEV sandwich gap — pre-fix args were
+  // hardcoded 0n, accepting any output. The contract's bonding-curve
+  // refund-dust mechanism only refunds overshoot rounding; it does
+  // NOT protect against frontrun price moves between submit + execute.
+  const slippageBps = BigInt(Math.floor(slippagePct * 100))
+  const minTokensOut = useMemo<bigint>(() => {
+    if (estimatedTokensOut === 0n) return 0n
+    return estimatedTokensOut - (estimatedTokensOut * slippageBps) / 10_000n
+  }, [estimatedTokensOut, slippageBps])
+
   const sellAmountWei = useMemo<bigint>(() => {
     if (tab !== 'sell' || amountNum <= 0) return 0n
     try {
@@ -110,6 +131,13 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
     }
   }, [tab, amountNum, amount])
   const sellQuote = useQuoteSell(curveAddr, tab === 'sell' ? sellAmountWei : undefined)
+
+  // Same slippage logic for sell — minSrxOut = quote × (1 - slippage).
+  const minSrxOut = useMemo<bigint>(() => {
+    const out = sellQuote.srxOut
+    if (out === undefined || out === 0n) return 0n
+    return out - (out * slippageBps) / 10_000n
+  }, [sellQuote.srxOut, slippageBps])
 
   // Allowance check for sell (curve pulls tokens via transferFrom).
   // Reads against effectiveAddress so Solux-mode users see correct gating.
@@ -198,20 +226,23 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
 
     if (tab === 'buy') {
       if (amountNum <= 0) return
+      // minTokensOut applies the user's slippage tolerance to the
+      // displayed expected output. Pre-fix this was hardcoded 0n,
+      // making every buy sandwich-able with no min-out floor.
       if (useSoluxPath) {
         soluxSigner
           .signAndSend({
             to: curveAddr,
             abi: coinBlastCurveAbi,
             functionName: 'buy',
-            args: [0n], // minTokensOut=0; refund-dust handles slippage
+            args: [minTokensOut],
             value: parseEther(amount),
             label: `Buy ${token.symbol} on CoinBlast`,
           })
           .then(setSoluxTxHash)
           .catch(() => {})
       } else {
-        buyHook.submit(amount, 0n)
+        buyHook.submit(amount, minTokensOut)
       }
     } else {
       if (sellAmountWei === 0n) return
@@ -237,25 +268,63 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
         })
         return
       }
+      // minSrxOut applies slippage tolerance to the displayed quote.
       if (useSoluxPath) {
         soluxSigner
           .signAndSend({
             to: curveAddr,
             abi: coinBlastCurveAbi,
             functionName: 'sell',
-            args: [sellAmountWei, 0n],
+            args: [sellAmountWei, minSrxOut],
             label: `Sell ${token.symbol} on CoinBlast`,
           })
           .then(setSoluxTxHash)
           .catch(() => {})
       } else {
-        sellHook.submit(sellAmountWei, 0n)
+        sellHook.submit(sellAmountWei, minSrxOut)
       }
     }
   }
 
   return (
     <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-4">
+      {/* Slippage control */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[11px] uppercase tracking-wider font-mono text-[var(--tx-d)]">Slippage</span>
+        <div className="flex gap-1">
+          {SLIPPAGE_PRESETS.map((s) => (
+            <button
+              key={s}
+              onClick={() => setSlippagePct(s)}
+              className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-colors ${
+                slippagePct === s
+                  ? 'bg-[var(--gold)] text-[var(--bk)]'
+                  : 'bg-[var(--bk)] text-[var(--tx-d)] hover:text-[var(--tx)]'
+              }`}
+            >
+              {s}%
+            </button>
+          ))}
+          <input
+            type="number"
+            min="0.1"
+            max="15"
+            step="0.1"
+            value={slippagePct}
+            onChange={(e) => {
+              const v = parseFloat(e.target.value)
+              if (isFinite(v) && v >= 0.1 && v <= 15) setSlippagePct(v)
+            }}
+            className="w-12 px-1 py-1 rounded-md text-[11px] font-mono bg-[var(--bk)] border border-[var(--brd)] text-[var(--tx)] focus:outline-none focus:border-[var(--gold-d)] text-center"
+          />
+        </div>
+      </div>
+      {slippagePct > 5 && (
+        <div className="mb-3 px-2 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200">
+          ⚠ High slippage: {slippagePct}%. Front-runners can extract this much.
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-[var(--bk)] rounded-xl mb-4">
         {(['buy', 'sell'] as const).map((t) => (
