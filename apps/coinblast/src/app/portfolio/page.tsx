@@ -32,6 +32,7 @@ export default function PortfolioPage() {
     ]
     return (
       <div className="max-w-md mx-auto px-4 pt-[96px] pb-20 text-center">
+        <h1 className="sr-only">Your Portfolio</h1>
         <div className="w-20 h-20 bg-[var(--sf)] border border-[var(--brd)] rounded-full flex items-center justify-center mx-auto mb-6">
           <Wallet className="w-10 h-10 text-[var(--tx-d)]" />
         </div>
