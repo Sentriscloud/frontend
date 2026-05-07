@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: lint + typecheck + build (turbo)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+          run_install: false
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Turbo lint
+        run: pnpm turbo lint --concurrency=4
+
+      - name: Turbo typecheck
+        run: pnpm turbo typecheck --concurrency=4
+
+      - name: Turbo build
+        run: pnpm turbo build --concurrency=4
+        env:
+          # Builds may need RPC URL for static generation; default to public mainnet RPC.
+          NEXT_PUBLIC_SENTRIX_RPC_URL: https://rpc.sentrixchain.com
+          NEXT_PUBLIC_SENTRIX_TESTNET_RPC_URL: https://testnet-rpc.sentrixchain.com

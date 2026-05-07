@@ -1,0 +1,27 @@
+name: Owner auto-merge
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  enable-auto-merge:
+    runs-on: ubuntu-22.04
+    if: >
+      github.event.pull_request.user.login == 'satyakwok' &&
+      github.event.pull_request.draft == false
+    steps:
+      - name: Enable auto-merge (squash) for owner PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -e
+          gh pr merge --auto --squash "$PR_URL" || {
+            echo "::warning::auto-merge enable returned non-zero — PR may already be merged, conflicted, or have auto-merge already enabled."
+            exit 0
+          }
