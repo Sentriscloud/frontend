@@ -8,7 +8,7 @@ import { MOCK_TOKENS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
 import { useDeployedCurves } from '@/lib/useDeployedCurves'
 import { useTopHolders } from '@/lib/useTopHolders'
-import { useTradesByCurve } from '@/lib/useCoinblastIndexer'
+import { useTradesByCurve, useIndexerTokenMeta } from '@/lib/useCoinblastIndexer'
 import { useCurveState } from '@/lib/useCoinBlastCurve'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import { Badge } from '@/components/ui/Badge'
@@ -132,6 +132,13 @@ export default function TokenDetailPage({ params }: Props) {
     return set.size
   }, [tradesForVol])
 
+  // Indexer-sourced metadata (image, description, socials). Overrides
+  // MOCK_TOKENS / static seed when present. Multi-browser visible —
+  // every visitor sees the icon the launcher posted, not just the
+  // launching browser's localStorage. Hook gates on undefined curve so
+  // bare ERC-20s without a curve return null and we keep the seed.
+  const { meta: indexerMeta } = useIndexerTokenMeta(token?.curveAddress)
+
   if (!token) {
     if (isLoading) {
       return (
@@ -142,6 +149,15 @@ export default function TokenDetailPage({ params }: Props) {
     }
     notFound()
   }
+
+  // Apply indexer metadata over the static token row (read-through).
+  // Order: indexer.image → static MOCK_TOKENS.imageUrl → empty (avatar
+  // generates a colored letter fallback). Same for description / socials.
+  const displayImage = indexerMeta?.imageUrl || token.imageUrl
+  const displayDescription = indexerMeta?.description ?? (token as { description?: string }).description ?? ''
+  const displayTwitter = indexerMeta?.twitterUrl || token.twitter
+  const displayTelegram = indexerMeta?.telegramUrl || token.telegram
+  const displayWebsite = indexerMeta?.websiteUrl || token.website
 
   // Live launches put their graduation threshold on the Token row (in SRX
   // raised). Pre-deploy preview rows fall back to the legacy 69k mcap.
@@ -176,7 +192,7 @@ export default function TokenDetailPage({ params }: Props) {
             <TokenAvatar
               address={token.address}
               symbol={token.symbol}
-              imageUrl={token.imageUrl}
+              imageUrl={displayImage}
               size={64}
               className="shrink-0"
             />
@@ -225,23 +241,24 @@ export default function TokenDetailPage({ params }: Props) {
                 <ShareButtons name={token.name} symbol={token.symbol} />
               </div>
 
-              {/* Social links */}
-              {(token.website || token.twitter || token.telegram || token.discord) && (
+              {/* Social links — read indexer metadata first, fall back
+                  to the static Token row's social fields if present. */}
+              {(displayWebsite || displayTwitter || displayTelegram || token.discord) && (
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  {token.website && (
-                    <Link href={token.website} target="_blank"
+                  {displayWebsite && (
+                    <Link href={displayWebsite} target="_blank"
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--sf)] border border-[var(--brd)] text-xs text-[var(--tx-d)] hover:text-[var(--gold)] hover:border-[var(--brd2)] transition-all">
                       <Globe className="w-3 h-3" /> Website
                     </Link>
                   )}
-                  {token.twitter && (
-                    <Link href={token.twitter} target="_blank"
+                  {displayTwitter && (
+                    <Link href={displayTwitter} target="_blank"
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--sf)] border border-[var(--brd)] text-xs text-[var(--tx-d)] hover:text-[var(--gold)] hover:border-[var(--brd2)] transition-all">
                       <span className="text-[10px] font-bold leading-none">𝕏</span> Twitter
                     </Link>
                   )}
-                  {token.telegram && (
-                    <Link href={token.telegram} target="_blank"
+                  {displayTelegram && (
+                    <Link href={displayTelegram} target="_blank"
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--sf)] border border-[var(--brd)] text-xs text-[var(--tx-d)] hover:text-[var(--gold)] hover:border-[var(--brd2)] transition-all">
                       <Send className="w-3 h-3" /> Telegram
                     </Link>
@@ -353,10 +370,10 @@ export default function TokenDetailPage({ params }: Props) {
           )}
 
           {/* Description */}
-          {token.description && (
+          {displayDescription && (
             <div className="bg-[var(--sf)] border border-[var(--brd)] rounded-xl p-5">
               <h3 className="font-semibold text-[var(--tx)] mb-3">About</h3>
-              <p className="text-[var(--tx-m)] text-sm leading-relaxed">{token.description}</p>
+              <p className="text-[var(--tx-m)] text-sm leading-relaxed">{displayDescription}</p>
             </div>
           )}
 

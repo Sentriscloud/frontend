@@ -239,3 +239,70 @@ export function useTradesByCurve(
 
   return { trades, isLoading, error };
 }
+
+/**
+ * Per-curve indexer metadata (image_url, description, socials). Reads
+ * the same /coinblast/tokens/{curve} endpoint as the launch list but
+ * returns just the rich-metadata fields the launch detail page needs.
+ *
+ * Returns null fields until the lookup resolves OR if the curve has no
+ * metadata posted yet (frontend then falls back to MOCK_TOKENS / the
+ * static seed). Polls every 30 s — metadata is operator-pushed, not
+ * trade-driven, so a slower cadence is fine.
+ */
+export interface IndexerTokenMeta {
+  imageUrl: string | null;
+  description: string | null;
+  twitterUrl: string | null;
+  telegramUrl: string | null;
+  websiteUrl: string | null;
+}
+
+export function useIndexerTokenMeta(
+  curveAddress: string | undefined,
+): { meta: IndexerTokenMeta | null; isLoading: boolean } {
+  const [meta, setMeta] = useState<IndexerTokenMeta | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!curveAddress) {
+      setMeta(null);
+      setIsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const d = await fetchJson<{
+          token: {
+            image_url: string | null;
+            description: string | null;
+            twitter_url: string | null;
+            telegram_url: string | null;
+            website_url: string | null;
+          };
+        }>(`/api/cb/tokens/${curveAddress.toLowerCase()}`);
+        if (cancelled) return;
+        setMeta({
+          imageUrl: d.token.image_url,
+          description: d.token.description,
+          twitterUrl: d.token.twitter_url,
+          telegramUrl: d.token.telegram_url,
+          websiteUrl: d.token.website_url,
+        });
+      } catch {
+        if (!cancelled) setMeta(null);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [curveAddress]);
+
+  return { meta, isLoading };
+}
