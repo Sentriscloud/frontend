@@ -307,11 +307,21 @@ export function PriceHistoryChart({ curveAddress }: Props) {
   const showOverlay =
     !curveAddress || !!error || isLoading || trades.length === 0 || candles.length === 0
 
-  // Format helpers for the OHLC + price summary row. Tiny prices like
-  // 1e-5 SRX read better in scientific notation than as 0.00001; large
-  // prices read better with thousands separators. Switch threshold at 1.
-  const fmt = (n: number) =>
-    n === 0 ? '—' : n < 0.01 ? n.toExponential(3) : n.toFixed(6)
+  // Format helpers for the OHLC + price summary row. Locale-formatted
+  // for normal range, scientific only at extremes (<1e-6 or >=1e9).
+  // Mirrors apps/dex/src/lib/usePools.ts#formatPriceRatio — was using
+  // n.toExponential(3) at <0.01 which surfaced as "1.010e-4" on the
+  // CBLAST detail page (1 SRX → 9899 tokens = price 1.01e-4 SRX/CBLAST).
+  // Discovered 2026-05-07 pre-launch audit; same fix already shipped
+  // for DEX in PR #29.
+  const fmt = (n: number) => {
+    if (n === 0 || !isFinite(n)) return '—'
+    if (n < 0.000001) return n.toExponential(3)
+    if (n >= 1e9) return n.toExponential(3)
+    if (n >= 1000) return n.toLocaleString('en-US', { maximumFractionDigits: 2 })
+    if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 })
+    return n.toLocaleString('en-US', { maximumFractionDigits: 6 })
+  }
 
   return (
     <div>

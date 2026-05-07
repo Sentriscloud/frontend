@@ -31,6 +31,13 @@ const SORTS: { key: SortKey; label: string }[] = [
 ]
 
 function tabFilter(t: Token, tab: Tab): boolean {
+  // CoinBlast is a bonding-curve launchpad. Bare ERC-20s deployed via
+  // the older factory flow (no curve attached) shouldn't surface in
+  // launchpad tabs — they have nothing to interact with here, and
+  // their stale gradient placeholders dilute the /explore signal-to-
+  // noise. Discovered 2026-05-07 pre-launch audit (`Tesucoin` and
+  // `Sentrix Genesis Coin` were sitting next to real curve launches).
+  if (!t.curveAddress) return false
   switch (tab) {
     case 'hot':
     case 'new':
@@ -94,6 +101,18 @@ export default function ExplorePage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 pt-[96px] pb-10">
+      {/* Page header — gives /explore a proper h1 (was missing per
+          2026-05-07 pre-launch audit) so screen readers + SEO have an
+          anchor and shared links unfurl with a clear "what is this
+          page" cue beyond the browser tab title. */}
+      <div className="mb-5">
+        <h1 className="text-2xl sm:text-3xl font-black text-[var(--tx)]">Explore Coins</h1>
+        <p className="text-sm text-[var(--tx-d)] mt-1">
+          Every fair-launch coin live on Sentrix Chain. Filter by tab, sort by metric, or
+          search by name / ticker / address.
+        </p>
+      </div>
+
       {/* Search — same compact pill as the homepage so users see
           one search-bar pattern across the app. */}
       <div className="relative mb-4">

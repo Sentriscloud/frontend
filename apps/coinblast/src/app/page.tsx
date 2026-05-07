@@ -43,13 +43,17 @@ function formatBlocksAgo(latest: bigint | null, then: bigint): string {
 }
 
 function getTabTokens(tokens: Token[], tab: Tab): Token[] {
+  // CoinBlast is a bonding-curve launchpad — bare ERC-20s without a
+  // curve don't belong on the launchpad tabs. Same filter as
+  // /explore (see app/explore/page.tsx#tabFilter for rationale).
+  const curveOnly = tokens.filter((t) => !!t.curveAddress)
   switch (tab) {
     case 'hot':
-      return [...tokens].filter((t) => !t.isWarned).sort((a, b) => b.marketCap - a.marketCap)
+      return curveOnly.filter((t) => !t.isWarned).sort((a, b) => b.marketCap - a.marketCap)
     case 'new':
       // Live tokens get a real createdAt; static seeds use 0 ("just launched").
       // Tokens with createdAt=0 sort to the top, then by descending real ts.
-      return [...tokens].sort((a, b) => {
+      return curveOnly.sort((a, b) => {
         if (a.createdAt === 0 && b.createdAt === 0) return 0
         if (a.createdAt === 0) return -1
         if (b.createdAt === 0) return 1
@@ -59,11 +63,11 @@ function getTabTokens(tokens: Token[], tab: Tab): Token[] {
       // Volume-as-proxy-for-momentum: marketCap reflects SRX raised on
       // the curve, which only goes up with buys. Sort descending and
       // hide warned rows (same hide rule as Hot — Movers is curated).
-      return [...tokens].filter((t) => !t.isWarned).sort((a, b) => b.volume24h - a.volume24h || b.marketCap - a.marketCap)
+      return curveOnly.filter((t) => !t.isWarned).sort((a, b) => b.volume24h - a.volume24h || b.marketCap - a.marketCap)
     case 'graduating':
-      return [...tokens].filter((t) => !t.isGraduated && t.progress >= 50).sort((a, b) => b.progress - a.progress)
+      return curveOnly.filter((t) => !t.isGraduated && t.progress >= 50).sort((a, b) => b.progress - a.progress)
     case 'graduated':
-      return [...tokens].filter((t) => t.isGraduated)
+      return curveOnly.filter((t) => t.isGraduated)
   }
 }
 
