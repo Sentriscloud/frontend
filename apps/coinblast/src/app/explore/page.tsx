@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { TokenCard } from '@/components/token/TokenCard'
 import { MOCK_TOKENS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
+import { useIndexerTokensMeta, useIndexerCurves } from '@/lib/useCoinblastIndexer'
 import { useDeployedCurves } from '@/lib/useDeployedCurves'
 import { mergeStaticAndDeployed } from '@/lib/token-registry'
 import type { Token } from '@/types'
@@ -82,10 +83,49 @@ export default function ExplorePage() {
   }, [])
 
   const { tokens: deployed } = useDeployedTokens()
-  const { curves } = useDeployedCurves()
+  const { curves: chainCurves } = useDeployedCurves()
+  const { curves: indexerCurves } = useIndexerCurves()
+  const { byCurve: indexerMeta } = useIndexerTokensMeta()
+  // Indexer-curves first (fast — single fetch), chain-scan curves
+  // appended as resilience backup. Dedup happens inside
+  // mergeStaticAndDeployed via tokenAddress key.
+  const curves = useMemo(
+    () => [
+      ...indexerCurves.map((c) => ({
+        curveAddress: c.curveAddress,
+        tokenAddress: c.tokenAddress,
+        owner: c.owner,
+        name: c.name,
+        symbol: c.symbol,
+        curveSupply: c.curveSupply,
+        graduationSrxThreshold: c.graduationSrxThreshold,
+        blockNumber: c.blockNumber,
+        txHash: c.txHash,
+      })),
+      ...chainCurves,
+    ],
+    [indexerCurves, chainCurves],
+  )
   const merged = useMemo(
-    () => mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves),
-    [deployed, curves],
+    () => {
+      const base = mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves)
+      // Patch indexer-sourced metadata (image, description) onto each
+      // row keyed by curveAddress. Without this the cards render the
+      // gradient placeholder even after the launcher has POSTed an
+      // icon — only the token detail page was reading indexer meta.
+      if (indexerMeta.size === 0) return base
+      return base.map((t) => {
+        if (!t.curveAddress) return t
+        const m = indexerMeta.get(t.curveAddress.toLowerCase())
+        if (!m) return t
+        return {
+          ...t,
+          imageUrl: m.imageUrl ?? t.imageUrl,
+          description: m.description ?? t.description,
+        }
+      })
+    },
+    [deployed, curves, indexerMeta],
   )
 
   const tokens = useMemo(() => {

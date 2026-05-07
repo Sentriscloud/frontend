@@ -306,3 +306,147 @@ export function useIndexerTokenMeta(
 
   return { meta, isLoading };
 }
+
+/**
+ * Bulk indexer metadata for the launchpad list views (/explore + home).
+ * Single fetch of /coinblast/tokens?limit=100 returning a Map<curveAddr,
+ * { imageUrl, description }> so list pages can patch their token rows
+ * without one fetch per card. Polls every 30 s.
+ *
+ * The token detail page uses useIndexerTokenMeta (one curve at a time);
+ * this is its plural sibling.
+ */
+export interface IndexerTokensMetaMap {
+  byCurve: Map<string, { imageUrl: string | null; description: string | null }>;
+  isLoading: boolean;
+}
+
+export function useIndexerTokensMeta(): IndexerTokensMetaMap {
+  const [byCurve, setByCurve] = useState<Map<string, { imageUrl: string | null; description: string | null }>>(
+    () => new Map(),
+  );
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const d = await fetchJson<{
+          tokens: Array<{
+            curve_address: string;
+            image_url: string | null;
+            description: string | null;
+          }>;
+        }>(`/api/cb/tokens?limit=100`);
+        if (cancelled) return;
+        const m = new Map<string, { imageUrl: string | null; description: string | null }>();
+        for (const t of d.tokens ?? []) {
+          m.set(t.curve_address.toLowerCase(), {
+            imageUrl: t.image_url,
+            description: t.description,
+          });
+        }
+        setByCurve(m);
+      } catch {
+        /* keep stale */
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  return { byCurve, isLoading };
+}
+
+/**
+ * Indexer-sourced curves list — fast path for /explore + home that
+ * bypasses the per-browser eth_getLogs chain scan (which takes 30-60 s
+ * to walk from the factory deploy block to current tip on a fresh
+ * browser session). Indexer already has every CurveCreated event
+ * processed; one fetch returns the same shape useDeployedCurves
+ * provides plus the metadata fields.
+ *
+ * Returned shape mirrors DeployedCurve from useDeployedCurves so the
+ * merge function can swap sources transparently. Polls every 30 s.
+ */
+export interface IndexerCurve {
+  curveAddress: `0x${string}`;
+  tokenAddress: `0x${string}`;
+  owner: `0x${string}`;
+  name: string;
+  symbol: string;
+  curveSupply: bigint;
+  graduationSrxThreshold: bigint;
+  blockNumber: bigint;
+  txHash: `0x${string}`;
+  isGraduated: boolean;
+  imageUrl: string | null;
+  description: string | null;
+}
+
+export function useIndexerCurves(): {
+  curves: IndexerCurve[];
+  isLoading: boolean;
+} {
+  const [curves, setCurves] = useState<IndexerCurve[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const d = await fetchJson<{
+          tokens: Array<{
+            curve_address: string;
+            token_address: string;
+            owner_address: string;
+            name: string;
+            symbol: string;
+            curve_supply: string;
+            graduation_threshold: string;
+            is_graduated: boolean;
+            created_block: string;
+            created_tx_hash: string;
+            image_url: string | null;
+            description: string | null;
+          }>;
+        }>(`/api/cb/tokens?limit=100`);
+        if (cancelled) return;
+        setCurves(
+          (d.tokens ?? []).map((t) => ({
+            curveAddress: t.curve_address as `0x${string}`,
+            tokenAddress: t.token_address as `0x${string}`,
+            owner: t.owner_address as `0x${string}`,
+            name: t.name,
+            symbol: t.symbol,
+            curveSupply: BigInt(t.curve_supply),
+            graduationSrxThreshold: BigInt(t.graduation_threshold),
+            blockNumber: BigInt(t.created_block),
+            txHash: t.created_tx_hash as `0x${string}`,
+            isGraduated: t.is_graduated,
+            imageUrl: t.image_url,
+            description: t.description,
+          })),
+        );
+      } catch {
+        /* keep stale */
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  return { curves, isLoading };
+}
