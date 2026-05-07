@@ -7,6 +7,7 @@ import { useBlockNumber } from 'wagmi'
 import { MOCK_TOKENS } from '@/lib/mock-data'
 import { useDeployedTokens } from '@/lib/useDeployedTokens'
 import { useDeployedCurves } from '@/lib/useDeployedCurves'
+import { useIndexerCurves } from '@/lib/useCoinblastIndexer'
 import { useTopHolders } from '@/lib/useTopHolders'
 import { useTradesByCurve, useIndexerTokenMeta } from '@/lib/useCoinblastIndexer'
 import { useCurveState } from '@/lib/useCoinBlastCurve'
@@ -73,9 +74,28 @@ export default function TokenDetailPage({ params }: Props) {
   // tokens with the static seed list.
   const { address } = use(params)
   const { tokens: deployed, isLoading: tokensLoading } = useDeployedTokens()
-  const { curves, isLoading: curvesLoading } = useDeployedCurves()
+  const { curves: chainCurves, isLoading: curvesLoading } = useDeployedCurves()
+  const { curves: indexerCurves } = useIndexerCurves()
   const isLoading = tokensLoading || curvesLoading
-  const merged = mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, curves)
+  // Indexer-first (instant) + chain-scan backup (30-60 s log scan).
+  // Without this, fresh-deployed tokens 404 for ~1 min until the
+  // chain log scan catches up — bad UX for share-link clicks the
+  // moment after a launch.
+  const allCurves = [
+    ...indexerCurves.map((c) => ({
+      curveAddress: c.curveAddress,
+      tokenAddress: c.tokenAddress,
+      owner: c.owner,
+      name: c.name,
+      symbol: c.symbol,
+      curveSupply: c.curveSupply,
+      graduationSrxThreshold: c.graduationSrxThreshold,
+      blockNumber: c.blockNumber,
+      txHash: c.txHash,
+    })),
+    ...chainCurves,
+  ]
+  const merged = mergeStaticAndDeployed(MOCK_TOKENS, deployed, 7119, allCurves)
   // Top holders — reads Transfer events for the token directly. Hook
   // gates on undefined address so it's a no-op until the token row
   // resolves out of the merge.
