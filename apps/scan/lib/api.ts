@@ -237,6 +237,27 @@ export interface DailyStat {
   transactions: number;
 }
 
+// Safely convert a token-base-unit BigInt to a display-units number,
+// preserving precision for the whole-token portion. Pre-existing
+// `Number(BigInt(raw)) / 10**decimals` lost precision for any supply
+// > 2^53 base units (= ~9 million tokens at 18 decimals), making the
+// total_supply display drift on large tokens. Split into integer +
+// fractional parts so the integer side stays exact for any size that
+// matters (Number can hold integers up to 2^53 = ~9e15 = 9 quadrillion
+// whole tokens, more than total of any plausible asset).
+function safeBaseUnitsToNumber(raw: bigint, decimals: number): number {
+  if (decimals <= 0) return Number(raw);
+  const divisor = 10n ** BigInt(decimals);
+  const whole = raw / divisor;
+  const frac = raw % divisor;
+  // Number(frac) is safe because frac < divisor; for 18-decimal tokens
+  // frac < 10^18 = ~1e18 which is just below 2^60 — float precision
+  // covers the leading 16 significant digits, which is more than the UI
+  // ever displays. fracPart is 0..1.
+  const fracPart = Number(frac) / Number(divisor);
+  return Number(whole) + fracPart;
+}
+
 export async function fetchChainInfo(network: NetworkId): Promise<ChainInfo | null> {
   return normalizeChainInfo(await apiFetch<ChainInfo>(network, "/chain/info"));
 }
@@ -696,7 +717,7 @@ async function fetchEvmTokensFromFactory(network: NetworkId): Promise<TokenData[
       const offSym = parseInt(data.slice(64, 128), 16) * 2;
       const supplyHex = data.slice(128, 192);
       if (!Number.isFinite(offName) || !Number.isFinite(offSym) || !/^[0-9a-fA-F]{64}$/.test(supplyHex)) continue;
-      supply = Number(BigInt("0x" + supplyHex)) / 1e18; // 18-decimal display
+      supply = safeBaseUnitsToNumber(BigInt("0x" + supplyHex), 18);
       name = decodeAbiString(data, offName);
       symbol = decodeAbiString(data, offSym);
       // If either string came back as binary garbage (e.g. the on-chain
@@ -809,7 +830,7 @@ async function fetchEvmTokenFromChain(network: NetworkId, address: string): Prom
     const decode = (raw: string) => decodeAbiString(raw.replace(/^0x/, ""), 0);
     const decimals = decRaw ? parseInt(decRaw, 16) : 18;
     const supply = supplyRaw
-      ? Number(BigInt(supplyRaw)) / Math.pow(10, decimals)
+      ? safeBaseUnitsToNumber(BigInt(supplyRaw), decimals)
       : 0;
     return {
       contract_address: addr,
