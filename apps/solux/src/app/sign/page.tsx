@@ -20,6 +20,7 @@ import { signEvmTransaction } from "@/lib/evm-sign";
 import { ShieldCheck, X, AlertTriangle } from "lucide-react";
 import SrxMark from "@/components/SrxMark";
 import { formatUnits } from "viem";
+import { isAllowedOrigin } from "@/lib/allowed-origins";
 
 interface SignRequestEnvelope {
   chainId: number;
@@ -43,19 +44,9 @@ interface ResultMessage {
   error?: string;
 }
 
-const ALLOWED_ORIGINS = [
-  "https://airdrop.sentrixchain.com",
-  "https://faucet.sentrixchain.com",
-  "https://dex.sentrixchain.com",
-  "https://coinblast.sentriscloud.com",
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "http://localhost:3002",
-  "http://localhost:3003",
-  "http://localhost:3006",
-  "http://localhost:3008",
-  "http://localhost:3009",
-];
+// ALLOWED_ORIGINS lives in @/lib/allowed-origins so /sign and /connect
+// share the same source of truth — adding a new dApp to one file no
+// longer risks the other rejecting it.
 
 function parseRequest(rawB64: string): SignRequestEnvelope | null {
   try {
@@ -99,7 +90,7 @@ export default function SignPage() {
       setError("Missing or malformed `origin` parameter.");
       return;
     }
-    if (!ALLOWED_ORIGINS.includes(o)) {
+    if (!isAllowedOrigin(o)) {
       setError(`Origin not allowed: ${o}`);
       return;
     }
