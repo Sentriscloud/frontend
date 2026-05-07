@@ -12,6 +12,16 @@ const TOKEN_OP_ADDRESS = '0x0000000000000000000000000000000000000000';
 const STAKING_ADDRESS = '0x0000000000000000000000000000000000000100';
 const SENTRI = 100_000_000;
 
+// Module-scope cache so navigation between tabs (Home → Activity → Home)
+// doesn't refetch + blank the list. Persists across component re-mounts
+// within the same page lifecycle. Cleared on hard reload (intentional —
+// fresh-mount on reload should re-fetch from server).
+// 2026-05-07: closes "history kadang hilang" — user was seeing the list
+// disappear because every mount triggered a fetch, and a transient
+// indexer / chain-RPC error blanked the list. Cache lets us show last
+// known good while refreshing in background.
+const txCache = new Map<string, TxHistoryItem[]>();
+
 export default function TxHistory({ onBack, inline = false }: { onBack?: () => void; inline?: boolean }) {
   const { address } = useWalletStore();
   const { hideBalances, network } = useSettingsStore();
@@ -22,16 +32,35 @@ export default function TxHistory({ onBack, inline = false }: { onBack?: () => v
   useEffect(() => {
     if (!address) return;
     let cancelled = false;
-    // Clear stale tx list immediately so the previous network's history
-    // doesn't flash while the new network's data loads. Synchronous
-    // setState here is intentional, fires only on user-driven address
-    // or network switch.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTxs([]);
-    setLoading(true);
+    const cacheKey = `${network}-${address}`;
+    const cached = txCache.get(cacheKey);
+
+    if (cached !== undefined) {
+      // Cache hit — show cached list immediately, refresh in background.
+      // No flash of "Loading…" or "No transactions" between tab switches.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTxs(cached);
+      setLoading(false);
+    } else {
+      // Cache miss (first mount for this address/network combo).
+      // Clear and show loading while we fetch.
+      setTxs([]);
+      setLoading(true);
+    }
+
     getTransactionHistory(address, 50)
-      .then((data) => { if (!cancelled) setTxs(data.transactions || []); })
-      .catch(() => { if (!cancelled) setTxs([]); })
+      .then((data) => {
+        if (cancelled) return;
+        const fresh = data.transactions || [];
+        setTxs(fresh);
+        txCache.set(cacheKey, fresh);
+      })
+      .catch(() => {
+        // Transient indexer / chain-RPC error: keep whatever we already
+        // showed (cached if cache hit, [] if cache miss). Don't blank the
+        // user's history just because one fetch failed during a chain
+        // halt or recovery window.
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [address, network]);
@@ -87,8 +116,9 @@ export default function TxHistory({ onBack, inline = false }: { onBack?: () => v
           ) : (
             <div className="space-y-1 max-h-[72vh] overflow-y-auto">
               {txs.map((tx) => {
-                const isTokenOp = tx.to === TOKEN_OP_ADDRESS && tx.direction === 'out';
-                const isStaking = tx.to.toLowerCase() === STAKING_ADDRESS;
+                const txTo = tx.to.toLowerCase();
+                const isTokenOp = txTo === TOKEN_OP_ADDRESS && tx.direction === 'out';
+                const isStaking = txTo === STAKING_ADDRESS;
                 const isReward  = tx.direction === 'reward';
                 const isOut     = tx.direction === 'out';
 

@@ -32,8 +32,9 @@ export default function TxDetail({
     getFinalizedHeight().then((fh) => setFinalized(fh.finalized_height ?? null)).catch(() => {});
   }, [tx.txid]);
 
-  const isTokenOp = tx.to === TOKEN_OP_ADDRESS && tx.direction === 'out';
-  const isStaking = tx.to.toLowerCase() === STAKING_ADDRESS;
+  const txTo = tx.to.toLowerCase();
+  const isTokenOp = txTo === TOKEN_OP_ADDRESS && tx.direction === 'out';
+  const isStaking = txTo === STAKING_ADDRESS;
   const isReward  = tx.direction === 'reward';
   const isOut     = tx.direction === 'out';
 

@@ -35,6 +35,15 @@ const SENTRI = 100_000_000;
 const TOKEN_OP_ADDRESS = '0x0000000000000000000000000000000000000000';
 const STAKING_ADDRESS = '0x0000000000000000000000000000000000000100';
 
+// Module-scope cache for recent txs per address+network. Same pattern as
+// TxHistory.tsx — keeps the home-screen "Recent activity" list visible
+// across re-renders + fetchAll() calls (post-send refresh, etc.) so the
+// list doesn't disappear on every transient indexer error.
+// 2026-05-07: closes "history kadang hilang" — fetchAll was unconditionally
+// blanking `recent` on every call (network change, post-action refresh,
+// etc.); transient API error left it blank until next successful fetch.
+const recentCache = new Map<string, TxHistoryItem[]>();
+
 type View =
   | { kind: 'main'; tab: NavTab }
   | { kind: 'send' }
@@ -87,25 +96,39 @@ export default function Dashboard() {
 
   const fetchAll = useCallback(async () => {
     if (!address) return;
+    const cacheKey = `${network}-${address}`;
+    const cachedRecent = recentCache.get(cacheKey);
+
     // Clear stale state so the previous network's data doesn't flash while
-    // the new network's request is in flight.
+    // the new network's request is in flight. EXCEPT recent — show cached
+    // (if any) immediately so the list doesn't blink to empty on every
+    // post-action refetch (send / staking return triggers fetchAll).
     setSrxBalance(null);
-    setRecent([]);
+    if (cachedRecent !== undefined) {
+      setRecent(cachedRecent);
+    } else {
+      setRecent([]);
+    }
     setTokens([]);
     setLoading(true);
     try {
       const [info, hist, tokenList] = await Promise.all([
         getAddressInfo(address).catch(() => null),
-        getTransactionHistory(address, 4).catch(() => ({ transactions: [] })),
+        getTransactionHistory(address, 4).catch(() => null),
         listTokens().catch(() => ({ tokens: [], total: 0 })),
       ]);
       setSrxBalance(info?.balance_sentri ?? Math.round((info?.balance_srx ?? 0) * SENTRI));
-      const newRecent = hist?.transactions ?? [];
+      // hist === null means the fetch failed (transient indexer/RPC error).
+      // In that case keep the previously-shown list (cached or empty) so
+      // the user's history doesn't blink to "No transactions yet" on every
+      // backend hiccup. Only update list + cache on actual success.
+      const newRecent = hist?.transactions ?? null;
+      const recentForRender = newRecent ?? cachedRecent ?? [];
 
       // Detect new inbound txs since last fetch — push notifications.
       // First-load skipped (lastSeenTxidsRef empty = treat as known baseline)
       // so user doesn't get spammed with history on wallet open.
-      if (lastSeenTxidsRef.current.size > 0 && address) {
+      if (newRecent !== null && lastSeenTxidsRef.current.size > 0 && address) {
         for (const tx of newRecent) {
           if (lastSeenTxidsRef.current.has(tx.txid)) continue;
           if (tx.direction === 'in' && tx.amount > 0) {
@@ -128,8 +151,11 @@ export default function Dashboard() {
           }
         }
       }
-      lastSeenTxidsRef.current = new Set(newRecent.map((t) => t.txid));
-      setRecent(newRecent);
+      if (newRecent !== null) {
+        lastSeenTxidsRef.current = new Set(newRecent.map((t) => t.txid));
+        recentCache.set(cacheKey, newRecent);
+      }
+      setRecent(recentForRender);
 
       if (tokenList.tokens.length > 0) {
         const balances = await Promise.all(
@@ -162,7 +188,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [address, pushNotif]);
+  }, [address, network, pushNotif]);
 
   // fetchAll resets stale state synchronously (setSrxBalance(null), etc)
   // before kicking off the async fetch — that's the intended "clear UI
@@ -500,8 +526,9 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-1">
               {recent.map((tx) => {
-                const isTokenOp = tx.to === TOKEN_OP_ADDRESS && tx.direction === 'out';
-                const isStaking = tx.to.toLowerCase() === STAKING_ADDRESS;
+                const txTo = tx.to.toLowerCase();
+                const isTokenOp = txTo === TOKEN_OP_ADDRESS && tx.direction === 'out';
+                const isStaking = txTo === STAKING_ADDRESS;
                 const isReward = tx.direction === 'reward';
                 const isOut = tx.direction === 'out';
                 const amt = isTokenOp ? tx.fee : tx.amount;
