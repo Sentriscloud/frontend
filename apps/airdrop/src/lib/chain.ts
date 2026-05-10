@@ -1,4 +1,4 @@
-// Sentrix Mainnet chain config — used by viem for read calls and by the
+// Sentrix Chain mainnet config — used by viem for read calls and by the
 // browser wallet for the wallet_addEthereumChain prompt.
 
 import type { Chain } from "viem";

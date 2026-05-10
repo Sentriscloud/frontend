@@ -321,7 +321,7 @@ export function ClaimWidget() {
           <Stage
             icon={<AlertCircle className="w-4 h-4 text-[var(--orange)]" />}
             tone="warn"
-            msg={`Switch to Sentrix Mainnet (chain ID ${SENTRIX_MAINNET.id}). Connected wallet is on chain ${chainId}.`}
+            msg={`Switch to Sentrix Chain (chain ID ${SENTRIX_MAINNET.id}). Connected wallet is on chain ${chainId}.`}
           />
           <button
             onClick={() => switchChain({ chainId: SENTRIX_MAINNET.id })}
