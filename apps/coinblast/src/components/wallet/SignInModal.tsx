@@ -63,11 +63,8 @@ export function SignInModal({
   // rule over-flags single-shot resets of this kind.
   useEffect(() => {
     if (open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setView('menu')
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setClickError(null)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPrivyTimeout(false)
     }
   }, [open])
@@ -77,7 +74,6 @@ export function SignInModal({
   useEffect(() => {
     if (!open) return
     if (isPrivyReady) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPrivyTimeout(false)
       return
     }

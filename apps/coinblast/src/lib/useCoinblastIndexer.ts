@@ -208,7 +208,6 @@ export function useTradesByCurve(
 
   useEffect(() => {
     if (!curve) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }
@@ -272,9 +271,7 @@ export function useIndexerTokenMeta(
 
   useEffect(() => {
     if (!curveAddress) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMeta(null);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(false);
       return;
     }

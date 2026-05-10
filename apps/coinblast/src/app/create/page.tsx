@@ -151,7 +151,6 @@ export default function CreatePage() {
     if (isMined && receipt && !deployed) {
       const found = extractCurveAndTokenFromReceipt(receipt.logs)
       if (found) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDeployed(found)
         // Persist the launch metadata locally so the user's own
         // launches surface in the explore list immediately, even

@@ -30,7 +30,6 @@ export function WalletConnect() {
   // RainbowKit's confirm-dialog and the user has to dismiss it twice.
   useEffect(() => {
     if (signInOpen && (isConnected || (addrSource === 'manual' && manualAddress))) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSignInOpen(false)
     }
   }, [signInOpen, isConnected, addrSource, manualAddress])
