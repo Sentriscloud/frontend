@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { timeAgo, formatTimestamp } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+// useSyncExternalStore-based mount detection — equivalent to the classic
+// useState+useEffect pattern but lint-clean under React 19's
+// react-hooks/set-state-in-effect rule.
+const subscribeMount = () => () => {};
+const getMountSnapshot = () => true;
+const getMountServerSnapshot = () => false;
 
 interface TimestampProps {
   timestamp: string | number;
@@ -21,11 +28,14 @@ interface TimestampProps {
 // first paint we render the absolute timestamp (deterministic), then on mount we flip to the
 // relative form. Avoids React error #418 when the rest of the page is server-rendered.
 export function Timestamp({ timestamp, className, absolute = false }: TimestampProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    subscribeMount,
+    getMountSnapshot,
+    getMountServerSnapshot,
+  );
   const [, setTick] = useState(0);
 
   useEffect(() => {
-    setMounted(true);
     const id = setInterval(() => setTick((t) => t + 1), 1_000);
     return () => clearInterval(id);
   }, []);

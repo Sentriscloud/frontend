@@ -37,7 +37,11 @@ function shortAddr(addr: string) {
 
 export function ClaimWidget() {
   const [bundle, setBundle] = useState<ProofsBundle>(EMPTY_BUNDLE);
-  const [status, setStatus] = useState<Status>("loading-proofs");
+  // Override only for transient outcomes that can't be derived from props
+  // (i.e. the refetch-then-collide path inside claim() that detects another
+  // tab landed the claim first). Everything else flows through the derived
+  // status useMemo below.
+  const [statusOverride, setStatusOverride] = useState<Status | null>(null);
   // Distinguish "still fetching" from "fetch failed/empty" — without
   // this, a missing or HTTP-errored proofs.json leaves the widget stuck
   // at "Loading eligibility list..." forever, since EMPTY_BUNDLE has
@@ -129,88 +133,50 @@ export function ClaimWidget() {
     hash: txHash,
   });
 
-  // ── Status reducer ───────────────────────────────────────
-  useEffect(() => {
-    // Pre-deploy state: contract env var is empty. The Phase-1 banner
-    // already explains this; here we just block the "ready" path so
-    // the claim button never renders in clickable form.
-    if (!AIRDROP_CONTRACT_ADDRESS) {
-      setStatus("no-contract");
-      return;
-    }
-    // proofs.json: still loading vs failed vs loaded-empty
-    if (!proofsLoaded) {
-      setStatus("loading-proofs");
-      return;
-    }
-    if (proofsError) {
-      setStatus("proofs-error");
-      return;
-    }
-    if (bundle.eligible_count === 0) {
-      // Loaded successfully but bundle is empty — pre-deploy or wrong
-      // bundle shipped. Treat as no-contract-style soft-error.
-      setStatus("proofs-error");
-      return;
-    }
+  // ── Status (derived from props in render) ────────────────
+  // React 19 / react-hooks/set-state-in-effect: deriving state in a
+  // useEffect-then-setState reducer is the textbook anti-pattern. The
+  // status is a pure function of props/queries; computing it inline
+  // avoids the cascading-render warning and removes a 17-dep array.
+  // statusOverride is the only piece of state we actually keep — for
+  // the refetch-then-collide branch inside claim() that needs to latch
+  // a transient "already-claimed" verdict before contract state has
+  // propagated through useReadContract.
+  const status: Status = useMemo(() => {
+    if (statusOverride) return statusOverride;
+    if (!AIRDROP_CONTRACT_ADDRESS) return "no-contract";
+    if (!proofsLoaded) return "loading-proofs";
+    if (proofsError) return "proofs-error";
+    // Loaded successfully but bundle is empty — pre-deploy or wrong
+    // bundle shipped. Treat as no-contract-style soft-error.
+    if (bundle.eligible_count === 0) return "proofs-error";
     // No connected wallet AND no manual address → prompt to connect/enter
-    if (!isConnected && addrSource !== "manual") {
-      setStatus("not-connected");
-      return;
-    }
+    if (!isConnected && addrSource !== "manual") return "not-connected";
     // Manually-entered address: skip wrong-network/account checks (they
     // only apply when we have a real connected wallet that could claim).
     if (addrSource === "manual") {
-      if (!entry) {
-        setStatus("not-eligible");
-        return;
-      }
-      if (contractClaimed === true) {
-        setStatus("already-claimed");
-        return;
-      }
+      if (!entry) return "not-eligible";
+      if (contractClaimed === true) return "already-claimed";
       // Otherwise just show the eligibility info (still needs connect to claim)
-      setStatus("ready");
-      return;
+      return "ready";
     }
-    if (!account) {
-      setStatus("not-connected");
-      return;
-    }
-    if (chainId !== undefined && chainId !== SENTRIX_MAINNET.id) {
-      setStatus("wrong-network");
-      return;
-    }
-    if (!entry) {
-      setStatus("not-eligible");
-      return;
-    }
-    if (contractSwept === true) {
-      setStatus("swept");
-      return;
-    }
+    if (!account) return "not-connected";
+    if (chainId !== undefined && chainId !== SENTRIX_MAINNET.id) return "wrong-network";
+    if (!entry) return "not-eligible";
+    if (contractSwept === true) return "swept";
     if (
       typeof contractDeadline === "bigint" &&
       contractDeadline > 0n &&
       BigInt(Math.floor(Date.now() / 1000)) > contractDeadline
     ) {
-      setStatus("deadline-passed");
-      return;
+      return "deadline-passed";
     }
-    if (contractClaimed === true || isMined) {
-      setStatus("success");
-      return;
-    }
-    if (isMining || isWriting) {
-      setStatus("claiming");
-      return;
-    }
-    if (writeError) {
-      setStatus("error");
-      return;
-    }
-    setStatus("ready");
+    if (contractClaimed === true || isMined) return "success";
+    if (isMining || isWriting) return "claiming";
+    if (writeError) return "error";
+    return "ready";
   }, [
+    statusOverride,
     bundle.eligible_count,
     proofsLoaded,
     proofsError,
@@ -239,7 +205,7 @@ export function ClaimWidget() {
     try {
       const fresh = await refetchClaimed();
       if (fresh.data === true) {
-        setStatus("already-claimed");
+        setStatusOverride("already-claimed");
         return;
       }
     } catch {

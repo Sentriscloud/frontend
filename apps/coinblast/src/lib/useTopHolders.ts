@@ -62,7 +62,9 @@ export function useTopHolders(
 
   useEffect(() => {
     if (!tokenAddress) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHolders([]);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTotalSupply(0n);
       return;
     }

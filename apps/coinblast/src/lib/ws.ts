@@ -219,8 +219,14 @@ export function useEthSubscribeLogs(opts: SubscribeLogsOpts | null): {
   tick: number;
   lastLog: RawLog | null;
 } {
+  // Both tick and lastLog held in state (rather than tick + ref) — react-
+  // compiler flags reading .current during render. setLastLog already
+  // triggers a re-render so the dedicated tick counter that used to force
+  // re-renders alongside the ref is no longer needed; we keep it because
+  // existing consumers put `tick` in useEffect deps as a low-cost change
+  // signal even when they don't read the log payload itself.
   const [tick, setTick] = useState(0);
-  const lastLog = useRef<RawLog | null>(null);
+  const [lastLog, setLastLog] = useState<RawLog | null>(null);
   const optsKey = opts ? JSON.stringify(opts) : null;
 
   useEffect(() => {
@@ -230,14 +236,14 @@ export function useEthSubscribeLogs(opts: SubscribeLogsOpts | null): {
     if (opts.topics && opts.topics.length > 0) filter.topics = opts.topics;
     const unsub = getClient(url).subscribe("logs", (msg) => {
       const log = msg as RawLog;
-      lastLog.current = log;
+      setLastLog(log);
       setTick((n) => n + 1);
     }, [filter]);
     return () => { unsub(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [optsKey]);
 
-  return { tick, lastLog: lastLog.current };
+  return { tick, lastLog };
 }
 
 export interface FinalizedEvent {

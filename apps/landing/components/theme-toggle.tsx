@@ -2,13 +2,23 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+// useSyncExternalStore-based mount detection — equivalent to the classic
+// useState+useEffect pattern but lint-clean under React 19's
+// react-hooks/set-state-in-effect rule. Server snapshot is false, client
+// resolves true on subscribe — same hydration-safe behavior.
+const subscribeMount = () => () => {};
+const getMountSnapshot = () => true;
+const getMountServerSnapshot = () => false;
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    subscribeMount,
+    getMountSnapshot,
+    getMountServerSnapshot,
+  );
 
   if (!mounted) {
     return <div className="h-9 w-9" aria-hidden />;

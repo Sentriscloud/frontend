@@ -212,6 +212,7 @@ export default function LivePage() {
       if (!prev.has(t.id)) fresh.add(t.id)
     }
     if (fresh.size > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFreshIds(fresh)
       // Auto-clear the freshness flag after the highlight has played
       // so newer poll cycles don't double-highlight the same row.

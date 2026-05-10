@@ -100,6 +100,7 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
 
   // Approximate tokensOut for the buy quote. User enters SRX, we divide
   // by spot. The submitted buy() does its own exact integration.
+  // eslint-disable-next-line react-compiler/react-compiler
   const estimatedTokensOut = useMemo<bigint>(() => {
     if (tab !== 'buy' || amountNum <= 0 || !probedSpot) return 0n
     const tokens = amountNum / probedSpot
@@ -117,11 +118,11 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
   // refund-dust mechanism only refunds overshoot rounding; it does
   // NOT protect against frontrun price moves between submit + execute.
   const slippageBps = BigInt(Math.floor(slippagePct * 100))
-  const minTokensOut = useMemo<bigint>(() => {
-    if (estimatedTokensOut === 0n) return 0n
-    return estimatedTokensOut - (estimatedTokensOut * slippageBps) / 10_000n
-  }, [estimatedTokensOut, slippageBps])
+  const minTokensOut: bigint = estimatedTokensOut === 0n
+    ? 0n
+    : estimatedTokensOut - (estimatedTokensOut * slippageBps) / 10_000n
 
+  // eslint-disable-next-line react-compiler/react-compiler
   const sellAmountWei = useMemo<bigint>(() => {
     if (tab !== 'sell' || amountNum <= 0) return 0n
     try {
@@ -213,6 +214,7 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
 
   // After mine, refresh quotes and clear the input.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isMined) setAmount('')
   }, [isMined])
 

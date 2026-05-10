@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 // Number that tweens from the previous value to the next over `duration`ms
 // using cubic-out easing. Used on the faucet stats so balance / total
@@ -16,17 +16,35 @@ interface Props {
   className?: string
 }
 
+// Reduced-motion preference via useSyncExternalStore — lint-clean under
+// React 19's react-hooks/set-state-in-effect rule (vs. setState-in-effect
+// based on a media-query check) and reactive to runtime preference flips.
+function subscribeReducedMotion(cb: () => void) {
+  if (typeof window === 'undefined') return () => {}
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+  mq.addEventListener('change', cb)
+  return () => mq.removeEventListener('change', cb)
+}
+function getReducedMotionSnapshot() {
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+function getReducedMotionServerSnapshot() {
+  return false
+}
+
 export function AnimatedNumber({ value, duration = 700, format, className }: Props) {
   const [display, setDisplay] = useState(value)
   const fromRef = useRef(0)
   const startRef = useRef<number | null>(null)
   const rafRef = useRef<number | null>(null)
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot,
+  )
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setDisplay(value)
-      return
-    }
+    if (reducedMotion) return // snap-render via the displayValue branch below
 
     fromRef.current = display
     startRef.current = null
@@ -46,7 +64,7 @@ export function AnimatedNumber({ value, duration = 700, format, className }: Pro
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, duration])
+  }, [value, duration, reducedMotion])
 
-  return <span className={className}>{format(display)}</span>
+  return <span className={className}>{format(reducedMotion ? value : display)}</span>
 }

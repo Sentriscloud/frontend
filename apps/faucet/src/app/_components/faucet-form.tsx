@@ -151,21 +151,32 @@ export function FaucetForm({
   // when the tx lands in the very next block).
   const wsFinalized = useLatestFinalized(deriveWsUrl(publicRestUrl))
   const [submitFinalizedAt, setSubmitFinalizedAt] = useState<number | null>(null)
+  // Reactive transition off external WS push — when finalized height crosses
+  // the height we captured at submit time, flip 'success' → 'finalized'. This
+  // is exactly the "subscribe to external system, mirror into local state"
+  // shape useEffect is meant for; the react-hooks/set-state-in-effect
+  // warning over-flags single-shot transitions of this kind.
   useEffect(() => {
     if (status !== 'success' || submitFinalizedAt == null || wsFinalized == null) return
     if (wsFinalized > submitFinalizedAt) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus('finalized')
     }
   }, [status, submitFinalizedAt, wsFinalized])
 
-  // ── On mount: cooldown + stats ─────────────────────────────────────────
+  // ── On mount / network change: read localStorage cooldown + fetch stats ──
+  // localStorage is browser-only so the cooldown read genuinely has to
+  // happen post-mount; lint rule react-hooks/set-state-in-effect can't see
+  // that the alternative (initial-state function) would crash on SSR.
   useEffect(() => {
     const last = localStorage.getItem(lsKey(network))
     if (last) {
       const elapsed = Date.now() - parseInt(last, 10)
       if (elapsed < COOLDOWN_MS) {
         const secs = Math.ceil((COOLDOWN_MS - elapsed) / 1000)
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCooldownSeconds(secs)
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setStatus('cooldown')
       }
     }
