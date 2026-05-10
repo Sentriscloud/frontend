@@ -2,8 +2,10 @@
 
 Block explorer for Sentrix Chain (SRX) — browse blocks, transactions, addresses, validators, and SRC-20 tokens.
 
-**Mainnet:** https://sentrixscan.sentriscloud.com
-**Testnet:** https://testnet-scan.sentriscloud.com
+**Mainnet:** https://scan.sentrixchain.com
+**Testnet:** https://scan-testnet.sentrixchain.com
+
+> **Two explorers coexist by design.** This is the **Next.js V1** — feature-rich (validator pages, leaderboard, EIP-3091 deeplinks, contract verification panel, multi-locale i18n). For the **WASM V2 Obsidian** alternative (same data, full-Rust + tonic-web, near-native parse cost) see [`Sentriscloud/sentrix-explorer-v2`](https://github.com/Sentriscloud/sentrix-explorer-v2) at `scan.sentriscloud.com` / `scan-testnet.sentriscloud.com`. Pick whichever fits the workflow; neither replaces the other.
 
 ## Tech Stack
 
