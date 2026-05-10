@@ -25,7 +25,7 @@ const repos = [
 ];
 
 const codeSample = `# Latest block from Sentrix Chain mainnet
-curl https://rpc.sentrixchain.com/rpc \\
+curl https://rpc.sentrixchain.com \\
   -H 'content-type: application/json' \\
   -d '{
     "jsonrpc": "2.0",

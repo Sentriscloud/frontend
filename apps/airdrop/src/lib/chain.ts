@@ -5,7 +5,7 @@ import type { Chain } from "viem";
 
 export const SENTRIX_MAINNET = {
   id: 7119,
-  name: "Sentrix",
+  name: "Sentrix Chain",
   nativeCurrency: { name: "Sentrix", symbol: "SRX", decimals: 18 },
   rpcUrls: {
     default: { http: ["https://rpc.sentrixchain.com"] },

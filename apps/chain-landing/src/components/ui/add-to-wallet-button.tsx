@@ -115,7 +115,7 @@ export function AddToWalletButton({
 export const SENTRIX_MAINNET_ADD_PARAMS: ChainParams = {
   chainId: "0x1bcf",
   chainName: "Sentrix Chain",
-  nativeCurrency: { name: "SRX", symbol: "SRX", decimals: 18 },
+  nativeCurrency: { name: "Sentrix", symbol: "SRX", decimals: 18 },
   rpcUrls: ["https://rpc.sentrixchain.com"],
   blockExplorerUrls: ["https://scan.sentrixchain.com"],
 };
@@ -123,7 +123,7 @@ export const SENTRIX_MAINNET_ADD_PARAMS: ChainParams = {
 export const SENTRIX_TESTNET_ADD_PARAMS: ChainParams = {
   chainId: "0x1bd0",
   chainName: "Sentrix Testnet",
-  nativeCurrency: { name: "SRX", symbol: "SRX", decimals: 18 },
+  nativeCurrency: { name: "Sentrix", symbol: "SRX", decimals: 18 },
   rpcUrls: ["https://testnet-rpc.sentrixchain.com"],
-  blockExplorerUrls: ["https://scan.sentrixchain.com"],
+  blockExplorerUrls: ["https://scan-testnet.sentrixchain.com"],
 };

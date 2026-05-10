@@ -14,7 +14,7 @@ import type { Chain } from "viem";
 
 export const SENTRIX_MAINNET = {
   id: 7119,
-  name: "Sentrix",
+  name: "Sentrix Chain",
   nativeCurrency: { name: "Sentrix", symbol: "SRX", decimals: 18 },
   rpcUrls: {
     default: { http: ["https://rpc.sentrixchain.com"] },
@@ -35,7 +35,7 @@ export const SENTRIX_TESTNET = {
     public: { http: ["https://testnet-rpc.sentrixchain.com"] },
   },
   blockExplorers: {
-    default: { name: "Sentrix Scan", url: "https://scan.sentrixchain.com" },
+    default: { name: "Sentrix Scan Testnet", url: "https://scan-testnet.sentrixchain.com" },
   },
   testnet: true,
 } as const satisfies Chain;

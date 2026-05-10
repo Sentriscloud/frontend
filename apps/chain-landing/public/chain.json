@@ -1,6 +1,6 @@
 {
   "$schema": "https://chainagnostic.org/chain-meta/v1.json",
-  "name": "Sentrix Mainnet",
+  "name": "Sentrix Chain",
   "chain": "SRX",
   "chainId": 7119,
   "networkId": 7119,
@@ -27,11 +27,6 @@
     {
       "name": "Sentrix Scan",
       "url": "https://scan.sentrixchain.com",
-      "standard": "EIP3091"
-    },
-    {
-      "name": "Blockscout",
-      "url": "https://blockscout.sentrixchain.com",
       "standard": "EIP3091"
     }
   ],

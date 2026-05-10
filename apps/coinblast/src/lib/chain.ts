@@ -14,7 +14,7 @@ export const SENTRIX_CHAIN_PARAMS = {
     // eth_getBalance / msg.value / wei conventions all work normally).
     decimals: 18,
   },
-  rpcUrls: [process.env.NEXT_PUBLIC_RPC_URL ?? 'https://rpc.sentrixchain.com/rpc'],
+  rpcUrls: [process.env.NEXT_PUBLIC_RPC_URL ?? 'https://rpc.sentrixchain.com'],
   blockExplorerUrls: [
     process.env.NEXT_PUBLIC_EXPLORER_URL ?? 'https://scan.sentrixchain.com',
   ],
@@ -23,7 +23,7 @@ export const SENTRIX_CHAIN_PARAMS = {
 /** Read-only provider — for fetching balances, chain info, etc. */
 export function getReadProvider(): ethers.JsonRpcProvider {
   return new ethers.JsonRpcProvider(
-    process.env.NEXT_PUBLIC_RPC_URL ?? 'https://rpc.sentrixchain.com/rpc'
+    process.env.NEXT_PUBLIC_RPC_URL ?? 'https://rpc.sentrixchain.com'
   )
 }
 

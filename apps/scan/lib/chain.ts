@@ -2,7 +2,7 @@ import { defineChain, createPublicClient, http } from "viem";
 
 export const sentrixMainnet = defineChain({
   id: Number(process.env.NEXT_PUBLIC_MAINNET_CHAIN_ID) || 7119,
-  name: "Sentrix Mainnet",
+  name: "Sentrix Chain",
   // 18 decimals — Sentrix EVM (post-Voyager) follows the standard wei
   // convention. The 8-decimal "sentri" sub-unit only applies at the REST
   // API layer (api.ts converts at the edge); EVM RPC + wallet integrations
@@ -10,7 +10,7 @@ export const sentrixMainnet = defineChain({
   nativeCurrency: { name: "Sentrix", symbol: "SRX", decimals: 18 },
   rpcUrls: {
     default: {
-      http: [process.env.NEXT_PUBLIC_MAINNET_RPC || "https://rpc.sentrixchain.com/rpc"],
+      http: [process.env.NEXT_PUBLIC_MAINNET_RPC || "https://rpc.sentrixchain.com"],
     },
   },
   blockExplorers: {
@@ -28,7 +28,7 @@ export const sentrixTestnet = defineChain({
   nativeCurrency: { name: "Sentrix", symbol: "SRX", decimals: 18 },
   rpcUrls: {
     default: {
-      http: [process.env.NEXT_PUBLIC_TESTNET_RPC || "https://testnet-rpc.sentrixchain.com/rpc"],
+      http: [process.env.NEXT_PUBLIC_TESTNET_RPC || "https://testnet-rpc.sentrixchain.com"],
     },
   },
   blockExplorers: {
