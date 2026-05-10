@@ -21,14 +21,22 @@
 // useEffect fires — at which point WagmiProvider context is set up
 // and downstream wagmi hooks resolve cleanly on first call.
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useSyncExternalStore, type ReactNode } from 'react'
 import { SentrixPrivyProvider } from '@sentriscloud/wallet-config'
 
+// useSyncExternalStore-based mount detection — equivalent to the classic
+// useState+useEffect pattern but lint-clean under React 19's
+// react-hooks/set-state-in-effect rule.
+const subscribeMount = () => () => {}
+const getMountSnapshot = () => true
+const getMountServerSnapshot = () => false
+
 export function PrivyProviderDynamic({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useSyncExternalStore(
+    subscribeMount,
+    getMountSnapshot,
+    getMountServerSnapshot,
+  )
 
   if (!mounted) return null
 

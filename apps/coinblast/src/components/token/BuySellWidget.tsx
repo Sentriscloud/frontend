@@ -117,10 +117,9 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
   // refund-dust mechanism only refunds overshoot rounding; it does
   // NOT protect against frontrun price moves between submit + execute.
   const slippageBps = BigInt(Math.floor(slippagePct * 100))
-  const minTokensOut = useMemo<bigint>(() => {
-    if (estimatedTokensOut === 0n) return 0n
-    return estimatedTokensOut - (estimatedTokensOut * slippageBps) / 10_000n
-  }, [estimatedTokensOut, slippageBps])
+  const minTokensOut: bigint = estimatedTokensOut === 0n
+    ? 0n
+    : estimatedTokensOut - (estimatedTokensOut * slippageBps) / 10_000n
 
   const sellAmountWei = useMemo<bigint>(() => {
     if (tab !== 'sell' || amountNum <= 0) return 0n

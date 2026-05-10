@@ -58,7 +58,9 @@ export function SignInModal({
   const [clickError, setClickError] = useState<string | null>(null)
 
   // Reset to menu view on every open so the user doesn't get stuck on
-  // the watch sub-screen across opens.
+  // the watch sub-screen across opens. Synchronizing local UI state with
+  // an external `open` prop is exactly what useEffect is for; the lint
+  // rule over-flags single-shot resets of this kind.
   useEffect(() => {
     if (open) {
       setView('menu')

@@ -97,7 +97,12 @@ export function useTrades(args: UseTradesArgs = {}) {
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const argsRef = useRef({ curve, trader, type, limit });
-  argsRef.current = { curve, trader, type, limit };
+  // Mirror latest args into the ref via effect (not during render) so the
+  // long-lived poller closure inside the next useEffect can read them
+  // without triggering a poll restart on every prop change.
+  useEffect(() => {
+    argsRef.current = { curve, trader, type, limit };
+  });
 
   useEffect(() => {
     let cancelled = false;
