@@ -38,7 +38,7 @@ interface FormData {
 // query at the end of the URL via the helper below.
 const NETWORKS = {
   7119: {
-    label: 'Sentrix Mainnet',
+    label: 'Sentrix Chain',
     explorerBase: 'https://scan.sentrixchain.com',
     explorerQuery: '',
     feeRecipient: '0xeb70fdefd00fdb768dec06c478f450c351499f14' as `0x${string}`,

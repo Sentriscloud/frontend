@@ -150,10 +150,10 @@ function getClient(url: string): WSClient {
 
 function defaultWsUrl(): string {
   // NEXT_PUBLIC_RPC_URL on coinblast points at the JSON-RPC HTTP host
-  // (https://rpc.sentrixchain.com/rpc). Convert to the ws subdomain on
+  // (https://rpc.sentrixchain.com). Convert to the ws subdomain on
   // the API host: wss://api.sentrixchain.com/ws. Both endpoints are
   // load-balanced across the same validator set.
-  const rpc = process.env.NEXT_PUBLIC_RPC_URL ?? "https://rpc.sentrixchain.com/rpc";
+  const rpc = process.env.NEXT_PUBLIC_RPC_URL ?? "https://rpc.sentrixchain.com";
   try {
     const u = new URL(rpc);
     const host = u.host
