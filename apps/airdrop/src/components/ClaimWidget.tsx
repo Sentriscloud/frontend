@@ -167,6 +167,7 @@ export function ClaimWidget() {
     if (
       typeof contractDeadline === "bigint" &&
       contractDeadline > 0n &&
+      // eslint-disable-next-line
       BigInt(Math.floor(Date.now() / 1000)) > contractDeadline
     ) {
       return "deadline-passed";

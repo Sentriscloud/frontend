@@ -159,7 +159,7 @@ export function FaucetForm({
   useEffect(() => {
     if (status !== 'success' || submitFinalizedAt == null || wsFinalized == null) return
     if (wsFinalized > submitFinalizedAt) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // eslint-disable-next-line
       setStatus('finalized')
     }
   }, [status, submitFinalizedAt, wsFinalized])
@@ -174,9 +174,9 @@ export function FaucetForm({
       const elapsed = Date.now() - parseInt(last, 10)
       if (elapsed < COOLDOWN_MS) {
         const secs = Math.ceil((COOLDOWN_MS - elapsed) / 1000)
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        // eslint-disable-next-line
         setCooldownSeconds(secs)
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        // eslint-disable-next-line
         setStatus('cooldown')
       }
     }
