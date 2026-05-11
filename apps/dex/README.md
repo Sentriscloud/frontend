@@ -42,4 +42,4 @@ Connects to `https://rpc.sentrixchain.com` by default. To point at testnet overr
 
 ## Deploy
 
-`pnpm build --filter @sentriscloud/dex` → `apps/dex/.next/standalone/`. Operator pushes to vps4 systemd unit `dex-mainnet.service`. See ops runbook in founder-private for the actual sequence.
+`pnpm build --filter @sentriscloud/dex` → `apps/dex/.next/standalone/`. Operator deploys via systemd unit `dex-mainnet.service`. See the operator runbook for the actual sequence.

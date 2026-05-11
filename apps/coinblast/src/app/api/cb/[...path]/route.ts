@@ -7,9 +7,9 @@
 //
 // Pattern: <METHOD> /api/cb/<anything> → <INDEXER_BASE>/coinblast/<anything>
 //
-// Operator-side override via INDEXER_API_URL env. Mainnet currently
-// proxies to vps6's externally-bound 8081 (per session-off v36 indexer
-// relocation); the local-default keeps dev / single-host setups working.
+// Operator-side override via INDEXER_API_URL env. Mainnet proxies to
+// the indexer host's externally-bound 8081 (set per environment); the
+// local-default keeps dev / single-host setups working.
 
 import { NextRequest, NextResponse } from "next/server";
 

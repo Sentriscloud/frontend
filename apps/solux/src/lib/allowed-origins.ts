@@ -5,8 +5,8 @@
 // Add new dApps here. Both pages auto-pickup. Avoids drift bug where
 // /sign accepts a new origin but /connect rejects it (or vice versa).
 //
-// Local-dev ports: covers vps4 + typical Next.js dev defaults across
-// the apps in this monorepo.
+// Local-dev ports: covers the dev host + typical Next.js dev defaults
+// across the apps in this monorepo.
 export const ALLOWED_ORIGINS = [
   // Production dApps — Sentrix-official domains only.
   "https://airdrop.sentrixchain.com",
