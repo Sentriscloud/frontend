@@ -6,7 +6,7 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
   // 2026-05-02: skip lint during production builds. eslint-plugin-react-hooks
-  // v6 (pulled in via newer transitive resolutions on vps6) enables
+  // v6 (pulled in via newer transitive resolutions on the build host) enables
   // `react-hooks/set-state-in-effect` and the React-Compiler rules that flag
   // ~30 violations across this app. They're real but every one is a refactor;
   // gating production builds on them blocks deploys for unrelated reasons.
