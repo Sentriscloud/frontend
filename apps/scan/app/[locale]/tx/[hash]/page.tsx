@@ -42,7 +42,9 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
   // "lives on Testnet, click to switch" wall.
   const { data: tx, loading } = useTransaction(network, hash);
   const otherNetwork = network === "mainnet" ? "testnet" : "mainnet";
-  const { data: txOther, loading: loadingOther } = useTransaction(otherNetwork, hash);
+  // Tight 2.5s timeout for the cross-network side-probe — see
+  // blocks/[height]/page.tsx for the same rationale.
+  const { data: txOther, loading: loadingOther } = useTransaction(otherNetwork, hash, 2500);
   const autoSwitched = useRef(false);
   useEffect(() => {
     if (autoSwitched.current) return;

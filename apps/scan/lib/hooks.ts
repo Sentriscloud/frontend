@@ -171,11 +171,11 @@ export function useBlocks(network: NetworkId, count = 10, initial: BlockData[] |
   );
 }
 
-export function useBlock(network: NetworkId, height: number) {
+export function useBlock(network: NetworkId, height: number, timeoutMs?: number) {
   return usePolling<BlockData>(
-    () => fetchBlock(network, height),
+    () => fetchBlock(network, height, timeoutMs),
     0,
-    [network, height]
+    [network, height, timeoutMs ?? 0]
   );
 }
 
@@ -188,11 +188,11 @@ export function useTransactions(network: NetworkId, count = 10, initial: Transac
   );
 }
 
-export function useTransaction(network: NetworkId, hash: string) {
+export function useTransaction(network: NetworkId, hash: string, timeoutMs?: number) {
   return usePolling<TransactionData>(
-    () => fetchTransaction(network, hash),
+    () => fetchTransaction(network, hash, timeoutMs),
     0,
-    [network, hash]
+    [network, hash, timeoutMs ?? 0]
   );
 }
 

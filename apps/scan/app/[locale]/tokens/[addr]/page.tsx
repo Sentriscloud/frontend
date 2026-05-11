@@ -50,7 +50,9 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
 
   useEffect(() => {
     setLoadingOther(true);
-    fetchToken(otherNetwork, addr).then((t) => {
+    // Tight 2.5s timeout: cross-network side-probe shouldn't block the
+    // primary render past a couple of seconds even if the peer is slow.
+    fetchToken(otherNetwork, addr, 2500).then((t) => {
       setTokenOther(t);
       setLoadingOther(false);
     });

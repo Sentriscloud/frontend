@@ -316,8 +316,13 @@ function normalizeBlockTransactions(block: BlockData | null): BlockData | null {
   return block;
 }
 
-export async function fetchBlock(network: NetworkId, index: number) {
-  const res = await apiFetch<BlockData>(network, `/chain/blocks/${index}`);
+// timeoutMs lets callers tighten the budget for cross-network probes
+// (block/tx detail pages fire a parallel "is this also on the other
+// chain?" query — that side-probe shouldn't be allowed to delay the
+// primary render past a couple of seconds even if the other network
+// is slow or down).
+export async function fetchBlock(network: NetworkId, index: number, timeoutMs?: number) {
+  const res = await apiFetch<BlockData>(network, `/chain/blocks/${index}`, timeoutMs);
   return normalizeBlockTransactions(res);
 }
 
@@ -391,8 +396,10 @@ function normalizeTx(raw: RawTxDetail): TransactionData | null {
   };
 }
 
-export async function fetchTransaction(network: NetworkId, txId: string): Promise<TransactionData | null> {
-  const res = await apiFetch<RawTxDetail>(network, `/transactions/${normalizeTxHash(txId)}`);
+// timeoutMs lets callers tighten the budget for cross-network probes
+// (see fetchBlock above for the same rationale).
+export async function fetchTransaction(network: NetworkId, txId: string, timeoutMs?: number): Promise<TransactionData | null> {
+  const res = await apiFetch<RawTxDetail>(network, `/transactions/${normalizeTxHash(txId)}`, timeoutMs);
   if (!res) return null;
   return normalizeTx(res);
 }
@@ -813,14 +820,18 @@ function isPrintable(s: string): boolean {
   return true;
 }
 
-export async function fetchToken(network: NetworkId, address: string): Promise<TokenData | null> {
+// timeoutMs lets callers tighten the budget for cross-network probes.
+export async function fetchToken(network: NetworkId, address: string, timeoutMs?: number): Promise<TokenData | null> {
   const addr = normalizeAddress(address);
   // Native first — `/tokens/{addr}` only resolves for native TokenOp.
-  const native = await apiFetch<TokenData>(network, `/tokens/${addr}`);
+  const native = await apiFetch<TokenData>(network, `/tokens/${addr}`, timeoutMs);
   if (native) return { ...native, standard: "tokenop" };
   // Fall back to ERC-20 read-via-RPC for EVM contracts (TokenFactory-deployed
   // or any other ERC-20). Multicall would be tighter, but per-field calls
   // keep this readable + work without Multicall3 ABI in this file.
+  // The EVM RPC path has its own internal 8s timeout that callers can't
+  // override yet; this is fine because the cross-network probe falls
+  // through to it only when the native lookup fails fast.
   return await fetchEvmTokenFromChain(network, addr);
 }
 
