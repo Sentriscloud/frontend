@@ -11,7 +11,7 @@ export const sentrixMainnet: Chain = {
     default: { http: [MAINNET_RPC] },
   },
   blockExplorers: {
-    default: { name: "SentrixScan", url: "https://scan.sentrixchain.com" },
+    default: { name: "Sentrix Scan", url: "https://scan.sentrixchain.com" },
   },
 };
 
