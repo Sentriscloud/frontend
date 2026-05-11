@@ -54,6 +54,23 @@ async function probeTx(network: NetworkId, hash: `0x${string}`): Promise<boolean
   }
 }
 
+// 64-hex strings are ambiguous between tx hashes and block hashes. We
+// probe both in parallel; if a block matches we resolve the height so
+// the caller can route to /blocks/<height> (the only block route is
+// height-keyed).
+async function probeBlockByHash(
+  network: NetworkId,
+  hash: `0x${string}`,
+): Promise<bigint | null> {
+  try {
+    const client = createClient(network);
+    const block = await client.getBlock({ blockHash: hash });
+    return block?.number ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function validateAndResolveSearch(
   network: NetworkId,
   query: string,
@@ -77,25 +94,37 @@ export async function validateAndResolveSearch(
     return { kind: "not_found", reason: `Block #${q} not found on either network` };
   }
 
-  // Transaction hash — accept both 0x-prefixed (wallet shape) and bare
-  // 64-hex (Sentrix internal shape). viem getTransaction needs the 0x
-  // form, so we prepend if missing before probing. The href routes
-  // through with whatever the user typed — fetchTransaction strips 0x
-  // again for the REST call internally.
+  // 64-hex — ambiguous between tx hash and block hash. Accept both
+  // 0x-prefixed (wallet shape) and bare (Sentrix internal shape).
+  // viem needs the 0x form for both getTransaction + getBlock, so we
+  // prepend if missing before probing. Run all four probes (tx + block
+  // on current + other network) in parallel — at chain-RPC latencies
+  // (~50ms each) the cost is dominated by the slowest, not the sum.
   if (/^(0x)?[a-fA-F0-9]{64}$/.test(q)) {
     const probeHash = (q.startsWith("0x") ? q : `0x${q}`) as `0x${string}`;
-    const [hereOk, otherOk] = await Promise.all([
+    const other = OTHER[network];
+    const [txHere, txOther, blockHere, blockOther] = await Promise.all([
       probeTx(network, probeHash),
-      probeTx(OTHER[network], probeHash),
+      probeTx(other, probeHash),
+      probeBlockByHash(network, probeHash),
+      probeBlockByHash(other, probeHash),
     ]);
-    if (hereOk) return { kind: "tx", href: `/tx/${q}`, onNetwork: network };
-    if (otherOk)
+    if (txHere) return { kind: "tx", href: `/tx/${q}`, onNetwork: network };
+    if (blockHere !== null)
+      return { kind: "block", href: `/blocks/${blockHere}`, onNetwork: network };
+    if (txOther)
       return {
         kind: "tx",
-        href: withNetwork(`/tx/${q}`, network, OTHER[network]),
-        onNetwork: OTHER[network],
+        href: withNetwork(`/tx/${q}`, network, other),
+        onNetwork: other,
       };
-    return { kind: "not_found", reason: "Transaction not found on either network" };
+    if (blockOther !== null)
+      return {
+        kind: "block",
+        href: withNetwork(`/blocks/${blockOther}`, network, other),
+        onNetwork: other,
+      };
+    return { kind: "not_found", reason: "No transaction or block with that hash on either network" };
   }
 
   // Address — viem's `isAddress` accepts 0x-prefixed only. Sentrix's
