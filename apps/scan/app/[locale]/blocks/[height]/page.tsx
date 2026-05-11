@@ -34,7 +34,10 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
   // often a hit on the other. Without this the user dead-ends instead of
   // getting a one-click switch.
   const otherNetwork = network === "mainnet" ? "testnet" : "mainnet";
-  const { data: blockOther, loading: loadingOther } = useBlock(otherNetwork, blockHeight);
+  // Tight 2.5s timeout: this is a "is the same height also on the other
+  // chain?" side-probe. If the peer network is slow or down, we'd
+  // rather skip the cross-network indicator than block the page render.
+  const { data: blockOther, loading: loadingOther } = useBlock(otherNetwork, blockHeight, 2500);
   const [txPage, setTxPage] = useState(1);
   const [railFilter, setRailFilter] = useState<RailFilter>("all");
 
