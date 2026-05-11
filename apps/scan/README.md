@@ -72,11 +72,11 @@ Open http://localhost:3000
 
 | Variable | Description | Default |
 |---|---|---|
-| NEXT_PUBLIC_MAINNET_RPC | Mainnet JSON-RPC | sentrix-rpc.sentriscloud.com/rpc |
-| NEXT_PUBLIC_MAINNET_API | Mainnet REST API | sentrix-api.sentriscloud.com |
+| NEXT_PUBLIC_MAINNET_RPC | Mainnet JSON-RPC | https://rpc.sentrixchain.com |
+| NEXT_PUBLIC_MAINNET_API | Mainnet REST API | https://api.sentrixchain.com |
 | NEXT_PUBLIC_MAINNET_CHAIN_ID | Mainnet chain ID | 7119 |
-| NEXT_PUBLIC_TESTNET_RPC | Testnet JSON-RPC | testnet-rpc.sentriscloud.com/rpc |
-| NEXT_PUBLIC_TESTNET_API | Testnet REST API | testnet-api.sentriscloud.com |
+| NEXT_PUBLIC_TESTNET_RPC | Testnet JSON-RPC | https://testnet-rpc.sentrixchain.com |
+| NEXT_PUBLIC_TESTNET_API | Testnet REST API | https://testnet-api.sentrixchain.com |
 | NEXT_PUBLIC_TESTNET_CHAIN_ID | Testnet chain ID | 7120 |
 | NEXT_PUBLIC_DEFAULT_NETWORK | Default network | mainnet |
 
@@ -90,14 +90,14 @@ pnpm build
 
 ### Systemd
 
-```
-Port 3006 (mainnet), Port 3007 (testnet)
-HOSTNAME=127.0.0.1 (bind localhost only, Nginx reverse proxy)
-```
+A single `sentrix-scan.service` runs `pnpm start` from this directory on
+port 3005. Both networks are served by the same process; the network is
+selected per-request via the cookie / `?network=` query / dedicated
+subdomain (Caddy routes both subdomains to the same upstream).
 
-### Nginx
+### Caddy
 
 ```
-sentrixscan.sentriscloud.com → 127.0.0.1:3006
-testnet-scan.sentriscloud.com → 127.0.0.1:3007
+scan.sentrixchain.com         → 127.0.0.1:3005
+scan-testnet.sentrixchain.com → 127.0.0.1:3005
 ```
