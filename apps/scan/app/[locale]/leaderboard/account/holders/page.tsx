@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Address } from "@/components/common/Address";
 import { Pagination } from "@/components/common/Pagination";
 import { RankBadge } from "@/components/common/RankBadge";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useRichlist, useValidators } from "@/lib/hooks";
 import { formatNumber } from "@/lib/format";
 
@@ -16,6 +16,7 @@ const PAGE_SIZE = 25;
 
 export default function TopHoldersPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const { data: holders, loading } = useRichlist(network, 100);
   const { data: validators } = useValidators(network);
   const [sortKey, setSortKey] = useState<SortKey>("balance");

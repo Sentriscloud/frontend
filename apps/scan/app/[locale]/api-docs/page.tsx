@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Code, Copy, ExternalLink, Check } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DetailCard } from "@/components/common/DetailCard";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { cn } from "@/lib/utils";
 
 // DECISION: hand-curated API docs page rather than Mintlify or Swagger UI.
@@ -109,6 +109,7 @@ const WS_CHANNELS: Array<{ name: string; method: "eth_subscribe"; summary: strin
 
 export default function ApiDocsPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const restBase = network === "mainnet" ? "https://rpc.sentrixchain.com" : "https://testnet-rpc.sentrixchain.com";
   const wsBase = network === "mainnet" ? "wss://rpc.sentrixchain.com/ws" : "wss://testnet-rpc.sentrixchain.com/ws";
 

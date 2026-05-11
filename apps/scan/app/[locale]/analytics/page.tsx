@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatCard } from "@/components/common/StatCard";
 import { EmptyState } from "@/components/common/EmptyState";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useStats, useChainPerformance, useValidators } from "@/lib/hooks";
 import { formatNumber, formatSRX } from "@/lib/format";
 import { fetchDailyStats } from "@/lib/api";
@@ -26,6 +26,7 @@ const AnalyticsCharts = dynamic(() => import("./charts").then((m) => m.Analytics
 // so no new API work is needed to light this up.
 export default function AnalyticsPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const { data: stats, loading: statsLoading } = useStats(network);
   const { data: perf } = useChainPerformance(network, "24h");
   const { data: validators } = useValidators(network);

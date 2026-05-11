@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Address } from "@/components/common/Address";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { fetchAccountBalance, fetchToken, fetchValidators, type AccountBalance, type TokenData, type ValidatorData } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 
@@ -36,6 +36,7 @@ export default function ComparePage() {
 
 function CompareInner() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const sp = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();

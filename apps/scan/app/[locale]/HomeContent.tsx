@@ -20,7 +20,7 @@ import { LiveTicker } from "@/components/home/LiveTicker";
 import { StickyStatsBar } from "@/components/home/StickyStatsBar";
 import { TxChart14d } from "@/components/home/TxChart14d";
 import { FreshnessChip } from "@/components/common/FreshnessChip";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useStats, useBlocks, useTransactions, useChainPerformance, useMempool, useCurrentEpoch, useChainStatus } from "@/lib/hooks";
 import { useLatestBlock, useLatestFinalized } from "@/lib/ws";
 import { formatNumber, formatSRX, toMillis } from "@/lib/format";
@@ -77,6 +77,10 @@ function estimateTotalTransactions(
 export function HomeContent({ initial }: { initial: HomeBundle }) {
   const t = useTranslations("home");
   const { network } = useNetwork();
+  // Honour `?network=mainnet|testnet` deeplinks on the home page too —
+  // without this, https://scan.sentrixchain.com/?network=testnet would
+  // render mainnet because the cookie never flips.
+  useNetworkFromQuery();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [perfRange, setPerfRange] = useState<"1m" | "5m" | "15m" | "1h" | "24h">("1h");

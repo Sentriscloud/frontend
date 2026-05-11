@@ -11,7 +11,7 @@ import { Timestamp } from "@/components/common/Timestamp";
 import { Copyable } from "@/components/common/Copyable";
 import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { fetchBlocksPage, type BlockData } from "@/lib/api";
 import { shortenHash } from "@/lib/format";
 
@@ -20,6 +20,8 @@ const PAGE_SIZE = 50; // server cap is 100; 50 is comfortable on a phone
 export default function BlocksPage() {
   const t = useTranslations("blocks");
   const { network } = useNetwork();
+  // Deeplink network switch — same pattern as detail pages.
+  useNetworkFromQuery();
   // Server-paginated against `/chain/blocks?page=N&limit=M`. Each page hits
   // the backend fresh so we get accurate "page N of M" semantics across the
   // full in-memory window (CHAIN_WINDOW_SIZE = 1000) — much deeper than the
