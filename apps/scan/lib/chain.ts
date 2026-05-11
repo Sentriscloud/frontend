@@ -49,6 +49,16 @@ export function getApiUrl(network: NetworkId) {
     : (process.env.NEXT_PUBLIC_MAINNET_API || "https://api.sentrixchain.com");
 }
 
+// Canonical JSON-RPC endpoint. Use this — never compose `${apiUrl}/rpc`,
+// which lands on a CORS-stripped Caddy passthrough that's both wrong
+// architecturally and silently breaks browser fetches on testnet (the
+// audit on 2026-05-11 caught 100+ requests/page going to the wrong host).
+export function getRpcUrl(network: NetworkId) {
+  return network === "testnet"
+    ? (process.env.NEXT_PUBLIC_TESTNET_RPC || "https://testnet-rpc.sentrixchain.com")
+    : (process.env.NEXT_PUBLIC_MAINNET_RPC || "https://rpc.sentrixchain.com");
+}
+
 export function getWsUrl(network: NetworkId) {
   return network === "testnet"
     ? (process.env.NEXT_PUBLIC_TESTNET_WS || "wss://testnet-rpc.sentrixchain.com/ws")

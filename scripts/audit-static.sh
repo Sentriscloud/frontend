@@ -183,6 +183,23 @@ else
   done
 fi
 
+# ── Rule 10: composing JSON-RPC URL from API base ──────────────────────
+# 2026-05-11 audit found scan v1 hitting `${apiBase}/rpc` 100+ times per
+# page render. The /rpc path on api.sentrixchain.com is a Caddy
+# passthrough that lacks CORS headers and is the wrong host
+# architecturally. Always use `getRpcUrl(network)` from chain.ts.
+section "BAD: composing JSON-RPC URL from API base (use getRpcUrl(network))"
+hits=$(grep -rnE $EXCLUDE 'fetch\([^)]*\$\{[^}]*[Bb]ase\}/rpc|fetch\([^)]*\$\{[^}]*[Aa]piUrl\}/rpc|fetch\([^)]*api\.sentrixchain\.com/rpc' $APPS_GLOB 2>/dev/null || true)
+if [ -z "$hits" ]; then
+  green "  clean"
+else
+  echo "$hits" | while IFS= read -r line; do
+    red "  ✗ $line"
+  done
+  count=$(echo "$hits" | wc -l)
+  ISSUES=$((ISSUES + count))
+fi
+
 printf '\n────────────────────────────────────────\n'
 if [ "$ISSUES" -eq 0 ]; then
   green "Static audit: no hard errors found."

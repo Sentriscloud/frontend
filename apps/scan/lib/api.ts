@@ -1,4 +1,4 @@
-import { getApiUrl, type NetworkId } from "./chain";
+import { getApiUrl, getRpcUrl, type NetworkId } from "./chain";
 
 // DECISION: Backend amounts are in "sentri" (1 SRX = 1e8 sentri). The UI displays SRX.
 // All fetchers do the conversion at the edge so downstream code can treat numbers as SRX.
@@ -649,17 +649,54 @@ const TOKEN_FACTORY_V1_1_0: Record<NetworkId, { addr: `0x${string}`; fromBlock: 
 
 const LOGS_CHUNK_SIZE = 5_000;
 
+// Module-level cache for the chain-walk result. Without this every page
+// mount re-walks the factory event range — ~110 eth_getLogs / page on
+// mainnet (we caught it at 2026-05-11 during the deep audit). The token
+// list is append-only and changes maybe a few times per hour at most;
+// a 5-minute TTL is the right balance between freshness and not
+// hammering the RPC. In-flight dedup so two simultaneous callers share
+// the same walk instead of doubling it.
+type FactoryCacheEntry = {
+  data: TokenData[];
+  fetchedAt: number;
+  inFlight: Promise<TokenData[]> | null;
+};
+const FACTORY_CACHE: Record<NetworkId, FactoryCacheEntry> = {
+  mainnet: { data: [], fetchedAt: 0, inFlight: null },
+  testnet: { data: [], fetchedAt: 0, inFlight: null },
+};
+const FACTORY_TTL_MS = 5 * 60 * 1000;
+
 async function fetchEvmTokensFromFactory(network: NetworkId): Promise<TokenData[]> {
   const cfg = TOKEN_FACTORY_V1_1_0[network];
   if (!cfg) return [];
 
+  const entry = FACTORY_CACHE[network];
+  const fresh = Date.now() - entry.fetchedAt < FACTORY_TTL_MS;
+  if (fresh && entry.data.length > 0) return entry.data;
+  if (entry.inFlight) return entry.inFlight;
+  entry.inFlight = doFetchEvmTokensFromFactory(network, cfg).then((data) => {
+    entry.data = data;
+    entry.fetchedAt = Date.now();
+    entry.inFlight = null;
+    return data;
+  }).catch((err) => {
+    entry.inFlight = null;
+    throw err;
+  });
+  return entry.inFlight;
+}
+
+async function doFetchEvmTokensFromFactory(
+  network: NetworkId,
+  cfg: { addr: `0x${string}`; fromBlock: number },
+): Promise<TokenData[]> {
+
   // Get the chain tip in hex so we know when to stop.
-  const base = network === "testnet"
-    ? (process.env.NEXT_PUBLIC_TESTNET_API || "https://testnet-api.sentrixchain.com")
-    : (process.env.NEXT_PUBLIC_MAINNET_API || "https://api.sentrixchain.com");
+  const rpcUrl = getRpcUrl(network);
   let tip = 0;
   try {
-    const r = await fetch(`${base}/rpc`, {
+    const r = await fetch(rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", method: "eth_blockNumber", params: [], id: 1 }),
@@ -789,14 +826,12 @@ export async function fetchToken(network: NetworkId, address: string): Promise<T
 
 async function fetchEvmTokenFromChain(network: NetworkId, address: string): Promise<TokenData | null> {
   const addr = normalizeAddress(address);
-  const base = network === "testnet"
-    ? (process.env.NEXT_PUBLIC_TESTNET_API || "https://testnet-api.sentrixchain.com")
-    : (process.env.NEXT_PUBLIC_MAINNET_API || "https://api.sentrixchain.com");
+  const rpcUrl = getRpcUrl(network);
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 8000);
   async function call(sig: string): Promise<string | null> {
     try {
-      const res = await fetch(`${base}/rpc`, {
+      const res = await fetch(rpcUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1212,9 +1247,7 @@ export async function fetchEventLogs(
   fromBlock: number | "earliest" = "earliest",
   toBlock: number | "latest" = "latest",
 ): Promise<EventLog[]> {
-  const base = (network === "testnet"
-    ? (process.env.NEXT_PUBLIC_TESTNET_API || "https://testnet-api.sentrixchain.com")
-    : (process.env.NEXT_PUBLIC_MAINNET_API || "https://api.sentrixchain.com"));
+  const rpcUrl = getRpcUrl(network);
   const fromHex = typeof fromBlock === "number" ? `0x${fromBlock.toString(16)}` : fromBlock;
   const toHex = typeof toBlock === "number" ? `0x${toBlock.toString(16)}` : toBlock;
   // 2026-04-30 audit: this function previously had no timeout. A slow RPC
@@ -1222,7 +1255,7 @@ export async function fetchEventLogs(
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
-    const res = await fetch(`${base}/rpc`, {
+    const res = await fetch(rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
