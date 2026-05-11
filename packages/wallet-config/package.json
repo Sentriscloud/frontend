@@ -28,12 +28,12 @@
     "@privy-io/react-auth": "^3.23.0",
     "@privy-io/wagmi": "^4.0.6",
     "@tanstack/react-query": "^5.62.0",
-    "@types/node": "^20",
+    "@types/node": "^25",
     "@types/react": "^19",
     "next": "15.5.15",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "typescript": "^5",
+    "typescript": "^6",
     "viem": "^2.21.0",
     "wagmi": "^2.14.0"
   }
