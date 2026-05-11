@@ -24,11 +24,17 @@ const JSON_OUT = process.argv.includes("--json");
 // fires without actually owning a real testnet tx). Those console 404s
 // are filtered out of the issue count.
 const SURFACE = [
-  { app: "scan",                url: "https://scan.sentrixchain.com" },
-  { app: "scan-tx-mainnet",     url: "https://scan.sentrixchain.com/tx/0xdeadbeef", expectNotFound: true },
-  { app: "scan-tx-testnet",     url: "https://scan.sentrixchain.com/tx/0xdeadbeef?network=testnet", expectNotFound: true },
-  { app: "scan-block-mainnet",  url: "https://scan.sentrixchain.com/blocks/1" },
-  { app: "scan-leaderboard",    url: "https://scan.sentrixchain.com/leaderboard" },
+  { app: "scan-v1",             url: "https://scan.sentrixchain.com" },
+  { app: "scan-v1-tx-mainnet",  url: "https://scan.sentrixchain.com/tx/0xdeadbeef", expectNotFound: true },
+  { app: "scan-v1-tx-testnet",  url: "https://scan.sentrixchain.com/tx/0xdeadbeef?network=testnet", expectNotFound: true },
+  { app: "scan-v1-block",       url: "https://scan.sentrixchain.com/blocks/1" },
+  { app: "scan-v1-leaderboard", url: "https://scan.sentrixchain.com/leaderboard" },
+  // V2 (Leptos) — separate sentriscloud.com hosts. Coexists with V1 per
+  // user direction; both monitored permanently.
+  { app: "scan-v2",             url: "https://scan.sentriscloud.com" },
+  { app: "scan-v2-block",       url: "https://scan.sentriscloud.com/block/1" },
+  { app: "scan-v2-testnet",     url: "https://scan-testnet.sentriscloud.com" },
+  { app: "scan-v2-testnet-blk", url: "https://scan-testnet.sentriscloud.com/block/1" },
   { app: "solux",               url: "https://solux.sentriscloud.com" },
   { app: "sentriscloud",        url: "https://sentriscloud.com" },
   { app: "sentrixchain",        url: "https://sentrixchain.com" },
