@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { Coins, Search, Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { detectSearchType } from "@/lib/format";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useSearchIndex } from "@/lib/search-index";
 import { Suspense, useEffect } from "react";
 
@@ -22,6 +22,7 @@ function SearchContent() {
   const query = searchParams.get("q") || "";
   const type = detectSearchType(query);
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const { match, ready } = useSearchIndex(network);
 
   const hits = ready ? match(query, 12) : [];

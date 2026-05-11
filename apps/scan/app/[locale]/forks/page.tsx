@@ -3,7 +3,7 @@
 import { GitFork, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DetailCard } from "@/components/common/DetailCard";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useStats } from "@/lib/hooks";
 import { FORKS, forkStateAt, type ForkEntry } from "@/lib/forks/registry";
 import { formatNumber } from "@/lib/format";
@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 
 export default function ForksPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const { data: stats } = useStats(network);
   const height = stats?.height ?? 0;
 

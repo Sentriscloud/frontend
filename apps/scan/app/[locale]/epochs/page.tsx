@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { DetailCard } from "@/components/common/DetailCard";
 import { InfoRow } from "@/components/common/InfoRow";
 import { StatCard } from "@/components/common/StatCard";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useStats, useCurrentEpoch, useValidators } from "@/lib/hooks";
 import { formatNumber, formatSRX } from "@/lib/format";
 
@@ -34,6 +34,7 @@ const PAST_TO_SHOW = 12;
 
 export default function EpochsPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const { data: stats } = useStats(network);
   const { data: epoch } = useCurrentEpoch(network);
   const { data: validators } = useValidators(network);

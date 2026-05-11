@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DetailCard } from "@/components/common/DetailCard";
 import { Address } from "@/components/common/Address";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useSourcifyStatus } from "@/lib/sourcify";
 import { fetchRecentContracts, type RecentContract } from "@/lib/api";
 
@@ -73,6 +73,7 @@ const CANONICAL: CanonicalEntry[] = [
 
 export default function ContractsPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const [lookup, setLookup] = useState("");
   const [submitted, setSubmitted] = useState<string | null>(null);
 

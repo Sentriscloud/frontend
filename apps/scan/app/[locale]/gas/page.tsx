@@ -5,7 +5,7 @@ import { Flame, Zap, Gauge, Turtle, Rabbit, Rocket } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DetailCard } from "@/components/common/DetailCard";
 import { StatCard } from "@/components/common/StatCard";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useStats, useMempool } from "@/lib/hooks";
 import { formatNumber } from "@/lib/format";
 import { fetchBlocksPage, type BlockData } from "@/lib/api";
@@ -30,6 +30,7 @@ const SENTRI_PER_SRX = 100_000_000;
 
 export default function GasPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const { data: stats } = useStats(network);
   const { data: mempool } = useMempool(network);
 

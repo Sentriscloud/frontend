@@ -8,7 +8,7 @@ import { Address } from "@/components/common/Address";
 import { TxHash } from "@/components/common/TxHash";
 import { Timestamp } from "@/components/common/Timestamp";
 import { EmptyState } from "@/components/common/EmptyState";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useBlocks } from "@/lib/hooks";
 import { formatNumber } from "@/lib/format";
 
@@ -20,6 +20,7 @@ const DEFAULT_THRESHOLD = 10_000; // SRX
 // TODO(api): needs GET /whale/tx?threshold=X — currently computed client-side from recent blocks.
 export default function WhaleRecentPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const { data: blocks, loading } = useBlocks(network, 100);
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
 

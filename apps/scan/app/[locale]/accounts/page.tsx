@@ -9,7 +9,7 @@ import { Address } from "@/components/common/Address";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Pagination } from "@/components/common/Pagination";
 import { EmptyState } from "@/components/common/EmptyState";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useAccountsTop } from "@/lib/hooks";
 import { formatNumber, formatSRX } from "@/lib/format";
 
@@ -21,6 +21,7 @@ const PAGE_SIZE = 25;
 // SentrixSafe surface their human names automatically.
 export default function AccountsPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();

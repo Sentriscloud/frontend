@@ -11,7 +11,7 @@ import { Copyable } from "@/components/common/Copyable";
 import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useTokens } from "@/lib/hooks";
 import { formatNumber, shortenAddress } from "@/lib/format";
 
@@ -22,6 +22,8 @@ const PAGE_SIZE = 25;
 export default function TokensPage() {
   const t = useTranslations("tokens");
   const { network } = useNetwork();
+  // Deeplink network switch.
+  useNetworkFromQuery();
   const searchParams = useSearchParams();
   const { data: tokens, loading } = useTokens(network);
   const [sortKey, setSortKey] = useState<SortKey>("none");

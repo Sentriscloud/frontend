@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Address } from "@/components/common/Address";
 import { EmptyState } from "@/components/common/EmptyState";
 import { RankBadge } from "@/components/common/RankBadge";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useRichlist, useValidators } from "@/lib/hooks";
 import { formatNumber } from "@/lib/format";
 
@@ -17,6 +17,7 @@ const DEFAULT_THRESHOLD = 100_000; // SRX
 // Matches Etherscan's whale-wallet convention of "large holders by absolute balance".
 export default function WhaleTopWalletsPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const { data: holders, loading } = useRichlist(network, 100);
   const { data: validators } = useValidators(network);
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);

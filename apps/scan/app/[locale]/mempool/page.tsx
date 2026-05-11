@@ -8,7 +8,7 @@ import { Address } from "@/components/common/Address";
 import { TxHash } from "@/components/common/TxHash";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useMempool } from "@/lib/hooks";
 import { formatSRX, timeAgo } from "@/lib/format";
 import { classifyRail, RailBadge } from "@/components/common/RailBadge";
@@ -22,6 +22,7 @@ import { classifyRail, RailBadge } from "@/components/common/RailBadge";
 
 export default function MempoolPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const { data, loading } = useMempool(network);
 
   return (

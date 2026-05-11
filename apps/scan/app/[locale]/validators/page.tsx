@@ -10,7 +10,7 @@ import { Address } from "@/components/common/Address";
 import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatCard } from "@/components/common/StatCard";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useValidators } from "@/lib/hooks";
 import { formatNumber } from "@/lib/format";
 
@@ -28,6 +28,8 @@ function StatusIcon({ status }: { status?: string }) {
 export default function ValidatorsPage() {
   const t = useTranslations("validators");
   const { network } = useNetwork();
+  // Deeplink network switch.
+  useNetworkFromQuery();
   const { data: validators, loading } = useValidators(network);
   const [sortKey, setSortKey] = useState<SortKey>("none");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");

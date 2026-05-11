@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Activity, Radio, Users, Clock } from "lucide-react";
 import { Address } from "@/components/common/Address";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { fetchSentrixStatusExtended, type SentrixStatusExtended } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 
@@ -28,6 +28,7 @@ const HEALTH_TONE: Record<string, { ring: string; text: string; label: string }>
 
 export default function SentinelPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const [data, setData] = useState<SentrixStatusExtended | null>(null);
   const [error, setError] = useState<string | null>(null);
 

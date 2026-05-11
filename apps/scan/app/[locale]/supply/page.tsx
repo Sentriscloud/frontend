@@ -9,7 +9,7 @@ import { InfoRow } from "@/components/common/InfoRow";
 import { StatCard } from "@/components/common/StatCard";
 import { Address } from "@/components/common/Address";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNetwork } from "@/lib/network-context";
+import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useStats, useValidators } from "@/lib/hooks";
 import { formatSRX, formatNumber } from "@/lib/format";
 
@@ -62,6 +62,7 @@ const PREMINE_TOTAL = PREMINE_WALLETS.reduce((s, e) => s + e.amount, 0);
 
 export default function SupplyPage() {
   const { network } = useNetwork();
+  useNetworkFromQuery();
   const { data: stats, loading: statsLoading } = useStats(network);
   const { data: validators } = useValidators(network);
 
