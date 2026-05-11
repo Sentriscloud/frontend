@@ -31,7 +31,7 @@ const REST: RestEndpoint[] = [
   { method: "GET", path: "/chain/blocks/{height}", summary: "Block detail by height — includes transactions + justification." },
   { method: "GET", path: "/sentrix_status", summary: "Node status: chain ID, consensus mode, version, sync info." },
   { method: "GET", path: "/health", summary: "Health probe — returns 200 OK while node is responsive." },
-  { method: "GET", path: "/metrics", summary: "Prometheus scrape — chain + system metrics." },
+  { method: "GET", path: "/metrics", summary: "Prometheus scrape — chain + system metrics. IP-restricted to scrapers; public hits return 403." },
   // accounts
   { method: "GET", path: "/accounts/{address}", summary: "Account balance + nonce + tx count." },
   { method: "GET", path: "/accounts/top?limit=N", summary: "Top accounts by balance (richlist)." },
@@ -48,12 +48,10 @@ const REST: RestEndpoint[] = [
   { method: "POST", path: "/tokens/transfer", summary: "Native SRC-20 transfer (signed)." },
   { method: "POST", path: "/tokens/burn", summary: "Native SRC-20 burn (signed)." },
   // staking
-  { method: "GET", path: "/staking/validators", summary: "Active + jailed validator set with stake breakdown." },
-  { method: "GET", path: "/staking/validators/{address}", summary: "Per-validator detail (commission, blocks produced, jail flags)." },
+  { method: "GET", path: "/staking/validators", summary: "Active + jailed validator set with stake breakdown. Per-validator detail is filtered client-side from this list (no per-address endpoint yet)." },
   { method: "GET", path: "/staking/delegations/{address}", summary: "All delegations FROM an account." },
-  { method: "GET", path: "/staking/rewards/{address}", summary: "Pending + claimed rewards for an address." },
   // epoch
-  { method: "GET", path: "/epoch/current", summary: "Current epoch number, block range, accrued rewards." },
+  { method: "GET", path: "/epoch/current", summary: "Most recent finalized epoch (number, block range, accrued rewards). Note: this lags the live chain tip — it returns the latest closed epoch, not an in-progress one." },
   // stats
   { method: "GET", path: "/stats/daily", summary: "Daily aggregates (txs, active addresses, supply delta)." },
   { method: "GET", path: "/chain/performance?range=24h", summary: "Block-time + TPS series across a window." },
