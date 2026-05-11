@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@openzeppelin/merkle-tree": "^1.0.7",
-    "@privy-io/react-auth": "^3.23.0",
+    "@privy-io/react-auth": "^3.23.1",
     "@privy-io/wagmi": "^4.0.6",
     "@sentriscloud/wallet-config": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
@@ -24,8 +24,8 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "tailwind-merge": "^3.5.0",
-    "viem": "^2.21.0",
-    "wagmi": "^2.14.0"
+    "viem": "^2.48.11",
+    "wagmi": "^3.6.11"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
