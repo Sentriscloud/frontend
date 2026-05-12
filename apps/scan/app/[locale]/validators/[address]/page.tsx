@@ -186,6 +186,9 @@ export default function ValidatorDetailPage({ params }: { params: Promise<{ addr
               <InfoRow label="Name" value={validator.name ?? "-"} />
               <InfoRow label="Address" value={<Address address={validator.address} truncate={false} />} />
               <InfoRow label="Status" value={<span className={`inline-flex items-center gap-1.5 text-sm ${st.color}`}>{st.icon}{st.text}</span>} />
+              {validator.registered_at !== undefined && validator.registered_at > 0 && (
+                <InfoRow label="Registered" value={<Timestamp timestamp={validator.registered_at} />} />
+              )}
               {validator.stake !== undefined && (
                 <InfoRow label="Stake" value={<span className="font-mono">{formatNumber(validator.stake)} SRX</span>} />
               )}

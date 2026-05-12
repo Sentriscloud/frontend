@@ -553,6 +553,9 @@ export async function fetchValidators(network: NetworkId) {
     return {
       ...v,
       name: v.name ?? legacy?.name ?? "",
+      // `registered_at` (unix seconds) is on /validators but not /staking/validators.
+      // Carry it across so the detail page can show "online since <date>".
+      registered_at: v.registered_at ?? legacy?.registered_at,
       // Prefer the larger of the two block counters. /staking/validators
       // tracks blocks_signed which can reset on chain restart; legacy
       // /validators carries the cumulative blocks_produced. Take whichever
