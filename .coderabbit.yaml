@@ -1,0 +1,31 @@
+language: en-US
+early_access: false
+reviews:
+  profile: chill
+  high_level_summary: true
+  poem: false
+  review_status: false
+  changed_files_summary: false
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!**/.next/**"
+    - "!**/node_modules/**"
+    - "!**/build/**"
+    - "!**/*.lock"
+    - "!**/CHANGELOG.md"
+    - "!**/public/**"
+  path_instructions:
+    - path: "**/api/**"
+      instructions: |
+        API routes / handlers. Watch for:
+        - Secret leak: env vars logged or echoed in responses?
+        - Auth bypass: any unprotected route changing state?
+        - Rate-limit on user-callable endpoints with side effects?
+    - path: "**/wallet*/**"
+      instructions: |
+        Wallet integration. No private-key handling client-side; signing must go through Privy / external wallet.
+chat:
+  auto_reply: true
