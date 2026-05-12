@@ -19,7 +19,7 @@
     "react": ">=19",
     "react-dom": ">=19",
     "viem": "^2.21.0",
-    "wagmi": "^2.14.0"
+    "wagmi": "^3.6.14"
   },
   "peerDependenciesMeta": {
     "next": { "optional": true }
@@ -35,6 +35,6 @@
     "react-dom": "19.1.0",
     "typescript": "^5",
     "viem": "^2.21.0",
-    "wagmi": "^2.14.0"
+    "wagmi": "^3.6.14"
   }
 }
