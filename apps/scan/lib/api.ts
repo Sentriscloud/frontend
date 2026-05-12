@@ -633,6 +633,13 @@ export async function fetchTokens(network: NetworkId) {
   return merged;
 }
 
+// Cheap variant used by the global LabelProvider — REST only, no eth_getLogs
+// factory walk. The walk is ~117 chunks on mainnet (cold cache) and was firing
+// on every page mount because the LabelProvider is in the root layout. EVM
+// token symbols still resolve on the /tokens page and individual token detail
+// pages, which is where users actually need them as labels.
+export const fetchTokensForLabels = fetchNativeTokens;
+
 async function fetchNativeTokens(network: NetworkId): Promise<TokenData[]> {
   const res = await apiFetch<{ tokens: TokenData[] } | TokenData[]>(network, "/tokens");
   if (!res) return [];

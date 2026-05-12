@@ -11,7 +11,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { NetworkId } from "./chain";
-import { fetchValidators, fetchAccountsTop, fetchTokens } from "./api";
+import { fetchValidators, fetchAccountsTop, fetchTokensForLabels } from "./api";
 
 export type LabelKind = "validator" | "account" | "token" | "treasury";
 
@@ -108,7 +108,7 @@ export function LabelProvider({ network, children }: { network: NetworkId; child
       const [validators, top, tokens] = await Promise.all([
         fetchValidators(network),
         fetchAccountsTop(network, 50),
-        fetchTokens(network),
+        fetchTokensForLabels(network),
       ]);
 
       const entries: Array<[string, LabelEntry]> = [];
