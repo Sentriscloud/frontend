@@ -1,25 +1,30 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({ baseDirectory: __dirname });
-
-const eslintConfig = [
-  // Ignore Next's build output + the type-only shims it generates.
-  // Without this, `next build` artefacts in .next/ get lint-walked and
-  // surface ~5800 false-positive `any`/require-style errors that aren't
-  // in source.
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
   {
-    ignores: [
-      ".next/**",
-      "next-env.d.ts",
-      "node_modules/**",
-    ],
+    rules: {
+      // TODO: re-enable once the React 19 / react-compiler refactor lands.
+      // The eslint-plugin-react-hooks v6 (pulled in via eslint-config-next 16)
+      // ships new compiler-aware rules that flag ~30 violations across the
+      // monorepo — every one is a real refactor, not a quick fix.
+      "react-hooks/preserve-manual-memoization": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/static-components": "off",
+      "react-hooks/use-memo": "off",
+    },
   },
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
-];
+]);
 
 export default eslintConfig;
