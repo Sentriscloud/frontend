@@ -22,7 +22,7 @@
     "react-dom": "19.1.0",
     "tailwind-merge": "^3.5.0",
     "viem": "^2.21.0",
-    "wagmi": "^2.14.0"
+    "wagmi": "^3.6.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
