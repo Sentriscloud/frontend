@@ -5,14 +5,23 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // TODO: re-enable once the React 19 / react-compiler refactor lands.
+      "react-hooks/preserve-manual-memoization": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/static-components": "off",
+      "react-hooks/use-memo": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

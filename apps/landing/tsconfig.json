@@ -5,12 +5,30 @@
     "noEmit": true,
     "verbatimModuleSyntax": false,
     "noUncheckedIndexedAccess": false,
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "plugins": [{ "name": "next" }],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "globals.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
