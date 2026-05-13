@@ -122,4 +122,4 @@ pnpm init
 
 ## License
 
-No `LICENSE` file is committed yet — source is **All rights reserved** until one lands. The Sentrix Chain protocol itself (separate repo, [`sentrix-labs/sentrix`](https://github.com/sentrix-labs/sentrix)) is BUSL-1.1; this monorepo's license is decided independently and will be added here when finalized.
+[MIT](LICENSE) — Copyright (c) 2026 Sentrix Labs. The Sentrix Chain protocol itself (separate repo, [`sentrix-labs/sentrix`](https://github.com/sentrix-labs/sentrix)) is BUSL-1.1; this monorepo is independently licensed.
