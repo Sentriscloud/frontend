@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useWalletStore, useSettingsStore, NETWORKS, THEMES, type Network as NetworkId, type Theme } from '@/lib/store';
 import { useEscape } from '@/lib/useEscape';
 import { encryptKeystore } from '@/lib/keystore';
@@ -44,6 +44,21 @@ export default function Settings({
   const activeTheme = THEMES[theme];
 
   const [sheet, setSheet] = useState<Sheet>('none');
+
+  // Track the secret we last copied to the clipboard so we can wipe it
+  // when the component unmounts. The 60-second setTimeout we kick off
+  // alongside copy* doesn't fire if the tab is backgrounded or the user
+  // navigates away — Settings unmounts but the clipboard still holds
+  // the seed. Cleanup below clears it deterministically on unmount.
+  const lastCopiedSecret = useRef<string | null>(null);
+  useEffect(() => {
+    return () => {
+      if (lastCopiedSecret.current && navigator.clipboard) {
+        navigator.clipboard.writeText('').catch(() => {});
+        lastCopiedSecret.current = null;
+      }
+    };
+  }, []);
   const [revealConfirm, setRevealConfirm] = useState(false);
   const [keyVisible, setKeyVisible] = useState(false);
   const [keyCopied, setKeyCopied] = useState(false);
@@ -68,10 +83,14 @@ export default function Settings({
   const copySeed = async () => {
     if (!mnemonic) return;
     await navigator.clipboard.writeText(mnemonic);
+    lastCopiedSecret.current = mnemonic;
     setSeedCopied(true);
-    toast.success('Seed phrase copied');
+    toast.success('Seed copied — clear your clipboard manually after navigating away.');
     setTimeout(() => setSeedCopied(false), 2000);
-    setTimeout(() => navigator.clipboard.writeText(''), 60_000);
+    setTimeout(() => {
+      navigator.clipboard.writeText('').catch(() => {});
+      if (lastCopiedSecret.current === mnemonic) lastCopiedSecret.current = null;
+    }, 60_000);
   };
 
   const exportKeystore = async () => {
@@ -127,10 +146,14 @@ export default function Settings({
   const copyKey = async () => {
     if (!privateKey) return;
     await navigator.clipboard.writeText(privateKey);
+    lastCopiedSecret.current = privateKey;
     setKeyCopied(true);
-    toast.success('Key copied');
+    toast.success('Key copied — clear your clipboard manually after navigating away.');
     setTimeout(() => setKeyCopied(false), 2000);
-    setTimeout(() => navigator.clipboard.writeText(''), 60_000);
+    setTimeout(() => {
+      navigator.clipboard.writeText('').catch(() => {});
+      if (lastCopiedSecret.current === privateKey) lastCopiedSecret.current = null;
+    }, 60_000);
   };
 
   return (

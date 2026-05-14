@@ -15,15 +15,20 @@
 // emits — and that's what we build below by hand.
 
 import { NextRequest, NextResponse } from "next/server";
+import { checkOrigin } from "@/lib/origin";
+import { checkPinRateLimit, getClientIP } from "@/lib/rateLimit";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
+// SVG dropped 2026-05-13 — XSS risk if rendered via <object>/<iframe>;
+// use raster formats. Today every avatar component renders via <img src>
+// (which neutralises inline scripts) but a future <object data> or
+// srcdoc would ship the embedded <script> straight to the user.
 const ALLOWED_MIME = new Set([
   "image/png",
   "image/jpeg",
   "image/webp",
   "image/gif",
-  "image/svg+xml",
 ]);
 
 interface PinataPinResponse {
@@ -43,6 +48,31 @@ function randomBoundary(): string {
 }
 
 export async function POST(req: NextRequest) {
+  // CSRF gate — without this, any third-party page can multipart-POST
+  // here and burn the operator's Pinata quota / billing. Same pattern
+  // as apps/faucet's /api/faucet route.
+  if (!checkOrigin(req)) {
+    return NextResponse.json(
+      { error: "Cross-origin requests not allowed" },
+      { status: 403 },
+    );
+  }
+
+  // Per-IP quota — defends against a single bad actor spamming pins
+  // (each one is up to 5 MB stored on Pinata, billed monthly). Returns
+  // 429 with Retry-After once the bucket is full.
+  const ip = getClientIP(req);
+  const rate = checkPinRateLimit(ip);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded — try again later" },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSeconds) },
+      },
+    );
+  }
+
   const jwt = process.env.PINATA_JWT;
   if (!jwt) {
     return NextResponse.json(

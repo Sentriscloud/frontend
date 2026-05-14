@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ipfsToGateway } from "@/lib/ipfs";
 
 const INDEXER_BASE =
   process.env.INDEXER_API_URL ?? "http://127.0.0.1:8081";
@@ -42,11 +43,12 @@ export async function generateMetadata({
         const description =
           row.description?.trim() ||
           `Trade ${row.symbol} on CoinBlast — fair-launch bonding curve on Sentrix Chain.`;
-        const ogImage = row.image_url
-          ? row.image_url.startsWith("ipfs://")
-            ? `https://gateway.pinata.cloud/ipfs/${row.image_url.slice(7)}`
-            : row.image_url
-          : undefined;
+        // Route through the shared resolver so OG images honour
+        // NEXT_PUBLIC_IPFS_GATEWAY (e.g. when we move off shared
+        // gateway.pinata.cloud to a custom-subdomain Pinata gateway).
+        // Pre-fix this hardcoded the public Pinata gateway, ignoring
+        // the env override the rest of the app already respects.
+        const ogImage = row.image_url ? ipfsToGateway(row.image_url) || undefined : undefined;
         return {
           title,
           description,

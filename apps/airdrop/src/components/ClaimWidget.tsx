@@ -65,9 +65,16 @@ export function ClaimWidget() {
   const { address: viewAddress, source: addrSource } = useEffectiveAddress("airdrop");
 
   // ── Load proofs.json on mount ────────────────────────────
+  // force-cache pins the response in HTTP cache, but the URL never
+  // changes — so a schema or merkle-root rotation lands silently and
+  // every returning visitor still sees the stale tree until they hit
+  // shift-reload. Bust on NEXT_PUBLIC_BUILD_ID (set from the deploy's
+  // git sha by next.config). Falls back to "dev" so local dev keeps
+  // a single cache entry.
   useEffect(() => {
     let cancelled = false;
-    fetch("/proofs.json", { cache: "force-cache" })
+    const buildId = process.env.NEXT_PUBLIC_BUILD_ID ?? "dev";
+    fetch(`/proofs.json?v=${encodeURIComponent(buildId)}`, { cache: "force-cache" })
       .then(async (res) => {
         if (cancelled) return;
         if (!res.ok) {

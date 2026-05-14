@@ -772,6 +772,17 @@ function PrivySignInButton() {
   );
 }
 
+// Slippage policy on the DEX:
+//   - presets are tight (0.1 / 0.5 / 1.0) — most SRX↔SGC swaps land
+//     inside 0.5%
+//   - hard cap at 5% — past that, sandwich-bots dominate the loss math
+//     and the user is better served waiting for deeper liquidity
+//   - explicit warning surface from 3% upward (separate from the
+//     pre-existing price-impact warn at 5%), so a user picking a wide
+//     tolerance sees a yellow stripe before signing
+const MAX_DEX_SLIPPAGE_PCT = 5;
+const SLIPPAGE_WARN_PCT = 3;
+
 function SlippageControl({ slippage, onChange }: { slippage: number; onChange: (n: number) => void }) {
   const presets = [0.1, 0.5, 1.0];
   return (
@@ -787,6 +798,30 @@ function SlippageControl({ slippage, onChange }: { slippage: number; onChange: (
           {p}%
         </button>
       ))}
+      <input
+        type="number"
+        min={0.1}
+        max={MAX_DEX_SLIPPAGE_PCT}
+        step={0.1}
+        value={slippage}
+        onChange={(e) => {
+          const v = parseFloat(e.target.value);
+          // Hard-clamp at 5%. Defence against accidental large-trade
+          // sandwiches; the warning surface above 3% covers the
+          // intentional case.
+          if (isFinite(v) && v >= 0.1 && v <= MAX_DEX_SLIPPAGE_PCT) onChange(v);
+        }}
+        className="w-12 px-1 py-0.5 rounded text-[10px] font-mono bg-[var(--bk)] border border-[var(--brd)] text-[var(--tx)] text-center focus:outline-none focus:border-[var(--gold-d)]"
+        aria-label="Custom slippage tolerance"
+      />
+      {slippage >= SLIPPAGE_WARN_PCT && (
+        <span
+          className="ml-1 text-[10px] font-mono text-yellow-400"
+          title={`High slippage (${slippage}%) — front-runners can extract this much`}
+        >
+          ⚠
+        </span>
+      )}
     </div>
   );
 }
