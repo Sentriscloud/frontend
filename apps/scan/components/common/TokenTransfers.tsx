@@ -183,10 +183,16 @@ export function TokenTransfers({ network, txHash }: TokenTransfersProps) {
     >
       <ul className="py-2 space-y-2">
         {transfers.map((t, i) => {
+          // Guard t.value — log decoding can return undefined on a token
+          // that emits a malformed Transfer (wrong topic count, no data).
+          // Without this the .toString() throws and the global error
+          // boundary fires the whole tx page (`Terjadi kesalahan` modal).
           const formatted =
-            t.decimals != null
-              ? formatTokenAmount(t.value, t.decimals)
-              : t.value.toString();
+            t.value == null
+              ? "?"
+              : t.decimals != null
+                ? formatTokenAmount(t.value, t.decimals)
+                : t.value.toString();
           return (
             <li
               key={`${t.contract}-${i}`}
