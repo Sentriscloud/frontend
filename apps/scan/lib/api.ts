@@ -382,8 +382,15 @@ interface RawTxDetail {
 function normalizeTx(raw: RawTxDetail): TransactionData | null {
   const tx = raw.transaction;
   if (!tx) return null;
+  // indexer-rs stores txids bare (no 0x prefix). Downstream consumers —
+  // TokenTransfers + TxLogs — pass tx.id straight into viem's
+  // getTransactionReceipt({ hash }) which expects `0x${string}` and throws
+  // otherwise (uncaught → global error boundary). Prefix here so every
+  // caller of TransactionData.id gets the EVM-canonical form.
+  const txid = tx.txid ?? "";
+  const id = txid && !txid.startsWith("0x") ? `0x${txid}` : txid;
   return {
-    id: tx.txid ?? "",
+    id,
     from: tx.from_address ?? "",
     to: tx.to_address ?? "",
     amount: toSrx(tx.amount ?? 0),
@@ -428,7 +435,7 @@ export async function fetchLatestTransactions(network: NetworkId, count = 10) {
   if (!res) return [];
   const rows = Array.isArray(res) ? res : (res.transactions ?? []);
   return rows.map((t): TransactionData => ({
-    id: t.txid,
+    id: t.txid && !t.txid.startsWith("0x") ? `0x${t.txid}` : t.txid,
     from: t.from,
     to: t.to,
     amount: toSrx(t.amount ?? 0),
