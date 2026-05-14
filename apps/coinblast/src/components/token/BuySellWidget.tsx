@@ -62,11 +62,17 @@ export function BuySellWidget({ token }: BuySellWidgetProps) {
 // ─── On-chain ──────────────────────────────────────────────────────
 
 // Default slippage tolerance for buy/sell — 1%. Industry-standard sane
-// default. Users can adjust 0.1-15% via SlippageControl. Anything > 5%
-// shows a warning. 2026-05-07: was effectively infinite (minOut=0n
-// hardcoded) — sandwich-attack window for any meaningful launch volume.
+// default. Users can adjust 0.1-10% via SlippageControl. Anything > 5%
+// triggers an Uniswap-style "expert mode" confirmation modal before the
+// trade fires (a sandwich-attacker drains exactly this much, so 6%+
+// without an explicit double-confirm is a footgun). 10% hard cap — past
+// that the curve depth doesn't justify the worst-case loss.
+// 2026-05-07: was effectively infinite (minOut=0n hardcoded) —
+// sandwich-attack window for any meaningful launch volume.
 const DEFAULT_SLIPPAGE_PCT = 1.0
 const SLIPPAGE_PRESETS = [0.5, 1.0, 5.0] as const
+const MAX_SLIPPAGE_PCT = 10
+const HIGH_SLIPPAGE_PCT = 5
 
 function OnChainWidget({ token }: BuySellWidgetProps) {
   const curveAddr = token.curveAddress!
@@ -74,6 +80,10 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
   const [tab, setTab] = useState<'buy' | 'sell'>('buy')
   const [amount, setAmount] = useState('')
   const [slippagePct, setSlippagePct] = useState<number>(DEFAULT_SLIPPAGE_PCT)
+  // Two-step confirmation when slippage > 5%. handleAction defers the
+  // real submit, opens the modal, and resumes once the user explicitly
+  // acknowledges the loss surface.
+  const [pendingHighSlippage, setPendingHighSlippage] = useState(false)
   const { isConnected, connect, address } = useWalletStore()
   const { source: addrSource, manualAddress } = useEffectiveAddress('coinblast')
   // Real-wallet path wins on isConnected; Solux/manual path takes over
@@ -223,6 +233,16 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
     if (!isConnected && !useSoluxPath) { connect(); return }
     if (isGraduated) return
 
+    // High-slippage gate. Anything past 5% deserves an explicit ack
+    // before we hit the chain — sandwich-bots happily extract the full
+    // tolerance. Confirmed users skip the modal next time within the
+    // same session by leaving slippage where it is.
+    if (slippagePct > HIGH_SLIPPAGE_PCT && !pendingHighSlippage) {
+      setPendingHighSlippage(true)
+      return
+    }
+    setPendingHighSlippage(false)
+
     if (tab === 'buy') {
       if (amountNum <= 0) return
       // minTokensOut applies the user's slippage tolerance to the
@@ -307,20 +327,59 @@ function OnChainWidget({ token }: BuySellWidgetProps) {
           <input
             type="number"
             min="0.1"
-            max="15"
+            max={MAX_SLIPPAGE_PCT}
             step="0.1"
             value={slippagePct}
             onChange={(e) => {
               const v = parseFloat(e.target.value)
-              if (isFinite(v) && v >= 0.1 && v <= 15) setSlippagePct(v)
+              // Clamp at MAX_SLIPPAGE_PCT (10%). A hard cap matters more
+              // than UX nudges — we don't want anyone fat-fingering 50%
+              // and instantly getting sandwiched for half the trade.
+              if (isFinite(v) && v >= 0.1 && v <= MAX_SLIPPAGE_PCT) setSlippagePct(v)
             }}
             className="w-12 px-1 py-1 rounded-md text-[11px] font-mono bg-[var(--bk)] border border-[var(--brd)] text-[var(--tx)] focus:outline-none focus:border-[var(--gold-d)] text-center"
           />
         </div>
       </div>
-      {slippagePct > 5 && (
+      {slippagePct > HIGH_SLIPPAGE_PCT && (
         <div className="mb-3 px-2 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200">
           ⚠ High slippage: {slippagePct}%. Front-runners can extract this much.
+        </div>
+      )}
+
+      {/* Expert-mode modal — only shown after handleAction defers a
+          high-slippage submit. Forces a second click before the trade
+          fires, mirroring Uniswap's expert-mode UX. */}
+      {pendingHighSlippage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setPendingHighSlippage(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-sm w-full rounded-2xl bg-[var(--sf)] border border-amber-500/40 p-5 space-y-3"
+          >
+            <h3 className="text-base font-semibold text-amber-300">High slippage confirmation</h3>
+            <p className="text-sm text-[var(--tx)]">
+              You set slippage to <span className="font-mono">{slippagePct}%</span>. A front-running
+              bot can extract <span className="font-mono">~{slippagePct}%</span> of this trade. Are
+              you sure?
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setPendingHighSlippage(false)}
+                className="flex-1 py-2 rounded-lg bg-[var(--bk)] border border-[var(--brd)] text-sm text-[var(--tx)] hover:bg-[var(--sf2)]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAction}
+                className="flex-1 py-2 rounded-lg bg-amber-500 text-[var(--bk)] text-sm font-semibold hover:bg-amber-400"
+              >
+                I understand, trade
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

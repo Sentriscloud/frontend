@@ -87,9 +87,20 @@ function withNonceLock<T>(faucetAddress: string, fn: () => Promise<T>): Promise<
 //
 // The faucet is rate-limited per IP and an attacker bypassing this gate
 // drains shared funds — header trust matters.
-function getClientIP(request: NextRequest): string {
+//
+// In production we hard-require CF-Connecting-IP. The public path always
+// goes through Cloudflare, so a request without it is either a direct
+// origin probe (bypassing CF + the per-IP limit) or misconfigured infra.
+// Either way: refuse, return null, the caller maps that to 503.
+function getClientIP(request: NextRequest): string | null {
   const cf = request.headers.get('cf-connecting-ip')
   if (cf) return cf.trim()
+  if (process.env.NODE_ENV === 'production') {
+    // No CF-Connecting-IP in prod = direct-to-origin or broken edge.
+    // X-Real-IP / XFF are spoofable on the wire here; refusing is safer
+    // than handing out free SRX to whoever fakes the header.
+    return null
+  }
   const realIP = request.headers.get('x-real-ip')
   if (realIP) return realIP.trim()
   const forwarded = request.headers.get('x-forwarded-for')
@@ -248,6 +259,16 @@ export async function POST(request: NextRequest) {
     // Atomically check + reserve the rate-limit slot. Concurrent requests
     // can't both pass — the second one sees the first one's reservation.
     const ip = getClientIP(request)
+    if (ip === null) {
+      // Production-only: missing CF-Connecting-IP means we can't trust
+      // the per-IP slot. Refuse rather than fall back to a spoofable
+      // header. See getClientIP for rationale.
+      console.warn(`[faucet:${network}] reject — CF-Connecting-IP missing in production`)
+      return NextResponse.json(
+        { success: false, error: 'Edge proxy headers missing — try again from the public site' },
+        { status: 503 },
+      )
+    }
     const reservation = await tryReserveClaim(network, ip, address)
     if (!reservation.allowed) {
       const msg = reservation.reason === 'address'

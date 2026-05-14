@@ -12,6 +12,7 @@
 // local-default keeps dev / single-host setups working.
 
 import { NextRequest, NextResponse } from "next/server";
+import { checkOrigin } from "@/lib/origin";
 
 const INDEXER_BASE =
   process.env.INDEXER_API_URL ?? "http://127.0.0.1:8081";
@@ -77,5 +78,15 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> },
 ) {
+  // Defence-in-depth: the indexer's /coinblast/* write paths are owner-
+  // signed-metadata gated, but a CSRF-able proxy still lets a third-
+  // party page burn cycles + hit rate limits with junk POSTs. GET is
+  // intentionally open (read-only).
+  if (!checkOrigin(req)) {
+    return NextResponse.json(
+      { error: "Cross-origin requests not allowed" },
+      { status: 403 },
+    );
+  }
   return proxy(req, (await params).path);
 }

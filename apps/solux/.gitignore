@@ -30,9 +30,17 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-!.env.production
+# env files — NEVER COMMIT
+# Pre-2026-05-13 this allow-listed .env.production via `!.env.production`,
+# which is the opposite of what we want for production secrets. Mirrors
+# apps/faucet/.gitignore.
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production
+.env.production.local
+.env*.bak*
 
 # vercel
 .vercel

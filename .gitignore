@@ -21,10 +21,14 @@ coverage/
 *.swp
 *.swo
 
-# Env
+# Env — never commit any of these. Per-app gitignores cover most apps
+# but the root entry is the safety net for any new app added without
+# its own .gitignore.
 .env
 .env.local
 .env.*.local
+.env.production
+.env.production.local
 
 # Logs
 *.log
