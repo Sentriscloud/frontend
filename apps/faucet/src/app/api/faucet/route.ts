@@ -397,10 +397,43 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await commitClaim(network, config.amountSrx)
-    console.info(`[faucet:${network}] Sent ${config.amountSrx} SRX → ${address} | tx: ${broadcastResult.txHash} | ip: ${ip}`)
+    // Mempool admit ≠ chain finalization. We saw real cases (2026-05-14)
+    // where the REST `/transactions` endpoint admitted to mempool, faucet
+    // logged "Sent", but the tx evicted before any block included it →
+    // user got a tx hash that would forever 404 + zero SRX delivered.
+    // Poll the chain for finalization before claiming success. ~30 s cap
+    // (~15 blocks at 2 s/block) is enough for a healthy chain; on slower
+    // chains the user retries.
+    const txHash = broadcastResult.txHash
+    const confirmDeadline = Date.now() + 30_000
+    let confirmed = false
+    while (Date.now() < confirmDeadline) {
+      try {
+        const res = await fetch(`${config.restUrl}/transactions/${txHash}`, {
+          signal: AbortSignal.timeout(3_000),
+        })
+        if (res.ok) { confirmed = true; break }
+      } catch { /* transient — keep polling */ }
+      await new Promise((r) => setTimeout(r, 2_000))
+    }
 
-    return NextResponse.json({ success: true, txHash: broadcastResult.txHash })
+    if (!confirmed) {
+      console.warn(`[faucet:${network}] tx ${txHash} did not finalize within 30s — rolling back reservation. Recipient: ${address}, ip: ${ip}`)
+      await releaseClaim(reservation.reservation)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Transaction submitted but did not finalize within 30 seconds. Try again — the chain may be congested.',
+          txHash,
+        },
+        { status: 503 }
+      )
+    }
+
+    await commitClaim(network, config.amountSrx)
+    console.info(`[faucet:${network}] Sent ${config.amountSrx} SRX → ${address} | tx: ${txHash} | ip: ${ip}`)
+
+    return NextResponse.json({ success: true, txHash })
   } catch (err) {
     console.error('[faucet] Unexpected error:', err)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
