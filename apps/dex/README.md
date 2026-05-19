@@ -31,6 +31,12 @@ The `<Nav />` shared component (Swap | Pools | Add | Positions) replaces the inl
 
 DEX contracts live in `sentrix-labs/sentrix-dex` (separate repo). Mainnet WSRX + factory + router addresses are pinned in `apps/dex/src/lib/contracts.ts`. Versioned via the `canonical-contracts` repo tag at deploy time.
 
+## sUSDC listing
+
+The DEX is prepared for the official Base USDC -> Sentrix sUSDC Hyperlane Warp Route without hardcoding undeployed token addresses. Set `NEXT_PUBLIC_SUSDC_TESTNET_ADDRESS` or `NEXT_PUBLIC_SUSDC_MAINNET_ADDRESS` only after the route is deployed, verified, and added to the Sentrix token list.
+
+Price routing preference for SRX is SRX/sUSDC first, then SRX/sUSDT when available. The app keeps sUSDC hidden from the token picker while the relevant env var is empty.
+
 ## Local dev
 
 ```bash

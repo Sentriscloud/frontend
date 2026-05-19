@@ -26,6 +26,27 @@ export interface Token {
   decimals: number;
 }
 
+const EVM_ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
+
+function optionalErc20Token(
+  symbol: string,
+  name: string,
+  address: string | undefined,
+  decimals: number,
+): readonly Token[] {
+  if (!address || !EVM_ADDRESS_RE.test(address)) return [];
+  return [{ symbol, name, address: address as `0x${string}`, decimals }];
+}
+
+const OPTIONAL_TOKENS = {
+  mainnet: {
+    sUSDC: process.env.NEXT_PUBLIC_SUSDC_MAINNET_ADDRESS,
+  },
+  testnet: {
+    sUSDC: process.env.NEXT_PUBLIC_SUSDC_TESTNET_ADDRESS,
+  },
+} as const;
+
 export const TOKENS: Record<"mainnet" | "testnet", readonly Token[]> = {
   mainnet: [
     { symbol: "SRX", name: "Sentrix", address: "native", decimals: 18 },
@@ -35,6 +56,12 @@ export const TOKENS: Record<"mainnet" | "testnet", readonly Token[]> = {
       address: "0xa79Fc9015aE30766ab4D24a5D4d3A0c66F371504",
       decimals: 18,
     },
+    ...optionalErc20Token(
+      "sUSDC",
+      "Sentrix Bridged USDC",
+      OPTIONAL_TOKENS.mainnet.sUSDC,
+      6,
+    ),
   ],
   testnet: [
     { symbol: "SRX", name: "Sentrix", address: "native", decimals: 18 },
@@ -44,8 +71,19 @@ export const TOKENS: Record<"mainnet" | "testnet", readonly Token[]> = {
       address: "0x72730453f4080C6ad8deF96c06F6074818Fb95B5",
       decimals: 18,
     },
+    ...optionalErc20Token(
+      "sUSDC",
+      "Sentrix Bridged USDC",
+      OPTIONAL_TOKENS.testnet.sUSDC,
+      6,
+    ),
   ],
 };
+
+export const PRICE_ROUTE_PREFERENCE = {
+  mainnet: ["SRX/sUSDC", "SRX/sUSDT"],
+  testnet: ["SRX/sUSDC", "SRX/sUSDT"],
+} as const;
 
 export const ROUTER_ABI = [
   {
