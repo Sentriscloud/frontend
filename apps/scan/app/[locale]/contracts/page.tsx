@@ -25,8 +25,10 @@ import { fetchRecentContracts, type RecentContract } from "@/lib/api";
 interface CanonicalEntry {
   name: string;
   description: string;
-  mainnet: `0x${string}`;
-  testnet: `0x${string}`;
+  // Bridge-side / testnet-only contracts can leave the other network blank;
+  // the row hides on the network where the address is absent.
+  mainnet?: `0x${string}`;
+  testnet?: `0x${string}`;
 }
 
 const CANONICAL: CanonicalEntry[] = [
@@ -68,6 +70,12 @@ const CANONICAL: CanonicalEntry[] = [
       "Native AMM router. Adds liquidity, removes liquidity, swaps along the constant-product curve. Includes UniV2 fee-on-transfer + permit-gated removeLiquidity helpers.",
     mainnet: "0xAb67E171c0DE0Cd6dD6fE87E5E399C091F9c9dE8",
     testnet: "0x2bF73491733c3b87D72b16d4f7151dA294b55cB0",
+  },
+  {
+    name: "sUSDC (bridged)",
+    description:
+      "Synthetic USDC minted on Sentrix when USDC is locked on Base Sepolia via Hyperlane v3. HypERC20Capped router — 6 decimals, per-tx/daily/total mint caps enforced on inbound bridge messages. Pair: Base USDC collateral 0x8c8C05D6B689C8BBb4f106AbB6E916e928a61e70.",
+    testnet: "0x58758796A7D0124585499D589f89ec2336Aa49f7",
   },
 ];
 
@@ -191,7 +199,10 @@ npx hardhat verify --network sentrix${network === "testnet" ? "Testnet" : ""} <A
 
 function CanonicalRow({ entry, network }: { entry: CanonicalEntry; network: "mainnet" | "testnet" }) {
   const addr = network === "mainnet" ? entry.mainnet : entry.testnet;
-  const { match } = useSourcifyStatus(network, addr);
+  // Bridge-side / testnet-only contracts have no address on the other
+  // network — skip the row entirely instead of rendering a broken link.
+  const { match } = useSourcifyStatus(network, addr ?? ("0x" + "00".repeat(20)) as `0x${string}`);
+  if (!addr) return null;
 
   return (
     <tr className="border-b border-border/30 last:border-0 hover:bg-muted/30">
