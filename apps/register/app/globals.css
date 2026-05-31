@@ -1,0 +1,278 @@
+@import "tailwindcss";
+
+/* CSS custom properties — defined outside @theme so Tailwind 4 doesn't
+   strip them during compile (var() indirection inside @theme is unreliable). */
+:root {
+  /* Brand family — emerald shared with Sentrix Labs */
+  --color-emerald-50:  #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
+  --color-emerald-900: #064e3b;
+
+  --color-bronze: #8a5a11;
+  --color-gold:   #dbc17f;
+
+  --color-canvas:    #0a0a0c;
+  --color-canvas-2:  #111114;
+  --color-ink:       #f5f5f4;
+  --color-ink-2:     #d6d3d1;
+  --color-ink-3:     #a8a29e;
+  --color-ink-4:     #78716c;
+  --color-line:      #27272a;
+  --color-line-2:    #1c1c1f;
+
+  --ease-out-expo:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+    font-synthesis: none;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "ss01", "cv11", "kern", "liga";
+    font-optical-sizing: auto;
+    font-variant-ligatures: common-ligatures contextual;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--color-emerald-500);
+    color: var(--color-canvas);
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--color-canvas); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line);
+    border: 2px solid var(--color-canvas);
+    border-radius: 5px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Editorial display heading — Fraunces, tuned for tech-editorial.
+     opsz=144 (display optical size, tighter terminals).
+     SOFT=50 (slightly humanized — less luxury-bridal, more modern).
+     No discretionary ligatures — those swashes read as "alay" in a
+     tech context; we want refined, not decorative. */
+  .display {
+    font-family: var(--font-display), ui-serif, Georgia, "Times New Roman", serif;
+    font-weight: 500;
+    font-variation-settings: "opsz" 36;
+    letter-spacing: -0.025em;
+    line-height: 0.95;
+    font-feature-settings: "lnum", "kern", "liga", "calt";
+    font-variant-ligatures: common-ligatures contextual;
+    font-optical-sizing: auto;
+    text-wrap: balance;
+  }
+
+  /* Accent variant — same upright serif as .display, slightly heavier
+     so emerald color + weight bump carry the emphasis instead of italic
+     (italic serif reads "alay" / calligraphic in a tech context). */
+  .display-italic {
+    font-family: var(--font-display), ui-serif, Georgia, "Times New Roman", serif;
+    font-style: normal;
+    font-weight: 600;
+    font-variation-settings: "opsz" 36;
+    letter-spacing: -0.026em;
+    line-height: 0.95;
+    font-feature-settings: "kern", "liga", "calt";
+    font-variant-ligatures: common-ligatures contextual;
+    font-optical-sizing: auto;
+  }
+
+  /* Heavy emphasis — Fraunces 700, still optical-display sized.
+     800 was too bridal; 700 keeps presence without theatrics. */
+  .display-heavy {
+    font-family: var(--font-display), ui-serif, Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    font-variation-settings: "opsz" 36;
+    letter-spacing: -0.028em;
+    line-height: 0.92;
+    font-feature-settings: "lnum", "kern", "liga", "calt";
+    font-variant-ligatures: common-ligatures contextual;
+    font-optical-sizing: auto;
+    text-wrap: balance;
+  }
+
+  /* Mono — for code, data, eyebrows. Slashed zero + tabular figures so
+     numbers don't shimmy when they update live. */
+  .mono {
+    font-family: var(--font-plex-mono), ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    font-feature-settings: "tnum", "zero", "ss01", "calt";
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+
+  /* Section number tag — "01 / Hero", editorial cue */
+  .section-number {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ink-4);
+  }
+
+  .eyebrow {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--color-emerald-500);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .eyebrow::before {
+    content: "";
+    display: block;
+    width: 1.5rem;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.5;
+  }
+
+  .container-page {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-page { padding-inline: 2.5rem; }
+  }
+
+  /* Pull rule — full-width hairline divider */
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--color-line);
+    margin: 0;
+  }
+
+  /* Subtle grain texture overlay */
+  .grain::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+
+  /* Drop-cap (used in the manifesto-style sections) */
+  .dropcap::first-letter {
+    font-family: var(--font-display), ui-serif, serif;
+    font-size: 4.5em;
+    line-height: 0.85;
+    float: left;
+    margin: 0.05em 0.08em -0.1em 0;
+    color: var(--color-emerald-500);
+    font-weight: 500;
+  }
+
+  /* Corner-lines — signature SentrisCloud card treatment. Four small gold
+     accents flick to visible on hover, framing the content like editorial
+     bracketing. */
+  .corner-lines {
+    position: relative;
+  }
+
+  .corner-lines::before,
+  .corner-lines::after,
+  .corner-lines > .cl-bl,
+  .corner-lines > .cl-br {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--color-gold);
+    opacity: 0;
+    transition: opacity 350ms var(--ease-out-expo);
+    pointer-events: none;
+  }
+
+  .corner-lines::before {
+    top: 0; left: 0;
+    border-right: none; border-bottom: none;
+  }
+
+  .corner-lines::after {
+    top: 0; right: 0;
+    border-left: none; border-bottom: none;
+  }
+
+  .corner-lines > .cl-bl {
+    bottom: 0; left: 0;
+    border-right: none; border-top: none;
+  }
+
+  .corner-lines > .cl-br {
+    bottom: 0; right: 0;
+    border-left: none; border-top: none;
+  }
+
+  .corner-lines:hover::before,
+  .corner-lines:hover::after,
+  .corner-lines:hover > .cl-bl,
+  .corner-lines:hover > .cl-br {
+    opacity: 0.85;
+  }
+
+  /* Oversized backdrop numeral — used behind hero for editorial drama.
+     Upright (italic numerals get gimmicky); use Newsreader at low
+     weight so it reads as a quiet structural accent. */
+  .backdrop-numeral {
+    font-family: var(--font-display), ui-serif, serif;
+    font-style: normal;
+    font-weight: 400;
+    font-variation-settings: "opsz" 36;
+    color: var(--color-canvas-2);
+    line-height: 0.8;
+    letter-spacing: -0.05em;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* Animated underline link */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 300ms var(--ease-out-expo);
+  }
+
+  .link-underline:hover {
+    background-size: 100% 1px;
+  }
+}
