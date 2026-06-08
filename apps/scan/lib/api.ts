@@ -377,9 +377,50 @@ interface RawTxDetail {
     data?: string;
     chain_id?: number;
   };
+  tx?: {
+    hash?: string;
+    block_height?: string | number;
+    tx_index?: number;
+    from?: string;
+    to?: string | null;
+    value?: string | number;
+    gas_limit?: string | number;
+    gas_used?: string | number | null;
+    gas_price?: string | number | null;
+    fee?: string | number;
+    nonce?: string | number;
+    data?: string | null;
+    status?: string | number;
+    contract_address?: string | null;
+    tx_type?: string;
+  };
 }
 
 function normalizeTx(raw: RawTxDetail): TransactionData | null {
+  if (raw.tx) {
+    const tx = raw.tx;
+    const feeSentri = typeof tx.fee === "string" ? Number(tx.fee) : (tx.fee ?? 0);
+    const valueSentri = typeof tx.value === "string" ? Number(tx.value) : (tx.value ?? 0);
+    const status = tx.status === 1 || tx.status === "1" ? "success" : tx.status === 0 || tx.status === "0" ? "failed" : undefined;
+    return {
+      id: tx.hash ?? "",
+      from: tx.from ?? "",
+      to: tx.to ?? "",
+      amount: toSrx(valueSentri),
+      fee: toSrx(feeSentri),
+      timestamp: "0",
+      nonce: typeof tx.nonce === "string" ? Number(tx.nonce) : (tx.nonce ?? 0),
+      signature: "",
+      input_data: tx.data ?? undefined,
+      block_height: typeof tx.block_height === "string" ? Number(tx.block_height) : tx.block_height,
+      tx_type: tx.tx_type,
+      status,
+      gas_used: tx.gas_used == null ? undefined : Number(tx.gas_used),
+      gas_price: tx.gas_price == null ? undefined : Number(tx.gas_price),
+      contract_address: tx.contract_address ?? undefined,
+    };
+  }
+
   const tx = raw.transaction;
   if (!tx) return null;
   // indexer-rs stores txids bare (no 0x prefix). Downstream consumers —
@@ -406,9 +447,13 @@ function normalizeTx(raw: RawTxDetail): TransactionData | null {
 // timeoutMs lets callers tighten the budget for cross-network probes
 // (see fetchBlock above for the same rationale).
 export async function fetchTransaction(network: NetworkId, txId: string, timeoutMs?: number): Promise<TransactionData | null> {
-  const res = await apiFetch<RawTxDetail>(network, `/transactions/${normalizeTxHash(txId)}`, timeoutMs);
-  if (!res) return null;
-  return normalizeTx(res);
+  const legacy = await apiFetch<RawTxDetail>(network, `/transactions/${normalizeTxHash(txId)}`, timeoutMs);
+  const normalizedLegacy = legacy ? normalizeTx(legacy) : null;
+  if (normalizedLegacy) return normalizedLegacy;
+
+  const hash = txId.toLowerCase().startsWith("0x") ? txId.toLowerCase() : `0x${txId.toLowerCase()}`;
+  const indexed = await apiFetch<RawTxDetail>(network, `/tx/${hash}`, timeoutMs);
+  return indexed ? normalizeTx(indexed) : null;
 }
 
 // DECISION: /transactions returns raw chain rows — txid/from/to/amount in sentri,
