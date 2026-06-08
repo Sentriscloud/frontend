@@ -6,5 +6,5 @@ export default async function ContractIndex({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  redirect({ href: "/leaderboard/contract/calls", locale });
+  redirect({ href: "/leaderboard/contract/recent", locale });
 }

@@ -224,7 +224,7 @@ export function Header() {
     { href: "/leaderboard/account/holders", label: "Account",   icon: Users,      color: "text-[var(--cyan)]" },
     { href: "/leaderboard/token/holders",   label: "Token",     icon: Coins,      color: "text-[var(--gold)]" },
     { href: "/leaderboard/validator/stake", label: "Validator", icon: Shield,     color: "text-[var(--purple)]" },
-    { href: "/leaderboard/contract/calls",  label: "Contract",  icon: FileCode,   color: "text-[var(--cyan)]" },
+    { href: "/leaderboard/contract/recent",  label: "Contract",  icon: FileCode,   color: "text-[var(--cyan)]" },
     { href: "/leaderboard/whale/recent",    label: "Whale",     icon: Fish,       color: "text-[var(--green)]" },
     { href: "/leaderboard/compare",         label: "Compare",   icon: GitCompare, color: "text-[var(--pink)]" },
   ] as const;

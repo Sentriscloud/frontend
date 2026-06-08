@@ -6,8 +6,8 @@ export default function ContractLeaderboardLayout({ children }: { children: Reac
     <div className="space-y-4">
       <SubTabs
         tabs={[
-          { href: "/leaderboard/contract/calls", label: "Top by Calls" },
-          { href: "/leaderboard/contract/gas",   label: "Top by Gas Used" },
+          { href: "/leaderboard/contract/recent",   label: "Recently Deployed" },
+          { href: "/leaderboard/contract/pioneers", label: "Pioneers" },
         ]}
       />
       {children}
