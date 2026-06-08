@@ -1347,34 +1347,13 @@ export async function fetchActiveAccounts(network: NetworkId, limit = 100): Prom
   return res?.accounts ?? [];
 }
 
-// ── /contracts/stats ────────────────────────────────────────────────────────
-// Top contracts by tx-count (?sort=calls) or summed gas_used (?sort=gas_used).
-// Indexer-served — joins transactions × addresses.is_contract = true.
-export interface ContractStat {
-  rank: number;
-  address: string;
-  calls: number;
-  gas_used: number;
-}
-
-export async function fetchContractStats(
-  network: NetworkId,
-  sort: "calls" | "gas_used" = "calls",
-  limit = 100,
-): Promise<ContractStat[]> {
-  const res = await apiFetch<{ contracts: ContractStat[] }>(
-    network,
-    `/contracts/stats?sort=${sort}&limit=${limit}`,
-  );
-  return res?.contracts ?? [];
-}
-
 // ── /contracts/recent ───────────────────────────────────────────────────────
 // User-deployed contracts ordered by deployment height. Indexer-served from
 // `addresses WHERE is_contract = true` — surfaces every contract the chain
-// has indexed, regardless of whether it's been called yet (so freshly-deployed
-// contracts show immediately, while /contracts/stats requires indexed call
-// history that may lag behind by hours during initial backfill).
+// has indexed. `/recent` is newest-first; `/pioneers` is earliest-first.
+// The indexer doesn't aggregate per-contract call/gas counts (the native
+// block view carries no receipt, so contract_address is never populated),
+// so these two orderings are all the contract leaderboard can honestly rank by.
 export interface RecentContract {
   rank: number;
   address: string;
@@ -1390,6 +1369,17 @@ export async function fetchRecentContracts(
   const res = await apiFetch<{ contracts: RecentContract[] }>(
     network,
     `/contracts/recent?limit=${limit}`,
+  );
+  return res?.contracts ?? [];
+}
+
+export async function fetchPioneerContracts(
+  network: NetworkId,
+  limit = 100,
+): Promise<RecentContract[]> {
+  const res = await apiFetch<{ contracts: RecentContract[] }>(
+    network,
+    `/contracts/pioneers?limit=${limit}`,
   );
   return res?.contracts ?? [];
 }

@@ -12,7 +12,7 @@ import {
   fetchAccountTokens, fetchValidatorRewards, fetchValidatorBlocksOverTime,
   fetchValidatorDelegators, fetchMempool, fetchCurrentEpoch, fetchChainStatus,
   fetchEventLogs, fetchDailyStats, fetchAccountsTop,
-  fetchActiveAccounts, fetchContractStats, fetchWhaleTransfers,
+  fetchActiveAccounts, fetchRecentContracts, fetchPioneerContracts, fetchWhaleTransfers,
   type ChainInfo, type BlockData, type TransactionData,
   type ValidatorData, type AccountBalance, type TokenData,
   type TopHolder, type TokenHolder, type TokenTransfer,
@@ -20,7 +20,7 @@ import {
   type AccountTokenHolding, type ValidatorReward, type ValidatorBlocksPoint,
   type ValidatorDelegator, type MempoolSnapshot, type EpochInfo, type ChainStatus,
   type EventLog, type DailyStat,
-  type ActiveAccount, type ContractStat, type WhaleTransfer,
+  type ActiveAccount, type RecentContract, type WhaleTransfer,
 } from "./api";
 
 interface UsePollingReturn<T> {
@@ -285,17 +285,21 @@ export function useActiveAccounts(network: NetworkId, limit = 100) {
   );
 }
 
-// Top contracts by call count or summed gas_used. Same 30s poll. Sort
-// flips per page (calls vs gas_used) so the dep list pulls it in.
-export function useContractStats(
+// Indexed contracts, newest-first ("recent") or earliest-first ("pioneers").
+// 30s poll; `order` is in the dep list so the two leaderboard tabs each get
+// their own fetch. The indexer has no per-contract call/gas aggregation, so
+// these height-based orderings are what the contract leaderboard ranks by.
+export function useContractList(
   network: NetworkId,
-  sort: "calls" | "gas_used" = "calls",
+  order: "recent" | "pioneers" = "recent",
   limit = 100,
 ) {
-  return usePolling<ContractStat[]>(
-    () => fetchContractStats(network, sort, limit),
+  return usePolling<RecentContract[]>(
+    () => (order === "pioneers"
+      ? fetchPioneerContracts(network, limit)
+      : fetchRecentContracts(network, limit)),
     30_000,
-    [network, sort, limit],
+    [network, order, limit],
   );
 }
 
