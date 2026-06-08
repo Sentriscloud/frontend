@@ -408,7 +408,10 @@ function normalizeTx(raw: RawTxDetail): TransactionData | null {
       to: tx.to ?? "",
       amount: toSrx(valueSentri),
       fee: toSrx(feeSentri),
-      timestamp: "0",
+      // The indexed /tx payload has no per-tx timestamp; the block's time
+      // rides alongside as top-level block_timestamp (indexer-rs #66). 0 only
+      // if the indexer predates that field, in which case the UI shows no time.
+      timestamp: String(raw.block_timestamp ?? 0),
       nonce: typeof tx.nonce === "string" ? Number(tx.nonce) : (tx.nonce ?? 0),
       signature: "",
       input_data: tx.data ?? undefined,
