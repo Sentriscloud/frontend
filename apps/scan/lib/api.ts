@@ -480,7 +480,7 @@ export async function fetchLatestTransactions(network: NetworkId, count = 10) {
     network,
     `/transactions?limit=${count}`,
   );
-  if (!res) return [];
+  if (res === null) return null;
   const rows = Array.isArray(res) ? res : (res.transactions ?? []);
   return rows.map((t): TransactionData => ({
     id: t.txid && !t.txid.startsWith("0x") ? `0x${t.txid}` : t.txid,
@@ -537,13 +537,14 @@ export async function fetchAccountHistory(
   address: string,
   page = 1,
   limit = 20,
-): Promise<TransactionData[]> {
+): Promise<TransactionData[] | null> {
   const offset = (page - 1) * limit;
   const res = await apiFetch<{ transactions: RawHistoryItem[] }>(
     network,
     `/address/${normalizeAddress(address)}/history?limit=${limit}&offset=${offset}`,
   );
-  if (!res?.transactions) return [];
+  if (res === null) return null;
+  if (!res.transactions) return [];
   return res.transactions.map((t) => ({
     id: t.txid,
     from: t.from,
@@ -679,6 +680,9 @@ export async function fetchTokens(network: NetworkId) {
     fetchNativeTokens(network),
     fetchEvmTokensFromFactory(network),
   ]);
+  // Native is the primary token source; if it failed, surface the error
+  // rather than showing an EVM-only (or empty) list as if it were complete.
+  if (native === null) return null;
   // Dedupe by contract_address (lowercase). Native takes precedence
   // for any collision because it's the chain's own ledger; EVM events
   // could theoretically be replayed on a fork, so we trust native more.
@@ -697,9 +701,9 @@ export async function fetchTokens(network: NetworkId) {
 // pages, which is where users actually need them as labels.
 export const fetchTokensForLabels = fetchNativeTokens;
 
-async function fetchNativeTokens(network: NetworkId): Promise<TokenData[]> {
+async function fetchNativeTokens(network: NetworkId): Promise<TokenData[] | null> {
   const res = await apiFetch<{ tokens: TokenData[] } | TokenData[]>(network, "/tokens");
-  if (!res) return [];
+  if (res === null) return null;
   const list = Array.isArray(res) ? res : (res.tokens ?? []);
   return list.map((t) => ({ ...t, standard: "tokenop" as const }));
 }
@@ -1096,9 +1100,10 @@ interface RawAccountTokenHolding {
   balance_raw?: number;
 }
 
-export async function fetchAccountTokens(network: NetworkId, address: string): Promise<AccountTokenHolding[]> {
+export async function fetchAccountTokens(network: NetworkId, address: string): Promise<AccountTokenHolding[] | null> {
   const res = await apiFetch<{ tokens: RawAccountTokenHolding[] }>(network, `/accounts/${normalizeAddress(address)}/tokens`);
-  if (!res?.tokens) return [];
+  if (res === null) return null;
+  if (!res.tokens) return [];
   return res.tokens.map((t) => ({
     contract_address: t.contract_address ?? t.contract ?? "",
     symbol: t.symbol ?? "",
