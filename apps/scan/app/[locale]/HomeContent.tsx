@@ -18,7 +18,6 @@ import { BlockHeight } from "@/components/common/BlockHeight";
 import { Timestamp } from "@/components/common/Timestamp";
 import { StatCard } from "@/components/common/StatCard";
 import { LiveTicker } from "@/components/home/LiveTicker";
-import { StickyStatsBar } from "@/components/home/StickyStatsBar";
 import { TxChart14d } from "@/components/home/TxChart14d";
 import { FreshnessChip } from "@/components/common/FreshnessChip";
 import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
@@ -257,10 +256,6 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
   return (
     <>
       <LiveTicker stats={stats} blockTime={blockTime} network={network} epoch={epoch} status={chainStatus} />
-      {/* Sticky stats bar — Etherscan-style 4-card row right under the
-          navbar. Sits above LiveTicker's flow content but below the
-          fixed header (top-16 = h-16 of header). */}
-      <StickyStatsBar />
       {(isChainIdle || chainUnreachable) && (
         <div role="alert" className="border-y-2 border-[var(--orange)]/60 bg-[color-mix(in_oklab,var(--orange)_16%,transparent)]">
           <div className="max-w-7xl mx-auto px-4 lg:px-6 py-3 flex items-center gap-3 text-[13px]">
