@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatCard } from "@/components/common/StatCard";
-import { EmptyState } from "@/components/common/EmptyState";
 import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useStats, useChainPerformance, useValidators } from "@/lib/hooks";
 import { formatNumber, formatSRX } from "@/lib/format";
@@ -94,11 +93,7 @@ export default function AnalyticsPage() {
 
       {/* Charts */}
       {!perf && !daily ? (
-        <Card>
-          <CardContent>
-            <EmptyState icon={Activity} title="Loading analytics…" hint="Gathering daily activity and performance data." />
-          </CardContent>
-        </Card>
+        <Skeleton className="h-80 w-full" />
       ) : (
         <AnalyticsCharts perf={perf} daily={daily} validatorShare={validatorShare} />
       )}

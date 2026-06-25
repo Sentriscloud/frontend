@@ -3,13 +3,14 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Users, CheckCircle, XCircle, AlertTriangle, ArrowUpDown } from "lucide-react";
+import { Users, CheckCircle, XCircle, AlertTriangle, ArrowUpDown, RotateCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Address } from "@/components/common/Address";
 import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatCard } from "@/components/common/StatCard";
+import { EmptyState } from "@/components/common/EmptyState";
 import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useValidators } from "@/lib/hooks";
 import { formatNumber } from "@/lib/format";
@@ -27,10 +28,11 @@ function StatusIcon({ status }: { status?: string }) {
 
 export default function ValidatorsPage() {
   const t = useTranslations("validators");
+  const tc = useTranslations("common");
   const { network } = useNetwork();
   // Deeplink network switch.
   useNetworkFromQuery();
-  const { data: validators, loading } = useValidators(network);
+  const { data: validators, loading, error, retry } = useValidators(network);
   const [sortKey, setSortKey] = useState<SortKey>("none");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -111,10 +113,10 @@ export default function ValidatorsPage() {
 
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label={t("total_staked")} value={`${formatNumber(summary.totalStake)} SRX`} accent="var(--gold)" />
-        <StatCard label={t("active")}       value={String(summary.active)}                   accent="var(--green)" />
-        <StatCard label={t("inactive")}     value={String(summary.inactive)}                 accent="var(--red)" />
-        <StatCard label={t("jailed")}       value={String(summary.jailed)}                   accent="var(--orange)" />
+        <StatCard label={t("total_staked")} value={`${formatNumber(summary.totalStake)} SRX`} accent="var(--gold)"   loading={loading && !validators} error={error} onRetry={retry} />
+        <StatCard label={t("active")}       value={String(summary.active)}                   accent="var(--green)"  loading={loading && !validators} error={error} onRetry={retry} />
+        <StatCard label={t("inactive")}     value={String(summary.inactive)}                 accent="var(--red)"    loading={loading && !validators} error={error} onRetry={retry} />
+        <StatCard label={t("jailed")}       value={String(summary.jailed)}                   accent="var(--orange)" loading={loading && !validators} error={error} onRetry={retry} />
       </div>
 
       <Card>
@@ -145,6 +147,23 @@ export default function ValidatorsPage() {
             <div className="p-4 space-y-2">
               {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
+          ) : error ? (
+            <EmptyState
+              tone="warn"
+              icon={AlertTriangle}
+              title={tc("failed_to_load")}
+              hint={tc("failed_to_load_hint")}
+              action={
+                <button
+                  type="button"
+                  onClick={retry}
+                  className="inline-flex items-center gap-1.5 text-sm font-mono text-[var(--orange)] hover:opacity-80 transition-opacity"
+                >
+                  <RotateCw className="h-3.5 w-3.5" />
+                  {tc("retry")}
+                </button>
+              }
+            />
           ) : paged.length > 0 ? (
             <>
               {/* Desktop table */}

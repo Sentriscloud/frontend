@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Users } from "lucide-react";
+import { Users, AlertTriangle, RotateCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Address } from "@/components/common/Address";
@@ -20,6 +21,7 @@ const PAGE_SIZE = 25;
 // registry (`lib/labels.tsx`) so premine wallets, validator hosts, and
 // SentrixSafe surface their human names automatically.
 export default function AccountsPage() {
+  const tc = useTranslations("common");
   const { network } = useNetwork();
   useNetworkFromQuery();
   const searchParams = useSearchParams();
@@ -41,7 +43,7 @@ export default function AccountsPage() {
     setPageState(fresh);
   }, [searchParams]);
 
-  const { data, loading } = useAccountsTop(network, 100);
+  const { data, loading, error, retry } = useAccountsTop(network, 100);
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil((data?.length ?? 0) / PAGE_SIZE)),
     [data],
@@ -80,6 +82,23 @@ export default function AccountsPage() {
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
+          ) : error ? (
+            <EmptyState
+              tone="warn"
+              icon={AlertTriangle}
+              title={tc("failed_to_load")}
+              hint={tc("failed_to_load_hint")}
+              action={
+                <button
+                  type="button"
+                  onClick={retry}
+                  className="inline-flex items-center gap-1.5 text-sm font-mono text-[var(--orange)] hover:opacity-80 transition-opacity"
+                >
+                  <RotateCw className="h-3.5 w-3.5" />
+                  {tc("retry")}
+                </button>
+              }
+            />
           ) : paged.length > 0 ? (
             <>
               <div className="overflow-x-auto">
