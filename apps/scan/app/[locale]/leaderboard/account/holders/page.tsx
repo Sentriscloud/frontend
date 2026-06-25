@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Address } from "@/components/common/Address";
 import { Pagination } from "@/components/common/Pagination";
 import { RankBadge } from "@/components/common/RankBadge";
+import { FetchError } from "@/components/common/FetchError";
 import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useRichlist, useValidators } from "@/lib/hooks";
 import { formatNumber } from "@/lib/format";
@@ -17,7 +18,7 @@ const PAGE_SIZE = 25;
 export default function TopHoldersPage() {
   const { network } = useNetwork();
   useNetworkFromQuery();
-  const { data: holders, loading } = useRichlist(network, 100);
+  const { data: holders, loading, error, retry } = useRichlist(network, 100);
   const { data: validators } = useValidators(network);
   const [sortKey, setSortKey] = useState<SortKey>("balance");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -57,6 +58,8 @@ export default function TopHoldersPage() {
           <div className="p-4 space-y-2">
             {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" style={{ opacity: 1 - i * 0.08 }} />)}
           </div>
+        ) : error ? (
+          <FetchError onRetry={retry} />
         ) : sorted.length === 0 ? (
           <div className="p-12 text-center">
             <Trophy className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />

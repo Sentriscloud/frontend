@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Address } from "@/components/common/Address";
+import { FetchError } from "@/components/common/FetchError";
 import { TxHash } from "@/components/common/TxHash";
 import { Timestamp } from "@/components/common/Timestamp";
 import { InfoRow } from "@/components/common/InfoRow";
@@ -37,8 +38,8 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
   const otherNetwork = network === "mainnet" ? "testnet" : "mainnet";
   const [tokenOther, setTokenOther] = useState<TokenData | null>(null);
   const [loadingOther, setLoadingOther] = useState(true);
-  const { data: holders, loading: holdersLoading } = useTokenHolders(network, addr, 50);
-  const { data: trades, loading: tradesLoading } = useTokenTrades(network, addr, 1, 25);
+  const { data: holders, loading: holdersLoading, error: holdersError, retry: retryHolders } = useTokenHolders(network, addr, 50);
+  const { data: trades, loading: tradesLoading, error: tradesError, retry: retryTrades } = useTokenTrades(network, addr, 1, 25);
 
   useEffect(() => {
     setLoading(true);
@@ -153,6 +154,8 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
                 <div className="p-4 space-y-2">
                   {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
                 </div>
+              ) : tradesError ? (
+                <FetchError onRetry={retryTrades} />
               ) : trades && trades.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -201,6 +204,8 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
                 <div className="p-4 space-y-2">
                   {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
                 </div>
+              ) : holdersError ? (
+                <FetchError onRetry={retryHolders} />
               ) : holders && holders.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
