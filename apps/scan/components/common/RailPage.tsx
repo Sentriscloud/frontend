@@ -1,7 +1,7 @@
 "use client";
 
 // Shared layout for the dedicated rail pages (/evm, /native). Sentrix
-// runs EVM and native side-by-side at the protocol level — newcomers
+// runs EVM and native side-by-side at the protocol level. Newcomers
 // landing on the home page see a mixed feed and get confused. These
 // pages are the focused single-rail view: explainer, rail-filtered tx
 // feed, and curated deep-links to the relevant sub-pages.
@@ -49,11 +49,11 @@ const COPY: Record<
     explainerTitle: "What this is",
     explainer:
       "EVM transactions executed by the embedded revm runtime against Solidity / Vyper contracts. " +
-      "Same wire format as Ethereum — eth_sendRawTransaction, EIP-1559 fees, ERC-20 / ERC-721 / ERC-1155. " +
+      "Same wire format as Ethereum: eth_sendRawTransaction, EIP-1559 fees, ERC-20 / ERC-721 / ERC-1155. " +
       "Anything you'd expect to see on Etherscan lives here. Native staking, native SRC-20, and plain SRX " +
       "transfers all run on the other rail and won't appear in this feed.",
     matchHint:
-      "No EVM transactions in the latest window. EVM activity ramps up as more contracts deploy — try the Contracts page below.",
+      "No EVM transactions in the latest window. EVM activity ramps up as more contracts deploy. Try the Contracts page below.",
     links: [
       { href: "/contracts", label: "Contracts", hint: "Verified Solidity sources via Sourcify" },
       { href: "/tokens", label: "ERC-20 tokens", hint: "Token list, holders, transfers" },
@@ -66,13 +66,13 @@ const COPY: Record<
     icon: Boxes,
     explainerTitle: "What this is",
     explainer:
-      "Native Sentrix operations applied directly at the protocol level — no contract gas, no revm. " +
+      "Native Sentrix operations applied directly at the protocol level: no contract gas, no revm. " +
       "Plain SRX transfers, validator coordination (Delegate / Undelegate / ClaimRewards / RegisterValidator / " +
       "AddSelfStake / Unjail), and SRC-20 token operations (Mint / Burn / Transfer / Approve / Deploy). " +
-      "These are Sentrix-specific primitives — they won't show up under EVM-style tooling because they " +
+      "These are Sentrix-specific primitives. They won't show up under EVM-style tooling because they " +
       "never touch the EVM.",
     matchHint:
-      "No native transactions in the latest window. Validators settle on the native rail every few seconds — try the Validators page below.",
+      "No native transactions in the latest window. Validators settle on the native rail every few seconds. Try the Validators page below.",
     links: [
       { href: "/validators", label: "Validators", hint: "Active set, stake, commission, jail state" },
       { href: "/epochs", label: "Epochs", hint: "Reward distribution + validator rotation" },
@@ -80,7 +80,7 @@ const COPY: Record<
     ],
   },
   // The home filter pills also surface SRC-20 + Staking, but the dedicated
-  // pages are EVM + Native only — the two that confuse users most. The
+  // pages are EVM + Native only, the two that confuse users most. The
   // entries below are placeholders so the type stays exhaustive.
   token: {
     title: "SRC-20 rail",
