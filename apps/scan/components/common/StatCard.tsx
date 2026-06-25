@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { TrendingDown, TrendingUp, RotateCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Split a formatted value (e.g. "14.2K", "3.1s", "12 tx", "14,109 SRX") into a number part
@@ -14,6 +17,11 @@ interface StatCardProps {
   label: ReactNode;
   value: string;
   loading?: boolean;
+  /** Fetch failed and there's no data to show. Renders a distinct error+retry state,
+   *  not the same dash the card shows for a genuinely empty value. */
+  error?: boolean;
+  /** Re-run the failed fetch. When set, the error state shows a retry control. */
+  onRetry?: () => void;
   /** CSS color (e.g. `var(--gold)`, `var(--green)`) applied to the trailing unit and hover glow. */
   accent?: string;
   /** Title tooltip on the value (useful when long values truncate). */
@@ -78,7 +86,8 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 // Playfair serif number, tinted em-unit, animated gold corner lines on hover. One primitive
 // so every page (home + detail summary rows) reads from the same vocabulary instead of
 // shadcn's grey `text-lg font-semibold font-mono`.
-export function StatCard({ label, value, loading = false, accent = "var(--gold)", title, spark, delta, subline }: StatCardProps) {
+export function StatCard({ label, value, loading = false, error = false, onRetry, accent = "var(--gold)", title, spark, delta, subline }: StatCardProps) {
+  const tc = useTranslations("common");
   const { num, unit } = splitValue(value);
   const showDelta = delta != null && Number.isFinite(delta) && Math.abs(delta) >= 0.05;
   const deltaUp = (delta ?? 0) >= 0;
@@ -105,7 +114,7 @@ export function StatCard({ label, value, loading = false, accent = "var(--gold)"
         <div className="font-mono text-[10px] text-[var(--tx-d)] tracking-[.12em] sm:tracking-[.22em] uppercase group-hover:text-[var(--tx-m)] transition-colors truncate flex-1">
           {label}
         </div>
-        {showDelta && !loading && (
+        {showDelta && !loading && !error && (
           <span
             className="inline-flex items-center gap-0.5 font-mono text-[10px] tracking-wide rounded-md px-1.5 py-0.5"
             style={{
@@ -126,6 +135,17 @@ export function StatCard({ label, value, loading = false, accent = "var(--gold)"
       >
         {loading ? (
           <Skeleton className="h-9 w-24" />
+        ) : error ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            disabled={!onRetry}
+            title={tc("retry")}
+            className="inline-flex items-center gap-1.5 font-mono text-[15px] leading-none text-[var(--red)] hover:opacity-80 transition-opacity disabled:cursor-default"
+          >
+            {tc("failed")}
+            <RotateCw className="h-3.5 w-3.5" />
+          </button>
         ) : (
           <>
             <span>{num}</span>
@@ -140,12 +160,12 @@ export function StatCard({ label, value, loading = false, accent = "var(--gold)"
           </>
         )}
       </div>
-      {subline && !loading && (
+      {subline && !loading && !error && (
         <div className="mt-1.5 text-[11px] font-mono text-[var(--tx-d)] truncate">
           {subline}
         </div>
       )}
-      {spark && spark.length > 1 && !loading && (
+      {spark && spark.length > 1 && !loading && !error && (
         <div className="mt-3 -mx-1">
           <Sparkline data={spark} color={accent} />
         </div>

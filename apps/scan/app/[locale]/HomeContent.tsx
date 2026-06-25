@@ -90,7 +90,7 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
   // most often (sent SRX → didn't show up under EVM scan, etc.) so they
   // get top billing in the pill row.
   const [railFilter, setRailFilter] = useState<"all" | Rail>("all");
-  const { data: stats, loading: statsLoading, refetch: refetchStats } = useStats(network, initial.stats);
+  const { data: stats, loading: statsLoading, error: statsError, refetch: refetchStats, retry: retryStats } = useStats(network, initial.stats);
   const { data: blocks, loading: blocksLoading, refetch: refetchBlocks } = useBlocks(network, 10, initial.blocks);
   const { data: txs, loading: txsLoading, refetch: refetchTxs } = useTransactions(network, 10, initial.txs);
   // Live block height via WebSocket. newHeads (proposed) + sentrix_finalized
@@ -382,6 +382,8 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               label={t("stats.active_validators")}
               value={stats ? String(stats.active_validators) : "—"}
               loading={statsLoading}
+              error={statsError}
+              onRetry={retryStats}
               accent="var(--gold)"
               subline={t("stats.subline_active_bft")}
             />
@@ -389,6 +391,8 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               label={t("stats.tokens_deployed")}
               value={stats ? String(stats.deployed_tokens) : "—"}
               loading={statsLoading}
+              error={statsError}
+              onRetry={retryStats}
               accent="var(--gold-l)"
               subline={t("stats.subline_src20_contracts")}
             />
@@ -397,6 +401,8 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               value={stats ? formatBurnedSrx(stats.total_burned_srx) : "—"}
               title={stats ? `${stats.total_burned_srx.toLocaleString(undefined, { maximumFractionDigits: 8 })} SRX` : undefined}
               loading={statsLoading}
+              error={statsError}
+              onRetry={retryStats}
               accent="var(--red)"
               subline={t("stats.subline_fee_burn")}
             />
@@ -404,6 +410,8 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               label={t("stats.block_reward")}
               value={stats ? `${stats.next_block_reward_srx} SRX` : "—"}
               loading={statsLoading}
+              error={statsError}
+              onRetry={retryStats}
               accent="var(--gold)"
               subline={t("stats.subline_claimable")}
             />

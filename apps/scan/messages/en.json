@@ -182,6 +182,7 @@
   },
   "common": {
     "loading": "Loading...",
+    "failed": "Failed",
     "retry": "Retry",
     "go_home": "Go home",
     "try_again": "Try again",

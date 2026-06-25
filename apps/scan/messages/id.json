@@ -182,6 +182,7 @@
   },
   "common": {
     "loading": "Memuat...",
+    "failed": "Gagal",
     "retry": "Coba Lagi",
     "go_home": "Ke Beranda",
     "try_again": "Coba Lagi",
