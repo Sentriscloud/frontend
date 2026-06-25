@@ -13,6 +13,7 @@ import { Copyable } from "@/components/common/Copyable";
 import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
+import { FetchError } from "@/components/common/FetchError";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useAddress, useAddressHistory, useAccountTokens, useEventLogs } from "@/lib/hooks";
@@ -92,8 +93,8 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
   const [railFilter, setRailFilter] = useState<RailFilter>("all");
   const [activeTab, setActiveTab] = useState("history");
   const { data: account, loading: accountLoading } = useAddress(network, addr);
-  const { data: history, loading: historyLoading } = useAddressHistory(network, addr, page, HISTORY_PAGE_SIZE);
-  const { data: tokens, loading: tokensLoading } = useAccountTokens(network, addr);
+  const { data: history, loading: historyLoading, error: historyError, retry: retryHistory } = useAddressHistory(network, addr, page, HISTORY_PAGE_SIZE);
+  const { data: tokens, loading: tokensLoading, error: tokensError, retry: retryTokens } = useAccountTokens(network, addr);
   const { data: eventLogs, loading: eventLogsLoading } = useEventLogs(network, addr);
   const label = useAddressLabel(addr);
 
@@ -293,6 +294,8 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
                 <div className="p-4 space-y-2">
                   {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
                 </div>
+              ) : historyError ? (
+                <FetchError onRetry={retryHistory} />
               ) : filtered.length > 0 ? (
                 <>
                   {/* Desktop table — single column hidden md+ on narrow viewports.
@@ -445,6 +448,8 @@ export default function AddressDetailPage({ params }: { params: Promise<{ addr: 
                 <div className="p-4 space-y-2">
                   {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
                 </div>
+              ) : tokensError ? (
+                <FetchError onRetry={retryTokens} />
               ) : tokens && tokens.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">

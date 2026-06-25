@@ -11,6 +11,7 @@ import { Copyable } from "@/components/common/Copyable";
 import { Pagination } from "@/components/common/Pagination";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
+import { FetchError } from "@/components/common/FetchError";
 import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useTokens } from "@/lib/hooks";
 import { formatNumber, shortenAddress } from "@/lib/format";
@@ -25,7 +26,7 @@ export default function TokensPage() {
   // Deeplink network switch.
   useNetworkFromQuery();
   const searchParams = useSearchParams();
-  const { data: tokens, loading } = useTokens(network);
+  const { data: tokens, loading, error, retry } = useTokens(network);
   const [sortKey, setSortKey] = useState<SortKey>("none");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   // ?standard=tokenop|evm pre-selects the filter so the Native rail's
@@ -204,6 +205,8 @@ export default function TokensPage() {
             <div className="p-4 space-y-2">
               {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
+          ) : error ? (
+            <FetchError onRetry={retry} />
           ) : paged.length > 0 ? (
             <>
               {/* Desktop table */}

@@ -8,6 +8,7 @@ import { Link } from "@/i18n/navigation";
 import { Blocks, ArrowUpDown, Search, Clock, Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { RailBadge, classifyRail, type Rail } from "@/components/common/RailBadge";
+import { FetchError } from "@/components/common/FetchError";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCardSkeleton } from "@/components/common/skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -92,7 +93,7 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
   const [railFilter, setRailFilter] = useState<"all" | Rail>("all");
   const { data: stats, loading: statsLoading, error: statsError, refetch: refetchStats, retry: retryStats } = useStats(network, initial.stats);
   const { data: blocks, loading: blocksLoading, refetch: refetchBlocks } = useBlocks(network, 10, initial.blocks);
-  const { data: txs, loading: txsLoading, refetch: refetchTxs } = useTransactions(network, 10, initial.txs);
+  const { data: txs, loading: txsLoading, error: txsError, refetch: refetchTxs, retry: retryTxs } = useTransactions(network, 10, initial.txs);
   // Live block height via WebSocket. newHeads (proposed) + sentrix_finalized
   // (BFT-supermajority sealed) — both fed in so the UI can show the proposer
   // tip + the canonical finality cursor as separate values. Each new head
@@ -526,6 +527,8 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
               <div className="p-4 space-y-2">
                 {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" style={{ opacity: 1 - i * 0.08 }} />)}
               </div>
+            ) : txsError ? (
+              <FetchError onRetry={retryTxs} />
             ) : txs && txs.length > 0 ? (
               (() => {
                 // Apply rail filter. classifyRail wants {to_address, data}, our
