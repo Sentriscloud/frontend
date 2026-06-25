@@ -21,7 +21,7 @@ import { LiveTicker } from "@/components/home/LiveTicker";
 import { TxChart14d } from "@/components/home/TxChart14d";
 import { FreshnessChip } from "@/components/common/FreshnessChip";
 import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
-import { useStats, useBlocks, useTransactions, useChainPerformance, useMempool, useCurrentEpoch, useChainStatus } from "@/lib/hooks";
+import { useStats, useBlocks, useTransactions, useChainPerformance, useMempool, useCurrentEpoch } from "@/lib/hooks";
 import { useLatestBlock, useLatestFinalized } from "@/lib/ws";
 import { formatNumber, formatSRX, toMillis } from "@/lib/format";
 import { validateAndResolveSearch } from "@/lib/search-validate";
@@ -122,7 +122,6 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
   const { data: performance, loading: perfLoading } = useChainPerformance(network, perfRange, initial.performance);
   const { data: mempool } = useMempool(network, initial.mempool);
   const { data: epoch } = useCurrentEpoch(network, initial.epoch);
-  const { data: chainStatus } = useChainStatus(network, initial.status);
 
   const latestPerf = performance?.points?.[performance.points.length - 1];
   // Show the actual recent block cadence from the latest blocks. The
@@ -262,7 +261,7 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
 
   return (
     <>
-      <LiveTicker stats={stats} blockTime={blockTime} network={network} epoch={epoch} status={chainStatus} />
+      <LiveTicker stats={stats} blockTime={blockTime} network={network} epoch={epoch} />
       {(isChainIdle || chainUnreachable) && (
         <div role="alert" className="border-y-2 border-[var(--orange)]/60 bg-[color-mix(in_oklab,var(--orange)_16%,transparent)]">
           <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-3 flex items-center gap-3 text-[13px]">
