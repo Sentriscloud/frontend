@@ -38,7 +38,7 @@ export function LiveTicker({ stats, blockTime, network, epoch, status }: LiveTic
     { label: "Circulating", value: stats ? formatSRX(stats.total_minted_srx) : "—" },
     { label: "Tokens", value: stats ? String(stats.deployed_tokens) : "—" },
     { label: "Reward", value: stats ? `${stats.next_block_reward_srx} SRX` : "—" },
-    { label: "Uptime", value: status ? formatUptime(status.uptime_seconds) : "—" },
+    { label: "Node uptime", value: status ? formatUptime(status.uptime_seconds) : "—" },
   ];
 
   // Single static rail. Used to be a marquee with two duplicated copies for
