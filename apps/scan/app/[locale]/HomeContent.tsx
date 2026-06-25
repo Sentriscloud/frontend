@@ -125,9 +125,16 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
   const { data: chainStatus } = useChainStatus(network, initial.status);
 
   const latestPerf = performance?.points?.[performance.points.length - 1];
-  const blockTime = latestPerf?.block_time_sec
-    ? `${latestPerf.block_time_sec.toFixed(1)}s`
-    : (blocks ? computeBlockTime(blocks.map((b) => b.timestamp as unknown as number | string)) : CHAIN_TARGET_BLOCK_TIME);
+  // Show the actual recent block cadence from the latest blocks. The
+  // chain-performance bucket average is windowed (range-dependent) and gets
+  // inflated by past stalls: it read ~1.8s on a 1h bucket while testnet was
+  // genuinely producing ~0.5s blocks. Fall back to the perf value, then the
+  // target, only when we don't have enough blocks to measure.
+  const blockTime = blocks && blocks.length >= 2
+    ? computeBlockTime(blocks.map((b) => b.timestamp as unknown as number | string))
+    : latestPerf?.block_time_sec
+      ? `${latestPerf.block_time_sec.toFixed(1)}s`
+      : CHAIN_TARGET_BLOCK_TIME;
   const totalTxValue = stats?.total_transactions != null
     ? formatNumber(stats.total_transactions)
     : estimateTotalTransactions(stats?.total_blocks, blocks);
