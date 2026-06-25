@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Link } from "@/i18n/navigation";
-import { Blocks, ArrowUpDown, Search, Clock, Loader2 } from "lucide-react";
+import { Blocks, ArrowUpDown, Search, Clock, Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { RailBadge, classifyRail, type Rail } from "@/components/common/RailBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -261,13 +261,13 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
           fixed header (top-16 = h-16 of header). */}
       <StickyStatsBar />
       {(isChainIdle || chainUnreachable) && (
-        <div className="border-b border-[var(--orange)]/30 bg-[color-mix(in_oklab,var(--orange)_8%,transparent)]">
-          <div className="max-w-7xl mx-auto px-4 lg:px-6 py-2 flex items-center gap-3 text-[11px]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--orange)] animate-pulse-live" />
-            <span className="font-mono uppercase tracking-[.15em] text-[var(--orange)]">
+        <div role="alert" className="border-y-2 border-[var(--orange)]/60 bg-[color-mix(in_oklab,var(--orange)_16%,transparent)]">
+          <div className="max-w-7xl mx-auto px-4 lg:px-6 py-3 flex items-center gap-3 text-[13px]">
+            <AlertTriangle className="h-4 w-4 text-[var(--orange)] shrink-0" />
+            <span className="font-mono uppercase tracking-[.15em] text-[var(--orange)] font-semibold shrink-0">
               {chainUnreachable ? "RPC offline" : `${network === "testnet" ? "Testnet" : "Chain"} paused`}
             </span>
-            <span className="font-mono text-[var(--tx-m)]">
+            <span className="font-mono text-[var(--foreground)]">
               {chainUnreachable
                 ? "Couldn't reach the chain RPC — retrying. Operators are aware."
                 : latestBlockAgeSec !== null
