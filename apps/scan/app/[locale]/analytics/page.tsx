@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
   }, [validators]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 lg:px-6 py-8 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
       <PageHeader icon={BarChart3} eyebrow="Analytics" title="Network Analytics" />
 
       {/* Headline stats — one row showing chain health at a glance.

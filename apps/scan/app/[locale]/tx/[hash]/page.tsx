@@ -69,7 +69,7 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
   // before the testnet probe finished).
   if (loading || (!tx && loadingOther)) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-4">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-4">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-80 w-full" />
       </div>
@@ -83,7 +83,7 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
       // and the next-render useTransaction(network, hash) refetches against
       // the right network. No button — see the comment on the effect for why.
       return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8">
           <Card>
             <CardContent className="p-8 text-center space-y-3">
               <Skeleton className="h-4 w-56 mx-auto" />
@@ -97,7 +97,7 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
       );
     }
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8">
         <Card>
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">Transaction not found</p>
@@ -129,7 +129,7 @@ export default function TxDetailPage({ params }: { params: Promise<{ hash: strin
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
       <PageHeader
         icon={ArrowUpDown}
         eyebrow="Transaction"

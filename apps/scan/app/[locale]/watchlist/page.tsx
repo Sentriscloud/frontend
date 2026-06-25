@@ -47,7 +47,7 @@ export default function WatchlistPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+    <div className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
       <PageHeader icon={Star} eyebrow="WATCHLIST" title="Starred addresses" />
 
       <Card>

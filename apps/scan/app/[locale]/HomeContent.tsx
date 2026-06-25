@@ -125,9 +125,16 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
   const { data: chainStatus } = useChainStatus(network, initial.status);
 
   const latestPerf = performance?.points?.[performance.points.length - 1];
-  const blockTime = latestPerf?.block_time_sec
-    ? `${latestPerf.block_time_sec.toFixed(1)}s`
-    : (blocks ? computeBlockTime(blocks.map((b) => b.timestamp as unknown as number | string)) : CHAIN_TARGET_BLOCK_TIME);
+  // Show the actual recent block cadence from the latest blocks. The
+  // chain-performance bucket average is windowed (range-dependent) and gets
+  // inflated by past stalls: it read ~1.8s on a 1h bucket while testnet was
+  // genuinely producing ~0.5s blocks. Fall back to the perf value, then the
+  // target, only when we don't have enough blocks to measure.
+  const blockTime = blocks && blocks.length >= 2
+    ? computeBlockTime(blocks.map((b) => b.timestamp as unknown as number | string))
+    : latestPerf?.block_time_sec
+      ? `${latestPerf.block_time_sec.toFixed(1)}s`
+      : CHAIN_TARGET_BLOCK_TIME;
   const totalTxValue = stats?.total_transactions != null
     ? formatNumber(stats.total_transactions)
     : estimateTotalTransactions(stats?.total_blocks, blocks);
@@ -258,7 +265,7 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
       <LiveTicker stats={stats} blockTime={blockTime} network={network} epoch={epoch} status={chainStatus} />
       {(isChainIdle || chainUnreachable) && (
         <div role="alert" className="border-y-2 border-[var(--orange)]/60 bg-[color-mix(in_oklab,var(--orange)_16%,transparent)]">
-          <div className="max-w-7xl mx-auto px-4 lg:px-6 py-3 flex items-center gap-3 text-[13px]">
+          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-3 flex items-center gap-3 text-[13px]">
             <AlertTriangle className="h-4 w-4 text-[var(--orange)] shrink-0" />
             <span className="font-mono uppercase tracking-[.15em] text-[var(--orange)] font-semibold shrink-0">
               {chainUnreachable ? "RPC offline" : `${network === "testnet" ? "Testnet" : "Chain"} paused`}
@@ -273,7 +280,7 @@ export function HomeContent({ initial }: { initial: HomeBundle }) {
           </div>
         </div>
       )}
-      <div className="max-w-7xl mx-auto px-4 lg:px-6 py-6 lg:py-10 space-y-10 animate-fade-in">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-6 lg:py-10 space-y-10 animate-fade-in">
       {/* Title rail — flush-left wordmark + status eyebrow on the left, search rail on the
           right. Per sentris-design: explorer is dense, not sparse — the prior centered
           72px hero pushed live data below the fold and read as a marketing site instead of

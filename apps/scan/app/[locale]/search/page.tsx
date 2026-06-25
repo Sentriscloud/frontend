@@ -115,7 +115,7 @@ function SearchContent() {
 
 export default function SearchPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8">
       <Card>
         <CardContent className="p-8">
           <Suspense fallback={<p className="text-center text-muted-foreground">Loading...</p>}>

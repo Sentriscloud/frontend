@@ -21,7 +21,7 @@ export default function PageError({
   }, [error]);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12">
+    <div className="max-w-2xl mx-auto px-5 sm:px-6 lg:px-8 py-12">
       <Card>
         <CardContent className="p-8 text-center space-y-4">
           <div className="mx-auto h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">

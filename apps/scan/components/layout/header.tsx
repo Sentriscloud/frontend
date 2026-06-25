@@ -245,7 +245,7 @@ export function Header() {
           : "border-b border-transparent bg-[var(--bk)]/60"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 lg:px-6 h-16 flex items-center gap-4">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 h-16 flex items-center gap-4">
         {/* Logo — pearl-dots mark + SENTRIX wordmark, visually balanced. */}
         <Link href="/" className="flex items-center gap-2 text-[var(--gold)] shrink-0">
           <SentrixLogo size={28} />
