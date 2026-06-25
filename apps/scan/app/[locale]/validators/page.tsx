@@ -13,6 +13,7 @@ import { StatCard } from "@/components/common/StatCard";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useValidators } from "@/lib/hooks";
+import { useRefetchOnNewBlock } from "@/lib/ws";
 import { formatNumber } from "@/lib/format";
 
 type SortKey = "blocks" | "stake" | "uptime" | "none";
@@ -32,7 +33,9 @@ export default function ValidatorsPage() {
   const { network } = useNetwork();
   // Deeplink network switch.
   useNetworkFromQuery();
-  const { data: validators, loading, error, retry } = useValidators(network);
+  const { data: validators, loading, error, retry, refetch } = useValidators(network);
+  // Refresh shortly after each new block instead of waiting for the poll cycle.
+  useRefetchOnNewBlock(network, refetch);
   const [sortKey, setSortKey] = useState<SortKey>("none");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");

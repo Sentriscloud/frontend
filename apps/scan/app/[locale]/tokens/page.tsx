@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { FetchError } from "@/components/common/FetchError";
 import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useTokens } from "@/lib/hooks";
+import { useRefetchOnNewBlock } from "@/lib/ws";
 import { formatNumber, shortenAddress } from "@/lib/format";
 
 type SortKey = "supply" | "holders" | "transfers" | "none";
@@ -26,7 +27,9 @@ export default function TokensPage() {
   // Deeplink network switch.
   useNetworkFromQuery();
   const searchParams = useSearchParams();
-  const { data: tokens, loading, error, retry } = useTokens(network);
+  const { data: tokens, loading, error, retry, refetch } = useTokens(network);
+  // Refresh shortly after each new block instead of waiting for the 30s poll.
+  useRefetchOnNewBlock(network, refetch);
   const [sortKey, setSortKey] = useState<SortKey>("none");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   // ?standard=tokenop|evm pre-selects the filter so the Native rail's
