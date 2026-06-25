@@ -160,6 +160,28 @@ export function useLatestBlock(network: NetworkId): NewHeadEvent | null {
   return head;
 }
 
+// Trigger `refetch` shortly after each new block so a page reflects chain
+// changes without waiting for its full poll interval. Throttled to at most one
+// call per `minIntervalMs`: fast block times (testnet ~0.5s) would otherwise
+// turn this into a request flood for data that changes slowly (validator set,
+// token list), blowing the per-IP rate budget the poll intervals are sized for.
+export function useRefetchOnNewBlock(
+  network: NetworkId,
+  refetch: () => void,
+  minIntervalMs = 10_000,
+): void {
+  const head = useLatestBlock(network);
+  const lastRun = useRef(0);
+  useEffect(() => {
+    if (!head) return;
+    const now = Date.now();
+    if (now - lastRun.current < minIntervalMs) return;
+    lastRun.current = now;
+    refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [head?.number, minIntervalMs]);
+}
+
 export function useLatestFinalized(network: NetworkId): number | null {
   const [height, setHeight] = useState<number | null>(null);
   useEffect(() => {
