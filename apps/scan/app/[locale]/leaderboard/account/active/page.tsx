@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Address } from "@/components/common/Address";
 import { Pagination } from "@/components/common/Pagination";
 import { RankBadge } from "@/components/common/RankBadge";
+import { FetchError } from "@/components/common/FetchError";
 import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useActiveAccounts } from "@/lib/hooks";
 import { formatNumber } from "@/lib/format";
@@ -16,7 +17,7 @@ const PAGE_SIZE = 25;
 export default function MostActiveAccountsPage() {
   const { network } = useNetwork();
   useNetworkFromQuery();
-  const { data: accounts, loading } = useActiveAccounts(network, 100);
+  const { data: accounts, loading, error, retry } = useActiveAccounts(network, 100);
   const [page, setPage] = useState(1);
 
   const totalPages = Math.max(1, Math.ceil((accounts?.length ?? 0) / PAGE_SIZE));
@@ -39,6 +40,8 @@ export default function MostActiveAccountsPage() {
               <Skeleton key={i} className="h-12 w-full" style={{ opacity: 1 - i * 0.08 }} />
             ))}
           </div>
+        ) : error ? (
+          <FetchError onRetry={retry} />
         ) : (accounts?.length ?? 0) === 0 ? (
           <div className="p-12 text-center">
             <Activity className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />

@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Address } from "@/components/common/Address";
 import { EmptyState } from "@/components/common/EmptyState";
+import { FetchError } from "@/components/common/FetchError";
 import { RankBadge } from "@/components/common/RankBadge";
 import { useNetwork, useNetworkFromQuery } from "@/lib/network-context";
 import { useRichlist, useValidators } from "@/lib/hooks";
@@ -18,7 +19,7 @@ const DEFAULT_THRESHOLD = 100_000; // SRX
 export default function WhaleTopWalletsPage() {
   const { network } = useNetwork();
   useNetworkFromQuery();
-  const { data: holders, loading } = useRichlist(network, 100);
+  const { data: holders, loading, error, retry } = useRichlist(network, 100);
   const { data: validators } = useValidators(network);
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
 
@@ -60,6 +61,8 @@ export default function WhaleTopWalletsPage() {
           <div className="p-4 space-y-2">
             {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" style={{ opacity: 1 - i * 0.1 }} />)}
           </div>
+        ) : error ? (
+          <FetchError onRetry={retry} />
         ) : whales.length === 0 ? (
           <EmptyState
             icon={Fish}

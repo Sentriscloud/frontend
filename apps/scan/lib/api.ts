@@ -971,9 +971,10 @@ interface RawRichlistEntry {
   percent_of_supply?: number;
 }
 
-export async function fetchRichlist(network: NetworkId, limit = 100): Promise<TopHolder[]> {
+export async function fetchRichlist(network: NetworkId, limit = 100): Promise<TopHolder[] | null> {
   const res = await apiFetch<{ holders: RawRichlistEntry[] }>(network, `/richlist?limit=${limit}`);
-  if (!res?.holders) return [];
+  if (res === null) return null;
+  if (!res.holders) return [];
   return res.holders.map((h, i) => ({
     rank: i + 1,
     address: h.address,
@@ -994,12 +995,13 @@ export async function fetchTokenHolders(
   network: NetworkId,
   contract: string,
   limit = 50,
-): Promise<TokenHolder[]> {
+): Promise<TokenHolder[] | null> {
   const res = await apiFetch<{ holders: RawTokenHolder[] }>(
     network,
     `/tokens/${normalizeAddress(contract)}/holders?limit=${limit}`,
   );
-  if (!res?.holders) return [];
+  if (res === null) return null;
+  if (!res.holders) return [];
   return res.holders.map((h) => ({
     address: h.address,
     // 2026-04-30 audit: balance_sentri is the raw 1e8-scaled value; older
@@ -1026,13 +1028,14 @@ export async function fetchTokenTrades(
   contract: string,
   page = 1,
   limit = 20,
-): Promise<TokenTransfer[]> {
+): Promise<TokenTransfer[] | null> {
   const offset = (page - 1) * limit;
   const res = await apiFetch<{ trades: RawTokenTrade[] }>(
     network,
     `/tokens/${normalizeAddress(contract)}/trades?limit=${limit}&offset=${offset}`,
   );
-  if (!res?.trades) return [];
+  if (res === null) return null;
+  if (!res.trades) return [];
   return res.trades.map((t) => ({
     tx_hash: t.txid ?? t.tx_hash ?? "",
     from: t.from,
@@ -1400,9 +1403,10 @@ export interface ActiveAccount {
   tx_count: number;
 }
 
-export async function fetchActiveAccounts(network: NetworkId, limit = 100): Promise<ActiveAccount[]> {
+export async function fetchActiveAccounts(network: NetworkId, limit = 100): Promise<ActiveAccount[] | null> {
   const res = await apiFetch<{ accounts: ActiveAccount[] }>(network, `/accounts/active?limit=${limit}`);
-  return res?.accounts ?? [];
+  if (res === null) return null;
+  return res.accounts ?? [];
 }
 
 // ── /contracts/recent ───────────────────────────────────────────────────────
