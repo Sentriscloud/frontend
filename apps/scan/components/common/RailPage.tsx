@@ -116,7 +116,7 @@ export function RailPage({ rail }: RailPageProps) {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
       <PageHeader icon={Icon} eyebrow={cfg.eyebrow} title={cfg.title} />
 
       <DetailCard title={cfg.explainerTitle}>

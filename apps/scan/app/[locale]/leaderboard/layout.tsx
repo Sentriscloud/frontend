@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function LeaderboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 animate-fade-in">
       <PageHeader icon={Trophy} eyebrow="Rankings" title="Leaderboard" />
 
       <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6 mt-6">

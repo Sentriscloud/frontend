@@ -49,7 +49,7 @@ export default function BlocksPage() {
   const paged = blocks ?? [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
       <PageHeader
         icon={Blocks}
         title={t("title")}

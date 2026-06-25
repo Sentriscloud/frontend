@@ -88,7 +88,7 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
   // still in flight (same race the tx page used to hit).
   if (loading || (!block && loadingOther)) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-4">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-4">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-64 w-full" />
       </div>
@@ -99,7 +99,7 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
     if (blockOther) {
       // Auto-switch effect above already in flight; transient placeholder.
       return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8">
           <Card>
             <CardContent className="p-8 text-center space-y-3">
               <Skeleton className="h-4 w-48 mx-auto" />
@@ -112,7 +112,7 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
       );
     }
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8">
         <Card>
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">Block #{height} not found</p>
@@ -127,7 +127,7 @@ export default function BlockDetailPage({ params }: { params: Promise<{ height: 
   const totalTxPages = Math.max(1, Math.ceil(filteredTxs.length / TX_PAGE_SIZE));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
       <PageHeader
         icon={Blocks}
         eyebrow="Block Height"

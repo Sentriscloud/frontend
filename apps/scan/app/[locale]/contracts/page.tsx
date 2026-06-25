@@ -88,7 +88,7 @@ export default function ContractsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
       <PageHeader
         icon={FileCode}
         eyebrow="EVM · VERIFIED CONTRACTS"

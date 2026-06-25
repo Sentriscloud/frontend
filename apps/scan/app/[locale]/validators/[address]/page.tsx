@@ -75,7 +75,7 @@ export default function ValidatorDetailPage({ params }: { params: Promise<{ addr
 
   if (loading && !validators) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-4">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-4">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-48 w-full" />
       </div>
@@ -84,7 +84,7 @@ export default function ValidatorDetailPage({ params }: { params: Promise<{ addr
 
   if (!validator) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8">
         <Card>
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">Validator not found</p>
@@ -99,7 +99,7 @@ export default function ValidatorDetailPage({ params }: { params: Promise<{ addr
   const st = statusLabel(validator.status);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
       <PageHeader
         icon={Users}
         eyebrow="Validator"

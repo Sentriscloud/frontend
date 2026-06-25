@@ -77,7 +77,7 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
 
   if (loading || (!token && loadingOther)) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-4">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-4">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-48 w-full" />
       </div>
@@ -88,7 +88,7 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
     if (tokenOther) {
       // Auto-switch effect above already in flight; transient placeholder.
       return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8">
           <Card>
             <CardContent className="p-8 text-center space-y-3">
               <Skeleton className="h-4 w-56 mx-auto" />
@@ -102,7 +102,7 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
       );
     }
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8">
         <Card>
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">Token not found</p>
@@ -114,7 +114,7 @@ export default function TokenDetailPage({ params }: { params: Promise<{ addr: st
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
       <PageHeader
         iconSlot={
           <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[var(--gold)] to-[var(--gold-d)] flex items-center justify-center text-[var(--bk)] font-semibold">
