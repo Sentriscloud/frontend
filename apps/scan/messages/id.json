@@ -183,6 +183,8 @@
   "common": {
     "loading": "Memuat...",
     "failed": "Gagal",
+    "failed_to_load": "Gagal memuat data",
+    "failed_to_load_hint": "Tidak bisa mengambil data dari server. Coba lagi.",
     "retry": "Coba Lagi",
     "go_home": "Ke Beranda",
     "try_again": "Coba Lagi",

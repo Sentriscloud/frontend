@@ -588,7 +588,9 @@ export async function fetchValidators(network: NetworkId) {
     apiFetch<{ validators: RawValidator[] } | RawValidator[]>(network, "/staking/validators"),
     apiFetch<{ validators: RawValidator[] } | RawValidator[]>(network, "/validators"),
   ]);
-  if (!stakingRes) return [];
+  // Primary endpoint failed: return null so the hook flags an error state rather than
+  // rendering an empty validator set. A successful empty response still returns [].
+  if (stakingRes === null) return null;
   const stakingList = Array.isArray(stakingRes) ? stakingRes : (stakingRes.validators ?? []);
   const namedList = namedRes
     ? (Array.isArray(namedRes) ? namedRes : (namedRes.validators ?? []))
@@ -1365,11 +1367,14 @@ export async function fetchEventLogs(
 }
 
 // ── /accounts/top (real richlist with tx_count) ─────────────────────────────
-export async function fetchAccountsTop(network: NetworkId, limit = 100): Promise<TopHolder[]> {
+export async function fetchAccountsTop(network: NetworkId, limit = 100): Promise<TopHolder[] | null> {
   const res = await apiFetch<{
     accounts: Array<{ address: string; balance_srx: number; percentage: number; tx_count?: number; name?: string | null }>;
   }>(network, `/accounts/top?limit=${limit}`);
-  if (!res?.accounts) return [];
+  // Keep a failed fetch (null) separate from a successful empty list ([]). Collapsing
+  // both to [] made an outage look like a genuinely empty richlist.
+  if (res === null) return null;
+  if (!res.accounts) return [];
   return res.accounts.map((a, i) => ({
     rank: i + 1,
     address: a.address,
