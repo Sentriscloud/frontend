@@ -30,9 +30,9 @@
     "@tanstack/react-query": "^5.62.0",
     "@types/node": "^25",
     "@types/react": "^19",
-    "next": "15.5.18",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "next": "16.2.9",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "typescript": "^6",
     "viem": "^2.21.0",
     "wagmi": "^3.6.14"
